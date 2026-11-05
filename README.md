@@ -1,24 +1,23 @@
-# ChatByKarnav setup notes
+# ChatByKarnav
 
-## Deploying this update
+Static GitHub Pages chat backed by Firebase Authentication and Cloud Firestore.
 
-The site is a static GitHub Pages app and uses the existing Firebase project. Before deploying the new site, replace the current Firestore rules in Firebase Console with the contents of `firestore.rules`. Test the rules in the Firebase Rules Playground or a non-production project first. This ruleset intentionally does not allow access to the legacy `users/{uid}` profile documents because the old app stored email addresses there; public profile data now lives in `publicProfiles/{uid}` and must not contain email addresses.
+## Deploy
 
-New data layout:
+1. Review `firestore.rules` and test it in Firebase's Rules Playground or a non-production project.
+2. Publish those Firestore rules in Firebase Console. The old blanket signed-in rule exposes all documents and should be replaced.
+3. GitHub Pages publishes `index.html` from the configured branch. Browser notifications require HTTPS and the visitor's permission.
 
-- `publicProfiles/{uid}`: display name, grade, division, school, bio; no email.
-- `global_messages/{messageId}` and its `reactions/{uid}` subcollection.
-- `global_typing/{uid}`.
-- `conversations/{sortedUid1_sortedUid2}` with `members`, followed by `messages`, `typing`, and `readReceipts` subcollections.
-- `users/{uid}/presence/current` and `users/{uid}/blocks/{otherUid}`.
-- `reports/{reportId}`.
+Features in the current client: community and member-to-member chat, message replies, emoji reactions, unread markers, browser notifications, typing indicators, online presence, loaded-message search and older-message pagination, profile bios, and block/report controls.
 
-## Notes / limits
+## Important constraints
 
-- Browser notifications require the visitor to grant notification permission. The page must be served over HTTPS (GitHub Pages is HTTPS).
-- The UI limits message size and applies a small client-side send delay. A client-side delay is not secure anti-spam enforcement; production-grade throttling/moderation needs a trusted Cloud Function or other server-side service. Reports are recorded for an administrator to review; no admin console is included.
-- Typing status expires from the UI when the page closes only after Firestore state is cleared; stale typing docs can remain if a client disconnects unexpectedly. Presence is refreshed once per minute; `beforeunload` offline updates are best-effort. For robust disconnect status, use Firebase Realtime Database presence or a trusted backend.
-- The app's member search is capped to the first 100 profiles fetched and filtered in the browser. A larger directory needs a dedicated search/index solution.
-- Existing accounts continue to authenticate, but existing profile fields are not automatically copied. After deploying the updated rules/site, each member should save their profile once to populate `publicProfiles`; owners may migrate profile documents, excluding email fields.
-- Existing global message records are compatible if they have `uid`, `sender`, `text`, and a Firestore timestamp. Make sure Firebase indexes are created if the console requests them.
-- The pre-existing Storage avatar upload is not part of this rewrite; current avatars are not migrated to public profiles. Add a dedicated, authenticated Storage ruleset before enabling profile image uploads again.
+- This app uses client-side Firebase SDK. Client-side send delays are not security controls. For abuse-resistant rate limits, report review/moderation actions, and reliable offline presence, use a trusted backend/Cloud Functions or Realtime Database presence integration.
+- Blocking hides blocked users' messages in this browser and Firestore rules prevent private messages while either participant blocks the other. Global messages are shared room content and cannot be individually hidden by Firestore query security rules; each browser filters its locally blocked senders.
+- Browser notification popups only work while the app is open. Background push requires a service worker and Firebase Cloud Messaging setup.
+- Profiles intentionally omit email. Existing profile documents in `users/{uid}` are not automatically migrated; members should save their new profile once. Do not copy email into `publicProfiles`.
+- Conversation unread markers are derived from the latest message time and read receipt, not a fully reliable badge counter in every offline/race condition.
+- Search currently scans the first 100 profiles; use a search service for larger directories.
+- Presence heartbeat and `beforeunload` offline updates are best-effort; a user may appear online briefly after disconnecting.
+- Rules do not enable Firebase Storage avatar uploads. Configure separate Storage rules before using profile photos.
+- Firestore may prompt creation of indexes for compound queries.
