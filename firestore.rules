@@ -3,92 +3,53 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function self(uid) { return signedIn() && request.auth.uid == uid; }
-
-    // Admin access must come from a trusted backend via Firebase custom claims.
-    function isAdmin() {
-      return signedIn() && request.auth.token.admin == true;
-    }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
 
     function validReplyTo() {
       return !('replyTo' in request.resource.data) || (
         request.resource.data.replyTo is map &&
         request.resource.data.replyTo.keys().hasOnly(['id','text','sender']) &&
-        request.resource.data.replyTo.id is string &&
-        request.resource.data.replyTo.id.size() > 0 &&
-        request.resource.data.replyTo.id.size() <= 200 &&
-        request.resource.data.replyTo.sender is string &&
-        request.resource.data.replyTo.sender.size() > 0 &&
-        request.resource.data.replyTo.sender.size() <= 40 &&
-        request.resource.data.replyTo.text is string &&
-        request.resource.data.replyTo.text.size() > 0 &&
-        request.resource.data.replyTo.text.size() <= 300
+        request.resource.data.replyTo.keys().hasAll(['id','text','sender']) &&
+        request.resource.data.replyTo.id is string && request.resource.data.replyTo.id.size() > 0 && request.resource.data.replyTo.id.size() <= 200 &&
+        request.resource.data.replyTo.sender is string && request.resource.data.replyTo.sender.size() > 0 && request.resource.data.replyTo.sender.size() <= 40 &&
+        request.resource.data.replyTo.text is string && request.resource.data.replyTo.text.size() > 0 && request.resource.data.replyTo.text.size() <= 300
       );
     }
-
-    function validMediaEmoji() {
+    function validMemoji() {
       return !('memoji' in request.resource.data) ||
-        (request.resource.data.memoji is string &&
-         request.resource.data.memoji.size() > 0 &&
-         request.resource.data.memoji.size() <= 16);
+        (request.resource.data.memoji is string && request.resource.data.memoji.size() > 0 && request.resource.data.memoji.size() <= 16);
     }
-
     function validProfile() {
-      return request.resource.data.keys().hasOnly([
-        'displayName','displayNameLower','grade','division','school','bio','updatedAt','memoji'
-      ]) &&
-      (!('displayName' in request.resource.data) || (
-        request.resource.data.displayName is string &&
-        request.resource.data.displayName.size() > 0 &&
-        request.resource.data.displayName.size() <= 40
-      )) &&
-      (!('displayNameLower' in request.resource.data) || (
-        request.resource.data.displayNameLower is string &&
-        request.resource.data.displayNameLower.size() > 0 &&
-        request.resource.data.displayNameLower.size() <= 40
-      )) &&
-      (!('grade' in request.resource.data) || (
-        request.resource.data.grade is string &&
-        request.resource.data.grade.size() <= 40
-      )) &&
-      (!('division' in request.resource.data) || (
-        request.resource.data.division is string &&
-        request.resource.data.division.size() <= 40
-      )) &&
-      (!('school' in request.resource.data) || (
-        request.resource.data.school is string &&
-        request.resource.data.school.size() <= 100
-      )) &&
-      (!('bio' in request.resource.data) || (
-        request.resource.data.bio is string &&
-        request.resource.data.bio.size() <= 280
-      )) &&
-      (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt == request.time) &&
-      validMediaEmoji();
+      return request.resource.data.keys().hasOnly(['displayName','displayNameLower','grade','division','school','bio','updatedAt','memoji']) &&
+        request.resource.data.displayName is string && request.resource.data.displayName.size() > 0 && request.resource.data.displayName.size() <= 40 &&
+        request.resource.data.displayNameLower is string && request.resource.data.displayNameLower.size() > 0 && request.resource.data.displayNameLower.size() <= 40 &&
+        (!('grade' in request.resource.data) || (request.resource.data.grade is string && request.resource.data.grade.size() <= 40)) &&
+        (!('division' in request.resource.data) || (request.resource.data.division is string && request.resource.data.division.size() <= 40)) &&
+        (!('school' in request.resource.data) || (request.resource.data.school is string && request.resource.data.school.size() <= 100)) &&
+        (!('bio' in request.resource.data) || (request.resource.data.bio is string && request.resource.data.bio.size() <= 280)) &&
+        request.resource.data.updatedAt == request.time && validMemoji();
     }
-
+    function validMemberNames(data) {
+      return !('memberNames' in data) || (
+        data.memberNames is list && data.memberNames.size() >= 1 && data.memberNames.size() <= 2 &&
+        data.memberNames[0] is string && data.memberNames[0].size() <= 40 &&
+        (data.memberNames.size() == 1 || (data.memberNames[1] is string && data.memberNames[1].size() <= 40))
+      );
+    }
     function conversationMember(cid) {
-      return signedIn() &&
-        get(/databases/$(database)/documents/conversations/$(cid)).data.members is list &&
-        request.auth.uid in get(/databases/$(database)/documents/conversations/$(cid)).data.members;
+      let conversation = get(/databases/$(database)/documents/conversations/$(cid)).data;
+      return signedIn() && conversation.members is list && request.auth.uid in conversation.members;
     }
-
     function blocked(a, b) {
       return exists(/databases/$(database)/documents/users/$(a)/blocks/$(b)) ||
         exists(/databases/$(database)/documents/users/$(b)/blocks/$(a));
     }
-
     function validMessage() {
       return request.resource.data.keys().hasOnly(['uid','sender','text','timestamp','replyTo','memoji']) &&
         request.resource.data.uid == request.auth.uid &&
-        request.resource.data.sender is string &&
-        request.resource.data.sender.size() > 0 &&
-        request.resource.data.sender.size() <= 40 &&
-        request.resource.data.text is string &&
-        request.resource.data.text.size() > 0 &&
-        request.resource.data.text.size() <= 2000 &&
-        request.resource.data.timestamp == request.time &&
-        validMediaEmoji() &&
-        validReplyTo();
+        request.resource.data.sender is string && request.resource.data.sender.size() > 0 && request.resource.data.sender.size() <= 40 &&
+        request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000 &&
+        request.resource.data.timestamp == request.time && validMemoji() && validReplyTo();
     }
 
     match /publicProfiles/{uid} {
@@ -96,23 +57,18 @@ service cloud.firestore {
       allow create, update: if self(uid) && validProfile();
       allow delete: if false;
     }
-
     match /users/{uid}/presence/{presenceId} {
       allow read: if signedIn();
-      allow create, update: if self(uid) && presenceId == 'current' &&
-        request.resource.data.keys().hasOnly(['online','lastSeen']) &&
+      allow create, update: if self(uid) && presenceId == 'current' && request.resource.data.keys().hasOnly(['online','lastSeen']) &&
         request.resource.data.online is bool && request.resource.data.lastSeen == request.time;
       allow delete: if self(uid);
     }
-
     match /users/{uid}/blocks/{blockedUid} {
       allow get, list: if self(uid);
-      allow create: if self(uid) && blockedUid != uid &&
-        request.resource.data.keys().hasOnly(['createdAt']) && request.resource.data.createdAt == request.time;
+      allow create: if self(uid) && blockedUid != uid && request.resource.data.keys().hasOnly(['createdAt']) && request.resource.data.createdAt == request.time;
       allow delete: if self(uid);
       allow update: if false;
     }
-
     match /users/{uid} { allow read, write: if false; }
 
     match /global_messages/{messageId} {
@@ -120,121 +76,66 @@ service cloud.firestore {
       allow create: if signedIn() && validMessage();
       allow update: if false;
       allow delete: if isAdmin();
-
       match /reactions/{uid} {
         allow read: if signedIn();
-        allow create, update: if self(uid) &&
-          request.resource.data.keys().hasOnly(['uid','emoji','createdAt']) &&
-          request.resource.data.uid == request.auth.uid &&
-          request.resource.data.emoji in ['👍','❤️','😂'] &&
-          request.resource.data.createdAt == request.time;
+        allow create, update: if self(uid) && request.resource.data.keys().hasOnly(['uid','emoji','createdAt']) &&
+          request.resource.data.uid == request.auth.uid && request.resource.data.emoji in ['👍','❤️','😂'] && request.resource.data.createdAt == request.time;
         allow delete: if self(uid);
       }
     }
-
     match /global_typing/{uid} {
       allow read: if signedIn();
       allow create, update: if self(uid) && request.resource.data.keys().hasOnly(['typing','name','updatedAt']) &&
-        request.resource.data.typing is bool &&
-        request.resource.data.name is string &&
-        request.resource.data.name.size() <= 40 &&
-        request.resource.data.updatedAt == request.time;
+        request.resource.data.typing is bool && request.resource.data.name is string && request.resource.data.name.size() <= 40 && request.resource.data.updatedAt == request.time;
       allow delete: if self(uid);
     }
 
     match /conversations/{cid} {
-      allow get, list: if signedIn() && request.auth.uid in resource.data.members;
-      allow create: if signedIn() &&
-        request.resource.data.keys().hasOnly(['members','createdAt','lastMessage','updatedAt','memberNames']) &&
-        request.resource.data.members is list &&
-        request.resource.data.members.size() == 2 &&
-        request.auth.uid in request.resource.data.members &&
-        request.resource.data.createdAt == request.time &&
-        request.resource.data.lastMessage == '' &&
-        request.resource.data.updatedAt == request.time &&
-        (!('memberNames' in request.resource.data) || (
-          request.resource.data.memberNames is list &&
-          request.resource.data.memberNames.size() == 2 &&
-          request.resource.data.memberNames[0] is string &&
-          request.resource.data.memberNames[0].size() <= 40 &&
-          request.resource.data.memberNames[1] is string &&
-          request.resource.data.memberNames[1].size() <= 40
-        )) &&
-        !blocked(request.resource.data.members[0], request.resource.data.members[1]);
-
-      allow update: if signedIn() && request.auth.uid in resource.data.members &&
-        request.resource.data.members == resource.data.members &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage','updatedAt','memberNames']) &&
-        request.resource.data.lastMessage is string &&
-        request.resource.data.lastMessage.size() <= 100 &&
-        request.resource.data.updatedAt == request.time &&
-        (!('memberNames' in request.resource.data) || (
-          request.resource.data.memberNames is list &&
-          request.resource.data.memberNames.size() == 2 &&
-          request.resource.data.memberNames[0] is string &&
-          request.resource.data.memberNames[0].size() <= 40 &&
-          request.resource.data.memberNames[1] is string &&
-          request.resource.data.memberNames[1].size() <= 40
-        )) &&
-        !blocked(resource.data.members[0], resource.data.members[1]);
-
+      allow get, list: if signedIn() && (isAdmin() || (resource.data.members is list && request.auth.uid in resource.data.members));
+      allow create: if signedIn() && request.resource.data.keys().hasOnly(['members','createdAt','lastMessage','updatedAt','memberNames']) &&
+        request.resource.data.members is list && request.resource.data.members.size() == 2 &&
+        request.resource.data.members[0] is string && request.resource.data.members[1] is string &&
+        request.resource.data.members[0] != request.resource.data.members[1] && request.auth.uid in request.resource.data.members &&
+        request.resource.data.createdAt == request.time && request.resource.data.lastMessage == '' && request.resource.data.updatedAt == request.time &&
+        validMemberNames(request.resource.data) && !blocked(request.resource.data.members[0], request.resource.data.members[1]);
+      allow update: if signedIn() && resource.data.members is list && resource.data.members.size() == 2 && request.auth.uid in resource.data.members &&
+        request.resource.data.members == resource.data.members && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage','updatedAt','memberNames']) &&
+        request.resource.data.lastMessage is string && request.resource.data.lastMessage.size() <= 100 && request.resource.data.updatedAt == request.time &&
+        validMemberNames(request.resource.data) && !blocked(resource.data.members[0], resource.data.members[1]);
       allow delete: if false;
-
       match /messages/{messageId} {
-        allow read: if conversationMember(cid);
+        allow read: if isAdmin() || conversationMember(cid);
         allow create: if conversationMember(cid) && validMessage() &&
-          !blocked(
-            get(/databases/$(database)/documents/conversations/$(cid)).data.members[0],
-            get(/databases/$(database)/documents/conversations/$(cid)).data.members[1]
-          );
+          !blocked(get(/databases/$(database)/documents/conversations/$(cid)).data.members[0], get(/databases/$(database)/documents/conversations/$(cid)).data.members[1]);
         allow update: if false;
-        allow delete: if isAdmin() && conversationMember(cid);
-
+        allow delete: if isAdmin();
         match /reactions/{uid} {
-          allow read: if conversationMember(cid);
-          allow create, update: if conversationMember(cid) && self(uid) &&
-            request.resource.data.keys().hasOnly(['uid','emoji','createdAt']) &&
-            request.resource.data.uid == request.auth.uid &&
-            request.resource.data.emoji in ['👍','❤️','😂'] &&
-            request.resource.data.createdAt == request.time;
+          allow read: if isAdmin() || conversationMember(cid);
+          allow create, update: if conversationMember(cid) && self(uid) && request.resource.data.keys().hasOnly(['uid','emoji','createdAt']) &&
+            request.resource.data.uid == request.auth.uid && request.resource.data.emoji in ['👍','❤️','😂'] && request.resource.data.createdAt == request.time;
           allow delete: if conversationMember(cid) && self(uid);
         }
       }
-
       match /typing/{uid} {
-        allow read: if conversationMember(cid);
-        allow create, update: if conversationMember(cid) && self(uid) &&
-          request.resource.data.keys().hasOnly(['typing','name','updatedAt']) &&
-          request.resource.data.typing is bool &&
-          request.resource.data.name is string &&
-          request.resource.data.name.size() <= 40 &&
-          request.resource.data.updatedAt == request.time;
+        allow read: if isAdmin() || conversationMember(cid);
+        allow create, update: if conversationMember(cid) && self(uid) && request.resource.data.keys().hasOnly(['typing','name','updatedAt']) &&
+          request.resource.data.typing is bool && request.resource.data.name is string && request.resource.data.name.size() <= 40 && request.resource.data.updatedAt == request.time;
         allow delete: if conversationMember(cid) && self(uid);
       }
-
       match /readReceipts/{uid} {
-        allow read: if conversationMember(cid);
-        allow create, update: if conversationMember(cid) && self(uid) &&
-          request.resource.data.keys().hasOnly(['readAt']) &&
-          request.resource.data.readAt == request.time;
+        allow read: if isAdmin() || conversationMember(cid);
+        allow create, update: if conversationMember(cid) && self(uid) && request.resource.data.keys().hasOnly(['readAt']) && request.resource.data.readAt == request.time;
         allow delete: if false;
       }
     }
-
     match /reports/{reportId} {
       allow create: if signedIn() && request.resource.data.keys().hasOnly(['reporterUid','targetUid','messageId','scope','reason','createdAt','status']) &&
-        request.resource.data.reporterUid == request.auth.uid &&
-        request.resource.data.targetUid is string &&
-        request.resource.data.scope in ['global','private','profile'] &&
-        request.resource.data.reason is string &&
-        request.resource.data.reason.size() > 0 &&
-        request.resource.data.reason.size() <= 500 &&
-        request.resource.data.createdAt == request.time &&
-        request.resource.data.status == 'open';
+        request.resource.data.reporterUid == request.auth.uid && request.resource.data.targetUid is string &&
+        request.resource.data.scope in ['global','private','profile'] && request.resource.data.reason is string && request.resource.data.reason.size() > 0 &&
+        request.resource.data.reason.size() <= 500 && request.resource.data.createdAt == request.time && request.resource.data.status == 'open';
       allow read: if signedIn() && resource.data.reporterUid == request.auth.uid;
       allow update, delete: if false;
     }
-
     match /{document=**} { allow read, write: if false; }
   }
 }
