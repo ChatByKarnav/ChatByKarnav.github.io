@@ -3,6 +3,11 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function self(uid) { return signedIn() && request.auth.uid == uid; }
+    // Set this custom claim only from a trusted server using the Firebase Admin SDK.
+    // Never grant admin based on a client-supplied username or password.
+    function isAdmin() {
+      return signedIn() && request.auth.token.admin == true;
+    }
     function conversationMember(cid) {
       return signedIn() && request.auth.uid in
         get(/databases/$(database)/documents/conversations/$(cid)).data.members;
@@ -12,29 +17,35 @@ service cloud.firestore {
         exists(/databases/$(database)/documents/users/$(b)/blocks/$(a));
     }
     function validMessage() {
-      return request.resource.data.keys().hasOnly(['uid','sender','text','timestamp','replyTo']) &&
+      return request.resource.data.keys().hasOnly(['uid','sender','text','timestamp','replyTo','memoji']) &&
         request.resource.data.uid == request.auth.uid &&
         request.resource.data.sender is string && request.resource.data.sender.size() <= 40 &&
         request.resource.data.text is string && request.resource.data.text.size() > 0 &&
         request.resource.data.text.size() <= 2000 &&
         request.resource.data.timestamp == request.time &&
+        (!('memoji' in request.resource.data) ||
+          (request.resource.data.memoji is string && request.resource.data.memoji.size() <= 16)) &&
         (!('replyTo' in request.resource.data) ||
           (request.resource.data.replyTo is map &&
            request.resource.data.replyTo.keys().hasOnly(['id','text','sender']) &&
            request.resource.data.replyTo.text is string && request.resource.data.replyTo.text.size() <= 300));
     }
+
     match /publicProfiles/{uid} {
       allow get, list: if signedIn();
       allow create, update: if self(uid) &&
-        request.resource.data.keys().hasOnly(['displayName','displayNameLower','grade','division','school','bio','updatedAt']) &&
+        request.resource.data.keys().hasOnly(['displayName','displayNameLower','grade','division','school','bio','updatedAt','memoji']) &&
         request.resource.data.displayName is string && request.resource.data.displayName.size() > 0 && request.resource.data.displayName.size() <= 40 &&
         request.resource.data.displayNameLower is string &&
         request.resource.data.grade is string && request.resource.data.grade.size() <= 40 &&
         request.resource.data.division is string && request.resource.data.division.size() <= 40 &&
         request.resource.data.school is string && request.resource.data.school.size() <= 100 &&
-        request.resource.data.bio is string && request.resource.data.bio.size() <= 280;
+        request.resource.data.bio is string && request.resource.data.bio.size() <= 280 &&
+        (!('memoji' in request.resource.data) ||
+          (request.resource.data.memoji is string && request.resource.data.memoji.size() <= 16));
       allow delete: if false;
     }
+
     match /users/{uid}/presence/{presenceId} {
       allow read: if signedIn();
       allow create, update: if self(uid) && presenceId == 'current' &&
@@ -42,6 +53,7 @@ service cloud.firestore {
         request.resource.data.online is bool && request.resource.data.lastSeen == request.time;
       allow delete: if self(uid);
     }
+
     match /users/{uid}/blocks/{blockedUid} {
       allow get, list: if self(uid);
       allow create: if self(uid) && blockedUid != uid &&
@@ -49,11 +61,14 @@ service cloud.firestore {
       allow delete: if self(uid);
       allow update: if false;
     }
+
     match /users/{uid} { allow read, write: if false; }
+
     match /global_messages/{messageId} {
       allow read: if signedIn();
       allow create: if signedIn() && validMessage();
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isAdmin();
       match /reactions/{uid} {
         allow read: if signedIn();
         allow create, update: if self(uid) && request.resource.data.keys().hasOnly(['uid','emoji','createdAt']) &&
@@ -61,12 +76,14 @@ service cloud.firestore {
         allow delete: if self(uid);
       }
     }
+
     match /global_typing/{uid} {
       allow read: if signedIn();
       allow create, update: if self(uid) && request.resource.data.keys().hasOnly(['typing','name','updatedAt']) &&
         request.resource.data.typing is bool && request.resource.data.name is string && request.resource.data.updatedAt == request.time;
       allow delete: if self(uid);
     }
+
     match /conversations/{cid} {
       allow get, list: if signedIn() && request.auth.uid in resource.data.members;
       allow create: if signedIn() && request.resource.data.keys().hasOnly(['members','createdAt','lastMessage','updatedAt']) &&
@@ -86,7 +103,8 @@ service cloud.firestore {
           !blocked(
             get(/databases/$(database)/documents/conversations/$(cid)).data.members[0],
             get(/databases/$(database)/documents/conversations/$(cid)).data.members[1]);
-        allow update, delete: if false;
+        allow update: if false;
+        allow delete: if isAdmin() && conversationMember(cid);
         match /reactions/{uid} {
           allow read: if conversationMember(cid);
           allow create, update: if conversationMember(cid) && self(uid) && request.resource.data.keys().hasOnly(['uid','emoji','createdAt']) &&
@@ -106,6 +124,7 @@ service cloud.firestore {
         allow delete: if false;
       }
     }
+
     match /reports/{reportId} {
       allow create: if signedIn() && request.resource.data.keys().hasOnly(['reporterUid','targetUid','messageId','scope','reason','createdAt','status']) &&
         request.resource.data.reporterUid == request.auth.uid && request.resource.data.targetUid is string &&
@@ -115,6 +134,7 @@ service cloud.firestore {
       allow read: if signedIn() && resource.data.reporterUid == request.auth.uid;
       allow update, delete: if false;
     }
+
     match /{document=**} { allow read, write: if false; }
   }
 }
