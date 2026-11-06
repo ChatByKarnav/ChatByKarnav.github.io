@@ -23,8 +23,6 @@ service cloud.firestore {
            request.resource.data.replyTo.keys().hasOnly(['id','text','sender']) &&
            request.resource.data.replyTo.text is string && request.resource.data.replyTo.text.size() <= 300));
     }
-
-    // Public, searchable profiles deliberately contain no email address.
     match /publicProfiles/{uid} {
       allow get, list: if signedIn();
       allow create, update: if self(uid) &&
@@ -37,8 +35,6 @@ service cloud.firestore {
         request.resource.data.bio is string && request.resource.data.bio.size() <= 280;
       allow delete: if false;
     }
-
-    // Presence and block lists are private to the signed-in account.
     match /users/{uid}/presence/{presenceId} {
       allow read: if signedIn();
       allow create, update: if self(uid) && presenceId == 'current' &&
@@ -54,7 +50,6 @@ service cloud.firestore {
       allow update: if false;
     }
     match /users/{uid} { allow read, write: if false; }
-
     match /global_messages/{messageId} {
       allow read: if signedIn();
       allow create: if signedIn() && validMessage();
@@ -72,7 +67,6 @@ service cloud.firestore {
         request.resource.data.typing is bool && request.resource.data.name is string && request.resource.data.updatedAt == request.time;
       allow delete: if self(uid);
     }
-
     match /conversations/{cid} {
       allow get, list: if signedIn() && request.auth.uid in resource.data.members;
       allow create: if signedIn() && request.resource.data.keys().hasOnly(['members','createdAt','lastMessage','updatedAt']) &&
@@ -89,7 +83,9 @@ service cloud.firestore {
       match /messages/{messageId} {
         allow read: if conversationMember(cid);
         allow create: if conversationMember(cid) && validMessage() &&
-          !blocked(resource.data.members[0], resource.data.members[1]);
+          !blocked(
+            get(/databases/$(database)/documents/conversations/$(cid)).data.members[0],
+            get(/databases/$(database)/documents/conversations/$(cid)).data.members[1]);
         allow update, delete: if false;
         match /reactions/{uid} {
           allow read: if conversationMember(cid);
