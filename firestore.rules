@@ -3,7 +3,6 @@ service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
     function self(uid) { return signedIn() && request.auth.uid == uid; }
-    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
 
     function validReplyTo() {
       return !('replyTo' in request.resource.data) || (
@@ -74,8 +73,7 @@ service cloud.firestore {
     match /global_messages/{messageId} {
       allow read: if signedIn();
       allow create: if signedIn() && validMessage();
-      allow update: if false;
-      allow delete: if isAdmin();
+      allow update, delete: if false;
       match /reactions/{uid} {
         allow read: if signedIn();
         allow create, update: if self(uid) && request.resource.data.keys().hasOnly(['uid','emoji','createdAt']) &&
@@ -91,7 +89,7 @@ service cloud.firestore {
     }
 
     match /conversations/{cid} {
-      allow get, list: if signedIn() && (isAdmin() || (resource.data.members is list && request.auth.uid in resource.data.members));
+      allow get, list: if signedIn() && resource.data.members is list && request.auth.uid in resource.data.members;
       allow create: if signedIn() && request.resource.data.keys().hasOnly(['members','createdAt','lastMessage','updatedAt','memberNames']) &&
         request.resource.data.members is list && request.resource.data.members.size() == 2 &&
         request.resource.data.members[0] is string && request.resource.data.members[1] is string &&
@@ -104,26 +102,25 @@ service cloud.firestore {
         validMemberNames(request.resource.data) && !blocked(resource.data.members[0], resource.data.members[1]);
       allow delete: if false;
       match /messages/{messageId} {
-        allow read: if isAdmin() || conversationMember(cid);
+        allow read: if conversationMember(cid);
         allow create: if conversationMember(cid) && validMessage() &&
           !blocked(get(/databases/$(database)/documents/conversations/$(cid)).data.members[0], get(/databases/$(database)/documents/conversations/$(cid)).data.members[1]);
-        allow update: if false;
-        allow delete: if isAdmin();
+        allow update, delete: if false;
         match /reactions/{uid} {
-          allow read: if isAdmin() || conversationMember(cid);
+          allow read: if conversationMember(cid);
           allow create, update: if conversationMember(cid) && self(uid) && request.resource.data.keys().hasOnly(['uid','emoji','createdAt']) &&
             request.resource.data.uid == request.auth.uid && request.resource.data.emoji in ['👍','❤️','😂'] && request.resource.data.createdAt == request.time;
           allow delete: if conversationMember(cid) && self(uid);
         }
       }
       match /typing/{uid} {
-        allow read: if isAdmin() || conversationMember(cid);
+        allow read: if conversationMember(cid);
         allow create, update: if conversationMember(cid) && self(uid) && request.resource.data.keys().hasOnly(['typing','name','updatedAt']) &&
           request.resource.data.typing is bool && request.resource.data.name is string && request.resource.data.name.size() <= 40 && request.resource.data.updatedAt == request.time;
         allow delete: if conversationMember(cid) && self(uid);
       }
       match /readReceipts/{uid} {
-        allow read: if isAdmin() || conversationMember(cid);
+        allow read: if conversationMember(cid);
         allow create, update: if conversationMember(cid) && self(uid) && request.resource.data.keys().hasOnly(['readAt']) && request.resource.data.readAt == request.time;
         allow delete: if false;
       }
