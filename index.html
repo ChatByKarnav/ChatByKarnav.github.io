@@ -8,87 +8,14 @@
   <title>Messages | ChatByKarnav</title>
   <link rel="icon" type="image/png" href="lgo.png">
   <style>
-    /* 1. Smooth theme, button, and input transitions */
-body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, input, textarea {
-  transition: background 0.3s ease, background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* 2. Message bubble pop-in animation */
-@keyframes msgIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.msg-row {
-  animation: msgIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-/* 3. View switching fade-in (Chats, People, Profile) */
-@keyframes viewFade {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.chat-view:not(.hidden), .page.active {
-  animation: viewFade 0.22s ease-out;
-}
-
-/* 4. Popups & banners (Emoji picker, Reply banner, Toast) */
-@keyframes popIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-.emoji-pop:not(.hidden), .reply-banner:not(.hidden) {
-  animation: popIn 0.18s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.toast:not(.hidden) {
-  animation: popIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* 5. Mobile sidebar slide-in */
-@media (max-width: 760px) {
-  .sidebar {
-    display: flex !important;
-    position: fixed;
-    inset: 0;
-    z-index: 20;
-    transform: translateX(-100%);
-    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-    pointer-events: none;
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-    pointer-events: auto;
-  }
-}:root {
+    :root {
       color-scheme: light;
       --bg-gradient: radial-gradient(circle at 12% 18%, #d9e8ff 0%, transparent 45%),
                      radial-gradient(circle at 88% 15%, #f3dcff 0%, transparent 42%),
                      radial-gradient(circle at 75% 85%, #d6f7ee 0%, transparent 48%),
                      linear-gradient(135deg, #eef2f9 0%, #e5eaf5 100%);
       --glass: rgba(255, 255, 255, 0.52);
-      --glass-strong: rgba(255, 255, 255, 0.72);
+      --glass-strong: rgba(255, 255, 255, 0.74);
       --glass-subtle: rgba(255, 255, 255, 0.34);
       --glass-border: rgba(255, 255, 255, 0.62);
       --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
@@ -110,7 +37,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
                      radial-gradient(circle at 72% 85%, rgba(16, 105, 92, 0.35) 0%, transparent 48%),
                      linear-gradient(135deg, #0b0d14 0%, #111420 100%);
       --glass: rgba(28, 30, 40, 0.56);
-      --glass-strong: rgba(36, 39, 52, 0.74);
+      --glass-strong: rgba(36, 39, 52, 0.76);
       --glass-subtle: rgba(255, 255, 255, 0.06);
       --glass-border: rgba(255, 255, 255, 0.16);
       --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.18);
@@ -130,6 +57,10 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       background: var(--bg-gradient);
       background-attachment: fixed;
       color: var(--text);
+    }
+
+    body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, input, textarea {
+      transition: background 0.3s ease, background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
     button, input, textarea { font: inherit; }
@@ -198,7 +129,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       padding: 10px 12px;
       border-radius: 12px;
       font-weight: 600;
-      transition: background .2s, color .2s;
     }
 
     .auth-toggle button.active {
@@ -226,10 +156,20 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       -webkit-backdrop-filter: blur(12px);
       color: var(--text);
       padding: 12px 14px;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,.04);
     }
 
-    .memoji-wrap { margin-top: 8px; }
+    .forgot-link {
+      display: block;
+      margin: -6px 0 14px auto;
+      border: 0;
+      background: transparent;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 2px 4px;
+    }
+
+    .forgot-link:hover { text-decoration: underline; }
 
     .memoji-picker {
       display: flex;
@@ -247,7 +187,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       font-size: 26px;
       display: grid;
       place-items: center;
-      transition: transform .15s, background .15s;
     }
 
     .memoji-option:hover { transform: scale(1.06); }
@@ -265,7 +204,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       border-radius: 14px;
       padding: 12px 16px;
       font-weight: 700;
-      transition: transform .12s ease, box-shadow .12s ease;
     }
     .btn:hover { transform: translateY(-1px); }
     .btn.primary {
@@ -274,11 +212,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       flex: 1;
       border-color: rgba(255, 255, 255, 0.28);
       box-shadow: 0 8px 20px rgba(10, 132, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-    }
-    .btn.secondary {
-      background: var(--glass-subtle);
-      color: var(--text);
-      backdrop-filter: blur(12px);
     }
 
     .auth-status {
@@ -309,10 +242,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       overflow: hidden;
     }
 
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-    }
+    .sidebar { display: flex; flex-direction: column; }
 
     .side-head {
       display: flex;
@@ -357,7 +287,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       color: var(--text);
       font-size: 18px;
       box-shadow: var(--glass-highlight);
-      transition: transform .12s ease, background .12s ease;
     }
 
     .icon-btn:hover {
@@ -379,7 +308,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       padding: 10px 12px;
       border-radius: 12px;
       font-weight: 600;
-      transition: all .15s ease;
     }
 
     .nav.active {
@@ -415,12 +343,9 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       text-align: left;
       color: var(--text);
       margin-bottom: 4px;
-      transition: background .15s, border-color .15s;
     }
 
-    .thread:hover {
-      background: var(--glass-subtle);
-    }
+    .thread:hover { background: var(--glass-subtle); }
 
     .thread.selected {
       background: var(--glass-strong);
@@ -443,10 +368,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       flex-shrink: 0;
     }
 
-    .thread-copy {
-      flex: 1;
-      min-width: 0;
-    }
+    .thread-copy { flex: 1; min-width: 0; }
 
     .thread-title {
       font-weight: 700;
@@ -475,16 +397,9 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       padding: 12px 16px;
     }
 
-    .self-avatar {
-      width: 36px;
-      height: 36px;
-      font-size: 18px;
-    }
+    .self-avatar { width: 36px; height: 36px; font-size: 18px; }
 
-    .main {
-      display: flex;
-      flex-direction: column;
-    }
+    .main { display: flex; flex-direction: column; }
 
     .top {
       display: flex;
@@ -496,17 +411,9 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       min-height: 84px;
     }
 
-    .top-person {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .top-person { display: flex; align-items: center; gap: 12px; }
 
-    .top h1 {
-      margin: 0;
-      font-size: 22px;
-      letter-spacing: -.04em;
-    }
+    .top h1 { margin: 0; font-size: 22px; letter-spacing: -.04em; }
 
     .subtitle {
       color: var(--muted);
@@ -514,10 +421,9 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       margin-top: 3px;
     }
 
-    .main-actions {
-      display: flex;
-      gap: 8px;
-    }
+    .subtitle.online { color: var(--green); font-weight: 600; }
+
+    .main-actions { display: flex; gap: 8px; }
 
     .chat-view, .page {
       flex: 1;
@@ -555,6 +461,26 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       gap: 10px;
     }
 
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(10px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes viewFade {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: translateY(8px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .chat-view:not(.hidden), .page.active { animation: viewFade 0.22s ease-out; }
+    .emoji-pop:not(.hidden), .reply-banner:not(.hidden), .toast:not(.hidden) {
+      animation: popIn 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
     .day-divider {
       text-align: center;
       color: var(--muted);
@@ -588,7 +514,8 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       display: flex;
       gap: 10px;
       align-items: flex-end;
-      max-width: min(76%, 760px);
+      max-width: min(78%, 760px);
+      animation: msgIn 0.22s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
     .msg-row.mine {
@@ -620,23 +547,30 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       color: var(--muted);
       font-size: 10px;
       display: flex;
-      gap: 8px;
+      gap: 6px;
       align-items: center;
     }
 
     .msg-row.mine .msg-meta { justify-content: flex-end; }
 
-    .reply-btn {
+    .msg-actions {
+      display: inline-flex;
+      gap: 4px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .msg-row:hover .msg-actions { opacity: 1; }
+
+    .msg-action-btn {
       border: 0;
       background: transparent;
       color: var(--muted);
       font-size: 11px;
       padding: 0 4px;
-      opacity: 0;
-      transition: opacity .15s;
     }
 
-    .msg-row:hover .reply-btn { opacity: 1; }
+    .msg-action-btn:hover { color: var(--blue); }
 
     .reply-quote {
       font-size: 12px;
@@ -670,6 +604,50 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       border-radius: 20px 20px 6px 20px;
     }
 
+    .msg-img {
+      display: block;
+      max-width: 260px;
+      max-height: 260px;
+      border-radius: 14px;
+      margin-bottom: 4px;
+      object-fit: cover;
+      cursor: pointer;
+    }
+
+    .msg-ticks {
+      font-size: 11px;
+      margin-left: 4px;
+      color: var(--muted);
+    }
+
+    .msg-ticks.read { color: #34c759; font-weight: 700; }
+
+    .reactions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .msg-row.mine .reactions-row { justify-content: flex-end; }
+
+    .reaction-pill {
+      border: 1px solid var(--glass-border);
+      background: var(--glass-strong);
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      color: var(--text);
+    }
+
+    .reaction-pill.mine {
+      border-color: var(--blue);
+      background: rgba(10, 132, 255, 0.16);
+    }
+
     .composer-wrap {
       border-top: 1px solid var(--line);
       background: var(--glass-subtle);
@@ -697,12 +675,12 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
     }
 
     .emoji-toggle {
-      width: 44px;
+      width: 42px;
       height: 44px;
       border: 1px solid var(--glass-border);
       border-radius: 14px;
       background: var(--glass-subtle);
-      font-size: 22px;
+      font-size: 20px;
       box-shadow: var(--glass-highlight);
     }
 
@@ -716,7 +694,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       background: var(--glass-strong);
       color: var(--text);
       padding: 11px 14px;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,.04);
     }
 
     .send-btn {
@@ -730,10 +707,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       box-shadow: 0 6px 16px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
 
-    .send-btn:disabled {
-      opacity: .5;
-      cursor: not-allowed;
-    }
+    .send-btn:disabled { opacity: .5; cursor: not-allowed; }
 
     .emoji-pop {
       background: var(--glass-strong);
@@ -759,9 +733,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       font-size: 24px;
     }
 
-    .emoji-pop button:hover {
-      background: var(--glass-subtle);
-    }
+    .emoji-pop button:hover { background: var(--glass-subtle); }
 
     .page {
       padding: 20px;
@@ -791,11 +763,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       box-shadow: 0 6px 20px rgba(0,0,0,.05), var(--glass-highlight);
     }
 
-    .person-head {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    .person-head { display: flex; align-items: center; gap: 12px; }
 
     .person-card .avatar {
       width: 42px;
@@ -855,34 +823,20 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
     }
 
     @media (max-width: 760px) {
-      .shell {
-        display: block;
-        padding: 0;
-        min-height: 100vh;
-      }
-
-      .sidebar, .main {
-        min-height: 100vh;
-        border-radius: 0;
-        border: 0;
-      }
-
-      .sidebar { display: none; }
-
-      .sidebar.open {
-        display: flex;
-        position: absolute;
+      .shell { display: block; padding: 0; min-height: 100vh; }
+      .sidebar, .main { min-height: 100vh; border-radius: 0; border: 0; }
+      .sidebar {
+        display: flex !important;
+        position: fixed;
         inset: 0;
         z-index: 20;
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+        pointer-events: none;
       }
-
+      .sidebar.open { transform: translateX(0); pointer-events: auto; }
       .top { padding-inline: 12px; }
-
-      .message-tools, .messages, .composer-wrap {
-        padding-left: 12px;
-        padding-right: 12px;
-      }
-
+      .message-tools, .messages, .composer-wrap { padding-left: 12px; padding-right: 12px; }
       .msg-row { max-width: 88%; }
     }
   </style>
@@ -907,6 +861,8 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
         Password
         <input id="password" type="password" minlength="6" maxlength="100" placeholder="Required" autocomplete="current-password">
       </label>
+
+      <button type="button" id="forgot-password" class="forgot-link">Forgot password?</button>
 
       <div class="field memoji-wrap">
         Memoji
@@ -988,6 +944,8 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
 
           <div class="composer">
             <button class="emoji-toggle" id="emoji-toggle" type="button" title="Add emoji">😊</button>
+            <button class="emoji-toggle" id="photo-toggle" type="button" title="Send photo">📷</button>
+            <input id="photo-input" type="file" accept="image/*" class="hidden">
             <textarea id="message-input" rows="1" maxlength="2000" placeholder="Type a message"></textarea>
             <button class="send-btn" id="send" type="button" title="Send">➤</button>
           </div>
@@ -1053,6 +1011,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       getAuth,
       createUserWithEmailAndPassword,
       signInWithEmailAndPassword,
+      sendPasswordResetEmail,
       onAuthStateChanged,
       signOut,
       updateProfile
@@ -1064,6 +1023,8 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       getDoc,
       setDoc,
       addDoc,
+      updateDoc,
+      deleteDoc,
       query,
       where,
       orderBy,
@@ -1088,28 +1049,28 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
     const $ = (id) => document.getElementById(id);
 
     const MEMOJIS = ['🙂','😎','🤠','😊','😺','🐶','🦊','🤖','🦄','👾','🧑‍💻','🥳'];
+    const REACTIONS = ['❤️','😂','👍','😮','🙏'];
 
     let user = null;
     let profile = {};
     let active = 'global';
     let activePeer = null;
-    let stopThreads = null;
     let stopMessages = null;
+    let stopPresence = null;
+    let stopTyping = null;
+    let typingTimer = null;
     let allThreads = [];
     let lastSnapshot = null;
     let reply = null;
     let sendLock = false;
     let currentAuthMode = 'signin';
 
-    function safeText(value) {
-      return String(value ?? '').trim();
-    }
+    function safeText(value) { return String(value ?? '').trim(); }
 
     function initials(name) {
       const text = safeText(name);
       if (!text) return '?';
-      const parts = text.split(/\s+/).slice(0, 2);
-      return parts.map((part) => part[0] || '').join('').toUpperCase() || '?';
+      return text.split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toUpperCase() || '?';
     }
 
     function showToast(message, isError = false) {
@@ -1143,25 +1104,21 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
 
     function setAuthMode(mode) {
       currentAuthMode = mode;
-      const buttons = document.querySelectorAll('.auth-toggle button');
-      buttons.forEach((button) => button.classList.toggle('active', button.dataset.mode === mode));
-      const submit = $('auth-submit');
-      submit.textContent = mode === 'signup' ? 'Create account' : 'Sign in';
-      const emailInput = $('auth-email');
-      if (emailInput) emailInput.focus();
+      document.querySelectorAll('.auth-toggle button').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
+      $('auth-submit').textContent = mode === 'signup' ? 'Create account' : 'Sign in';
+      $('forgot-password').classList.toggle('hidden', mode === 'signup');
+      $('auth-email')?.focus();
     }
 
     function renderMemojiPicker(selected = '🙂') {
       const holder = $('memoji-picker');
       if (!holder) return;
       holder.innerHTML = '';
-
       MEMOJIS.forEach((emoji) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'memoji-option' + (emoji === selected ? ' active' : '');
         button.textContent = emoji;
-        button.title = emoji;
         button.addEventListener('click', () => {
           $('memoji-value').value = emoji;
           renderMemojiPicker(emoji);
@@ -1172,10 +1129,8 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
 
     function setReply(message) {
       reply = message;
-      const banner = $('reply-banner');
-      const label = $('reply-label');
-      label.textContent = `Replying to ${message.sender}: ${message.text.slice(0, 60)}`;
-      banner.classList.remove('hidden');
+      $('reply-label').textContent = `Replying to ${message.sender}: ${message.text ? message.text.slice(0, 50) : 'Photo'}`;
+      $('reply-banner').classList.remove('hidden');
       $('message-input').focus();
     }
 
@@ -1192,19 +1147,17 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       item.innerHTML = `
         <span class="avatar">${thread.avatar}</span>
         <span class="thread-copy">
-          <span class="thread-title">
-            <span>${thread.name}</span>
-            ${thread.unread ? '<span class="badge">new</span>' : ''}
-          </span>
+          <span class="thread-title"><span>${thread.name}</span></span>
           <span class="thread-preview">${thread.preview || 'No messages yet'}</span>
         </span>
       `;
-      item.addEventListener('click', async () => {
+      item.addEventListener('click', () => {
         if (thread.type === 'global') {
           active = 'global';
           activePeer = null;
           $('title').textContent = 'Community chat';
           $('subtitle').textContent = 'Everyone in the community';
+          $('subtitle').classList.remove('online');
           $('chat-avatar').textContent = '🌐';
         } else {
           active = thread.id;
@@ -1213,8 +1166,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
           $('subtitle').textContent = 'Private conversation';
           $('chat-avatar').textContent = thread.avatar;
         }
-
-        document.querySelectorAll('.thread').forEach((node) => node.classList.toggle('selected', node.dataset.threadId === active));
+        document.querySelectorAll('.thread').forEach((n) => n.classList.toggle('selected', n.dataset.threadId === active));
         startChat();
         changeView('chat');
         $('sidebar').classList.remove('open');
@@ -1226,12 +1178,11 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       const box = $('threads');
       if (!box) return;
       box.innerHTML = '';
-      threads.forEach((thread) => box.appendChild(buildThreadCard(thread)));
+      threads.forEach((t) => box.appendChild(buildThreadCard(t)));
     }
 
     async function loadThreads() {
       if (!user) return;
-
       const threads = [{
         id: 'global',
         type: 'global',
@@ -1243,13 +1194,10 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       try {
         const q = query(collection(db, 'conversations'), where('members', 'array-contains', user.uid), orderBy('updatedAt', 'desc'), limit(40));
         const snapshot = await getDocs(q);
-
         for (const docSnap of snapshot.docs) {
           const data = docSnap.data();
-          const members = Array.isArray(data.members) ? data.members : [];
-          const otherUid = members.find((id) => id !== user.uid);
+          const otherUid = (data.members || []).find((id) => id !== user.uid);
           if (!otherUid) continue;
-
           const peerSnap = await getDoc(doc(db, 'publicProfiles', otherUid));
           const peer = peerSnap.exists() ? peerSnap.data() : { displayName: 'Member', memoji: '🙂' };
           threads.push({
@@ -1267,10 +1215,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
 
       allThreads = threads;
       const term = $('thread-search')?.value.trim().toLowerCase() || '';
-      const filtered = term
-        ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term))
-        : allThreads;
-      renderThreads(filtered);
+      renderThreads(term ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term)) : allThreads);
     }
 
     function messagesRef() {
@@ -1285,6 +1230,88 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
           lastSeen: serverTimestamp()
         }, { merge: true });
       } catch (_) {}
+    }
+
+    async function setTyping(isTyping) {
+      if (!user || active === 'global') return;
+      try {
+        await setDoc(doc(db, 'conversations', active), {
+          [`typing_${user.uid}`]: isTyping
+        }, { merge: true });
+      } catch (_) {}
+    }
+
+    function watchPeerStatus() {
+      if (stopPresence) { stopPresence(); stopPresence = null; }
+      if (stopTyping) { stopTyping(); stopTyping = null; }
+      if (active === 'global' || !activePeer?.uid) return;
+
+      let peerOnlineText = 'Private conversation';
+
+      stopPresence = onSnapshot(doc(db, 'users', activePeer.uid, 'presence', 'current'), (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data.online) {
+          peerOnlineText = '● Online';
+          $('subtitle').classList.add('online');
+        } else {
+          $('subtitle').classList.remove('online');
+          const d = data.lastSeen?.toDate ? data.lastSeen.toDate() : null;
+          peerOnlineText = d ? `Last seen ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(d)}` : 'Offline';
+        }
+        $('subtitle').textContent = peerOnlineText;
+      });
+
+      stopTyping = onSnapshot(doc(db, 'conversations', active), (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        if (data[`typing_${activePeer.uid}`]) {
+          $('subtitle').textContent = 'typing...';
+          $('subtitle').classList.add('online');
+        } else {
+          $('subtitle').textContent = peerOnlineText;
+        }
+      });
+    }
+
+    async function toggleReaction(msgId, emoji) {
+      if (!user) return;
+      const msgRef = active === 'global'
+        ? doc(db, 'global_messages', msgId)
+        : doc(db, 'conversations', active, 'messages', msgId);
+      try {
+        const snap = await getDoc(msgRef);
+        if (!snap.exists()) return;
+        const reactions = snap.data().reactions || {};
+        const users = Array.isArray(reactions[emoji]) ? reactions[emoji] : [];
+        const updated = users.includes(user.uid) ? users.filter((u) => u !== user.uid) : [...users, user.uid];
+        await updateDoc(msgRef, { [`reactions.${emoji}`]: updated });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function deleteMessage(msgId) {
+      if (!user) return;
+      const msgRef = active === 'global'
+        ? doc(db, 'global_messages', msgId)
+        : doc(db, 'conversations', active, 'messages', msgId);
+      try {
+        await deleteDoc(msgRef);
+        showToast('Message deleted.');
+      } catch (err) {
+        showToast('Could not delete message.', true);
+      }
+    }
+
+    function markMessagesRead(snapshot) {
+      if (active === 'global' || !user) return;
+      snapshot.docs.forEach((docSnap) => {
+        const m = docSnap.data();
+        if (m.uid !== user.uid && !m.read) {
+          updateDoc(doc(db, 'conversations', active, 'messages', docSnap.id), { read: true }).catch(() => {});
+        }
+      });
     }
 
     function renderMessages(snapshot) {
@@ -1316,8 +1343,9 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
           lastDay = dayKey;
         }
 
+        const isMine = message.uid === user.uid;
         const row = document.createElement('article');
-        row.className = 'msg-row' + (message.uid === user.uid ? ' mine' : '');
+        row.className = 'msg-row' + (isMine ? ' mine' : '');
 
         const avatar = document.createElement('div');
         avatar.className = 'msg-avatar';
@@ -1330,29 +1358,84 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
         meta.className = 'msg-meta';
         meta.textContent = `${message.sender || 'Member'} • ${message.timestamp?.toDate ? new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(message.timestamp.toDate()) : ''}`;
 
+        if (isMine && active !== 'global') {
+          const ticks = document.createElement('span');
+          ticks.className = 'msg-ticks' + (message.read ? ' read' : '');
+          ticks.textContent = message.read ? '✓✓' : '✓';
+          meta.appendChild(ticks);
+        }
+
+        const actions = document.createElement('span');
+        actions.className = 'msg-actions';
+
         const replyBtn = document.createElement('button');
         replyBtn.type = 'button';
-        replyBtn.className = 'reply-btn';
+        replyBtn.className = 'msg-action-btn';
         replyBtn.textContent = 'Reply';
-        replyBtn.addEventListener('click', () => {
-          setReply({ id: messageSnap.id, sender: message.sender || 'Member', text: message.text || '' });
-        });
-        meta.appendChild(replyBtn);
+        replyBtn.addEventListener('click', () => setReply({ id: messageSnap.id, sender: message.sender || 'Member', text: message.text || '' }));
+        actions.appendChild(replyBtn);
 
+        REACTIONS.forEach((emoji) => {
+          const rBtn = document.createElement('button');
+          rBtn.type = 'button';
+          rBtn.className = 'msg-action-btn';
+          rBtn.textContent = emoji;
+          rBtn.addEventListener('click', () => toggleReaction(messageSnap.id, emoji));
+          actions.appendChild(rBtn);
+        });
+
+        if (isMine) {
+          const delBtn = document.createElement('button');
+          delBtn.type = 'button';
+          delBtn.className = 'msg-action-btn';
+          delBtn.textContent = '🗑';
+          delBtn.title = 'Delete';
+          delBtn.addEventListener('click', () => deleteMessage(messageSnap.id));
+          actions.appendChild(delBtn);
+        }
+
+        meta.appendChild(actions);
         wrap.appendChild(meta);
 
         if (message.replyTo) {
           const quote = document.createElement('div');
           quote.className = 'reply-quote';
-          quote.textContent = `${message.replyTo.sender}: ${message.replyTo.text}`;
+          quote.textContent = `${message.replyTo.sender}: ${message.replyTo.text || 'Photo'}`;
           wrap.appendChild(quote);
         }
 
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
-        bubble.textContent = message.text || '';
-
+        if (message.image) {
+          const img = document.createElement('img');
+          img.src = message.image;
+          img.className = 'msg-img';
+          img.alt = 'Shared photo';
+          img.addEventListener('click', () => window.open(message.image, '_blank'));
+          bubble.appendChild(img);
+        }
+        if (message.text) {
+          const txt = document.createElement('div');
+          txt.textContent = message.text;
+          bubble.appendChild(txt);
+        }
         wrap.appendChild(bubble);
+
+        if (message.reactions) {
+          const rRow = document.createElement('div');
+          rRow.className = 'reactions-row';
+          Object.entries(message.reactions).forEach(([emoji, users]) => {
+            if (!Array.isArray(users) || !users.length) return;
+            const pill = document.createElement('button');
+            pill.type = 'button';
+            pill.className = 'reaction-pill' + (users.includes(user.uid) ? ' mine' : '');
+            pill.textContent = `${emoji} ${users.length}`;
+            pill.addEventListener('click', () => toggleReaction(messageSnap.id, emoji));
+            rRow.appendChild(pill);
+          });
+          if (rRow.children.length) wrap.appendChild(rRow);
+        }
+
         row.appendChild(avatar);
         row.appendChild(wrap);
         box.appendChild(row);
@@ -1361,14 +1444,15 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       box.scrollTop = box.scrollHeight;
     }
 
-    async function sendMessage() {
+    async function sendMessage(imageDataUrl = null) {
       if (!user || sendLock) return;
       const textarea = $('message-input');
       const text = textarea.value.trim();
-      if (!text) return;
+      if (!text && !imageDataUrl) return;
 
       sendLock = true;
       $('send').disabled = true;
+      setTyping(false);
 
       try {
         const payload = {
@@ -1376,6 +1460,8 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
           sender: profile.displayName || 'User',
           memoji: profile.memoji || '🙂',
           text,
+          ...(imageDataUrl ? { image: imageDataUrl } : {}),
+          read: false,
           timestamp: serverTimestamp(),
           ...(reply ? { replyTo: { id: reply.id, text: reply.text, sender: reply.sender } } : {})
         };
@@ -1386,7 +1472,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
           const cid = active;
           await addDoc(collection(db, 'conversations', cid, 'messages'), payload);
           await setDoc(doc(db, 'conversations', cid), {
-            lastMessage: text.slice(0, 100),
+            lastMessage: text ? text.slice(0, 100) : '📷 Photo',
             updatedAt: serverTimestamp(),
             memberNames: [profile.displayName || 'You']
           }, { merge: true });
@@ -1403,9 +1489,35 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       }
     }
 
+    function compressAndSendPhoto(file) {
+      if (!file || !file.type.startsWith('image/')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const max = 600;
+          let w = img.width;
+          let h = img.height;
+          if (w > max || h > max) {
+            if (w > h) { h = Math.round((h * max) / w); w = max; }
+            else { w = Math.round((w * max) / h); h = max; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+          sendMessage(dataUrl);
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
     function startChat() {
       if (stopMessages) stopMessages();
       stopMessages = null;
+      watchPeerStatus();
 
       const box = $('messages');
       if (!box) return;
@@ -1415,6 +1527,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       stopMessages = onSnapshot(query(col, orderBy('timestamp', 'asc')), (snapshot) => {
         lastSnapshot = snapshot;
         renderMessages(snapshot);
+        markMessagesRead(snapshot);
       }, (error) => {
         console.error('Chat snapshot error', error);
         setStatus('chat-status', 'Could not load messages', true);
@@ -1437,7 +1550,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
             updatedAt: serverTimestamp()
           });
         }
-
         active = cid;
         activePeer = peer;
         $('title').textContent = peer.displayName || 'Private chat';
@@ -1460,8 +1572,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       setStatus('people-status', 'Searching…');
 
       try {
-        const q = query(collection(db, 'publicProfiles'), limit(100));
-        const snapshot = await getDocs(q);
+        const snapshot = await getDocs(query(collection(db, 'publicProfiles'), limit(100)));
         const text = term.toLowerCase();
         const people = snapshot.docs
           .map((docSnap) => ({ uid: docSnap.id, ...docSnap.data() }))
@@ -1477,7 +1588,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
           setStatus('people-status', 'No community members found.');
           return;
         }
-
         setStatus('people-status', `${people.length} member${people.length === 1 ? '' : 's'} found.`);
 
         people.forEach((person) => {
@@ -1507,7 +1617,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
     async function saveProfile(event) {
       event.preventDefault();
       if (!user) return;
-
       const name = $('display-name').value.trim();
       if (!name) {
         setStatus('profile-status', 'Display name is required.', true);
@@ -1549,7 +1658,6 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
         setStatus('auth-status', 'Please enter a valid email address.', true);
         return;
       }
-
       if (password.length < 6) {
         setStatus('auth-status', 'Password must be at least 6 characters.', true);
         return;
@@ -1595,8 +1703,9 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       if (!user) {
         $('login').classList.remove('hidden');
         $('app').classList.add('hidden');
-        if (stopThreads) { stopThreads(); stopThreads = null; }
         if (stopMessages) { stopMessages(); stopMessages = null; }
+        if (stopPresence) { stopPresence(); stopPresence = null; }
+        if (stopTyping) { stopTyping(); stopTyping = null; }
         return;
       }
 
@@ -1632,23 +1741,37 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       searchPeople('');
     }
 
-    document.querySelectorAll('.auth-toggle button').forEach((button) => {
-      button.addEventListener('click', () => setAuthMode(button.dataset.mode));
+    document.querySelectorAll('.auth-toggle button').forEach((b) => {
+      b.addEventListener('click', () => setAuthMode(b.dataset.mode));
     });
 
     $('auth-form').addEventListener('submit', handleAuthSubmit);
+
+    $('forgot-password').addEventListener('click', async () => {
+      const email = $('auth-email').value.trim();
+      if (!email || !email.includes('@')) {
+        setStatus('auth-status', 'Enter your email address above first.', true);
+        $('auth-email').focus();
+        return;
+      }
+      setStatus('auth-status', 'Sending reset link…');
+      try {
+        await sendPasswordResetEmail(auth, email);
+        setStatus('auth-status', 'Password reset email sent. Check your inbox.');
+      } catch (error) {
+        setStatus('auth-status', 'Could not send reset email.', true);
+      }
+    });
+
     $('profile-form').addEventListener('submit', saveProfile);
-    $('people-form').addEventListener('submit', (event) => {
-      event.preventDefault();
+    $('people-form').addEventListener('submit', (e) => {
+      e.preventDefault();
       searchPeople($('people-search').value.trim());
     });
 
-    $('thread-search').addEventListener('input', (event) => {
-      const term = event.target.value.trim().toLowerCase();
-      const filtered = term
-        ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term))
-        : allThreads;
-      renderThreads(filtered);
+    $('thread-search').addEventListener('input', (e) => {
+      const term = e.target.value.trim().toLowerCase();
+      renderThreads(term ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term)) : allThreads);
     });
 
     $('message-search').addEventListener('input', () => {
@@ -1656,7 +1779,7 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
     });
 
     $('new-chat').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.toggle('open');
+      $('sidebar').classList.toggle('open');
       changeView('people');
     });
 
@@ -1664,16 +1787,28 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
       try {
         await setPresence(false);
         await signOut(auth);
-      } catch (error) {
-        console.error(error);
+      } catch (error) { console.error(error); }
+    });
+
+    $('send').addEventListener('click', () => sendMessage());
+    $('message-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
       }
     });
 
-    $('send').addEventListener('click', sendMessage);
-    $('message-input').addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        sendMessage();
+    $('message-input').addEventListener('input', () => {
+      setTyping(true);
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => setTyping(false), 1800);
+    });
+
+    $('photo-toggle').addEventListener('click', () => $('photo-input').click());
+    $('photo-input').addEventListener('change', (e) => {
+      if (e.target.files?.[0]) {
+        compressAndSendPhoto(e.target.files[0]);
+        e.target.value = '';
       }
     });
 
@@ -1701,41 +1836,26 @@ body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, i
     $('cancel-reply').addEventListener('click', clearReply);
     $('theme-toggle').addEventListener('click', setTheme);
     $('notify-toggle').addEventListener('click', () => {
-      if (!('Notification' in window)) {
-        showToast('Notifications are not supported here.', true);
-        return;
-      }
-      Notification.requestPermission().then((permission) => {
-        showToast(permission === 'granted' ? 'Notifications enabled.' : 'Notifications were not enabled.');
-      });
+      if (!('Notification' in window)) return showToast('Notifications are not supported here.', true);
+      Notification.requestPermission().then((p) => showToast(p === 'granted' ? 'Notifications enabled.' : 'Notifications were not enabled.'));
     });
 
-    $('mobile-back').addEventListener('click', () => {
-      document.getElementById('sidebar').classList.add('open');
-    });
+    $('mobile-back').addEventListener('click', () => $('sidebar').classList.add('open'));
 
     function changeView(view) {
       const target = view || 'chat';
-      document.querySelectorAll('.nav').forEach((button) => {
-        button.classList.toggle('active', button.dataset.view === target);
-      });
+      document.querySelectorAll('.nav').forEach((b) => b.classList.toggle('active', b.dataset.view === target));
       $('view-chat').classList.toggle('hidden', target !== 'chat');
       $('view-people').classList.toggle('hidden', target !== 'people');
       $('view-profile').classList.toggle('hidden', target !== 'profile');
       $('view-chat').classList.toggle('active', target === 'chat');
       $('view-people').classList.toggle('active', target === 'people');
       $('view-profile').classList.toggle('active', target === 'profile');
-
       if (target === 'people') searchPeople('');
     }
 
-    document.querySelectorAll('.nav').forEach((button) => {
-      button.addEventListener('click', () => changeView(button.dataset.view));
-    });
-
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && user) setPresence(true);
-    });
+    document.querySelectorAll('.nav').forEach((b) => b.addEventListener('click', () => changeView(b.dataset.view)));
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && user) setPresence(true); });
 
     renderMemojiPicker('🙂');
     changeView('chat');
