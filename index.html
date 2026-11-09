@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f5f7">
-  <meta name="description" content="Friendly community messaging with custom memoji and username-only sign in.">
+  <meta name="description" content="Friendly community messaging with custom memoji and email sign in.">
   <title>Messages | ChatByKarnav</title>
   <link rel="icon" type="image/png" href="lgo.png">
   <style>
@@ -21,6 +21,18 @@
       --green: #32c759;
       --bubble: #ededf2;
       --shadow: 0 12px 40px rgba(0,0,0,.08);
+    }
+
+    body.dark {
+      color-scheme: dark;
+      --bg: #111216;
+      --panel: #1a1b20;
+      --panel-2: #24262d;
+      --text: #f1f1f5;
+      --muted: #9a9aa6;
+      --line: #2e303a;
+      --bubble: #2a2c35;
+      --shadow: 0 12px 40px rgba(0,0,0,.45);
     }
 
     * { box-sizing: border-box; }
@@ -95,7 +107,7 @@
     }
 
     .auth-toggle button.active {
-      background: white;
+      background: var(--panel);
       color: var(--text);
       box-shadow: 0 1px 3px rgba(0,0,0,.06);
     }
@@ -398,6 +410,15 @@
       font-size: 12px;
     }
 
+    .message-tools input {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 6px 10px;
+      background: var(--panel-2);
+      color: var(--text);
+      font-size: 13px;
+    }
+
     .messages {
       flex: 1;
       overflow: auto;
@@ -452,6 +473,7 @@
       display: grid;
       place-items: center;
       background: #e4e9ff;
+      color: #2c3355;
       font-size: 16px;
       flex-shrink: 0;
     }
@@ -472,6 +494,28 @@
     }
 
     .msg-row.mine .msg-meta { justify-content: flex-end; }
+
+    .reply-btn {
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 0 4px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .msg-row:hover .reply-btn { opacity: 1; }
+
+    .reply-quote {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: var(--panel-2);
+      border-left: 3px solid var(--blue);
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
 
     .bubble {
       background: var(--bubble);
@@ -609,6 +653,7 @@
       place-items: center;
       font-size: 22px;
       background: linear-gradient(145deg, #dfe8ff, #e7eefb);
+      color: #2c3355;
     }
 
     .form-card {
@@ -692,7 +737,7 @@
 <body>
   <div class="auth" id="login">
     <div class="brand"><span class="brand-mark">✉</span>ChatByKarnav</div>
-    <p>Sign in with your username and password.</p>
+    <p>Sign in with your email and password.</p>
 
     <div class="auth-toggle" aria-label="Authentication mode selector">
       <button type="button" class="active" data-mode="signin">Sign in</button>
@@ -701,8 +746,8 @@
 
     <form id="auth-form" novalidate>
       <label class="field">
-        Username
-        <input id="auth-name" maxlength="30" placeholder="Required" autocomplete="username">
+        Email
+        <input id="auth-email" type="email" maxlength="100" placeholder="you@example.com" autocomplete="email">
       </label>
 
       <label class="field">
@@ -872,8 +917,7 @@
       limit,
       onSnapshot,
       serverTimestamp,
-      getDocs,
-      deleteDoc
+      getDocs
     } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     const config = {
@@ -898,14 +942,11 @@
     let activePeer = null;
     let stopThreads = null;
     let stopMessages = null;
-    let stopTyping = null;
-    let stopReceipts = null;
-    let stopReactions = [];
-    let typingTimer = null;
+    let allThreads = [];
+    let lastSnapshot = null;
     let reply = null;
     let sendLock = false;
     let currentAuthMode = 'signin';
-    let lastNotify = 0;
 
     function safeText(value) {
       return String(value ?? '').trim();
@@ -935,17 +976,6 @@
       el.classList.toggle('danger', bad);
     }
 
-    function usernameKey(value) {
-      return safeText(value)
-        .toLowerCase()
-        .replace(/[^a-z0-9._-]+/g, '')
-        .slice(0, 24) || 'user';
-    }
-
-    function authEmailFromUsername(value) {
-      return `${usernameKey(value)}@chatbykarnav.local`;
-    }
-
     function applyTheme() {
       const dark = localStorage.getItem('chat-theme') === 'dark';
       document.body.classList.toggle('dark', dark);
@@ -964,8 +994,8 @@
       buttons.forEach((button) => button.classList.toggle('active', button.dataset.mode === mode));
       const submit = $('auth-submit');
       submit.textContent = mode === 'signup' ? 'Create account' : 'Sign in';
-      const name = $('auth-name');
-      if (name) name.focus();
+      const emailInput = $('auth-email');
+      if (emailInput) emailInput.focus();
     }
 
     function renderMemojiPicker(selected = '🙂') {
@@ -991,7 +1021,7 @@
       reply = message;
       const banner = $('reply-banner');
       const label = $('reply-label');
-      label.textContent = `Replying to ${message.sender}: ${message.text}`;
+      label.textContent = `Replying to ${message.sender}: ${message.text.slice(0, 60)}`;
       banner.classList.remove('hidden');
       $('message-input').focus();
     }
@@ -1033,6 +1063,7 @@
 
         document.querySelectorAll('.thread').forEach((node) => node.classList.toggle('selected', node.dataset.threadId === active));
         startChat();
+        $('sidebar').classList.remove('open');
       });
       return item;
     }
@@ -1042,17 +1073,6 @@
       if (!box) return;
       box.innerHTML = '';
       threads.forEach((thread) => box.appendChild(buildThreadCard(thread)));
-    }
-
-    function buildPrivateThread(peer) {
-      return {
-        id: [user.uid, peer.uid].sort().join('_'),
-        type: 'private',
-        avatar: peer.memoji || '🙂',
-        name: peer.displayName || 'Member',
-        preview: 'New conversation',
-        peer
-      };
     }
 
     async function loadThreads() {
@@ -1091,25 +1111,32 @@
         console.warn('Thread load failed', err);
       }
 
-      renderThreads(threads);
+      allThreads = threads;
+      const term = $('thread-search')?.value.trim().toLowerCase() || '';
+      const filtered = term
+        ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term))
+        : allThreads;
+      renderThreads(filtered);
     }
 
     function messagesRef() {
       return active === 'global' ? collection(db, 'global_messages') : collection(db, 'conversations', active, 'messages');
     }
 
-    function setPresence(online) {
+    async function setPresence(online) {
       if (!user) return;
-      setDoc(doc(db, 'users', user.uid, 'presence', 'current'), {
-        online,
-        lastSeen: serverTimestamp()
-      }, { merge: true }).catch(() => {});
+      try {
+        await setDoc(doc(db, 'users', user.uid, 'presence', 'current'), {
+          online,
+          lastSeen: serverTimestamp()
+        }, { merge: true });
+      } catch (_) {}
     }
 
     function renderMessages(snapshot) {
       const box = $('messages');
       if (!box) return;
-      const docs = [...snapshot.docs].reverse();
+      const docs = [...snapshot.docs];
       box.innerHTML = '';
 
       if (!docs.length) {
@@ -1117,9 +1144,15 @@
         return;
       }
 
+      const searchTerm = $('message-search')?.value.trim().toLowerCase() || '';
       let lastDay = '';
+
       docs.forEach((messageSnap) => {
         const message = messageSnap.data();
+        if (searchTerm && !(message.text || '').toLowerCase().includes(searchTerm) && !(message.sender || '').toLowerCase().includes(searchTerm)) {
+          return;
+        }
+
         const dayKey = message.timestamp?.toDate ? new Date(message.timestamp.toDate()).toDateString() : '';
         if (dayKey && dayKey !== lastDay) {
           const divider = document.createElement('div');
@@ -1143,11 +1176,28 @@
         meta.className = 'msg-meta';
         meta.textContent = `${message.sender || 'Member'} • ${message.timestamp?.toDate ? new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(message.timestamp.toDate()) : ''}`;
 
+        const replyBtn = document.createElement('button');
+        replyBtn.type = 'button';
+        replyBtn.className = 'reply-btn';
+        replyBtn.textContent = 'Reply';
+        replyBtn.addEventListener('click', () => {
+          setReply({ id: messageSnap.id, sender: message.sender || 'Member', text: message.text || '' });
+        });
+        meta.appendChild(replyBtn);
+
+        wrap.appendChild(meta);
+
+        if (message.replyTo) {
+          const quote = document.createElement('div');
+          quote.className = 'reply-quote';
+          quote.textContent = `${message.replyTo.sender}: ${message.replyTo.text}`;
+          wrap.appendChild(quote);
+        }
+
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
         bubble.textContent = message.text || '';
 
-        wrap.appendChild(meta);
         wrap.appendChild(bubble);
         row.appendChild(avatar);
         row.appendChild(wrap);
@@ -1209,20 +1259,12 @@
 
       const col = messagesRef();
       stopMessages = onSnapshot(query(col, orderBy('timestamp', 'asc')), (snapshot) => {
+        lastSnapshot = snapshot;
         renderMessages(snapshot);
       }, (error) => {
         console.error('Chat snapshot error', error);
         setStatus('chat-status', 'Could not load messages', true);
       });
-    }
-
-    function openGlobal() {
-      active = 'global';
-      activePeer = null;
-      $('chat-avatar').textContent = '🌐';
-      $('title').textContent = 'Community chat';
-      $('subtitle').textContent = 'Everyone in the community';
-      startChat();
     }
 
     async function openPrivate(peer) {
@@ -1244,6 +1286,7 @@
       $('title').textContent = peer.displayName || 'Private chat';
       $('subtitle').textContent = 'Private conversation';
       $('chat-avatar').textContent = peer.memoji || '🙂';
+      await loadThreads();
       startChat();
       changeView('chat');
       $('sidebar').classList.remove('open');
@@ -1337,12 +1380,12 @@
 
     async function handleAuthSubmit(event) {
       event.preventDefault();
-      const username = $('auth-name').value.trim();
+      const email = $('auth-email').value.trim();
       const password = $('password').value;
       const memoji = $('memoji-value').value || '🙂';
 
-      if (!username) {
-        setStatus('auth-status', 'Username is required.', true);
+      if (!email || !email.includes('@')) {
+        setStatus('auth-status', 'Please enter a valid email address.', true);
         return;
       }
 
@@ -1351,16 +1394,16 @@
         return;
       }
 
-      const email = authEmailFromUsername(username);
+      const defaultName = email.split('@')[0].slice(0, 30) || 'Member';
       setStatus('auth-status', currentAuthMode === 'signup' ? 'Creating account…' : 'Signing in…');
 
       try {
         if (currentAuthMode === 'signup') {
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          await updateProfile(userCredential.user, { displayName: username });
+          await updateProfile(userCredential.user, { displayName: defaultName });
           await setDoc(doc(db, 'publicProfiles', userCredential.user.uid), {
-            displayName: username,
-            displayNameLower: username.toLowerCase(),
+            displayName: defaultName,
+            displayNameLower: defaultName.toLowerCase(),
             memoji,
             grade: '',
             division: '',
@@ -1376,10 +1419,12 @@
       } catch (error) {
         console.error(error);
         const message = error?.code === 'auth/email-already-in-use'
-          ? 'Username is already taken.'
-          : error?.code === 'auth/user-not-found' || error?.code === 'auth/wrong-password'
-            ? 'Incorrect username or password.'
-            : 'Could not complete that request.';
+          ? 'An account with this email already exists.'
+          : error?.code === 'auth/invalid-email'
+            ? 'Please enter a valid email address.'
+            : error?.code === 'auth/user-not-found' || error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential'
+              ? 'Incorrect email or password.'
+              : 'Could not complete that request.';
         setStatus('auth-status', message, true);
       }
     }
@@ -1389,7 +1434,6 @@
       if (!user) {
         $('login').classList.remove('hidden');
         $('app').classList.add('hidden');
-        document.body.classList.remove('dark');
         if (stopThreads) { stopThreads(); stopThreads = null; }
         if (stopMessages) { stopMessages(); stopMessages = null; }
         return;
@@ -1400,9 +1444,10 @@
 
       const profileDoc = await getDoc(doc(db, 'publicProfiles', user.uid));
       const saved = profileDoc.exists() ? profileDoc.data() : {};
+      const fallbackName = user.displayName || (user.email ? user.email.split('@')[0] : 'You');
       profile = {
-        displayName: saved.displayName || user.displayName || usernameKey(user.email || 'You'),
-        displayNameLower: saved.displayNameLower || (saved.displayName || user.displayName || 'you').toLowerCase(),
+        displayName: saved.displayName || fallbackName,
+        displayNameLower: saved.displayNameLower || fallbackName.toLowerCase(),
         memoji: saved.memoji || '🙂',
         grade: saved.grade || '',
         division: saved.division || '',
@@ -1437,6 +1482,18 @@
       searchPeople($('people-search').value.trim());
     });
 
+    $('thread-search').addEventListener('input', (event) => {
+      const term = event.target.value.trim().toLowerCase();
+      const filtered = term
+        ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term))
+        : allThreads;
+      renderThreads(filtered);
+    });
+
+    $('message-search').addEventListener('input', () => {
+      if (lastSnapshot) renderMessages(lastSnapshot);
+    });
+
     $('new-chat').addEventListener('click', () => {
       document.getElementById('sidebar').classList.toggle('open');
       changeView('people');
@@ -1444,8 +1501,8 @@
 
     $('logout').addEventListener('click', async () => {
       try {
+        await setPresence(false);
         await signOut(auth);
-        setPresence(false);
       } catch (error) {
         console.error(error);
       }
