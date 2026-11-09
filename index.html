@@ -4,9 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f5f7">
-  <meta name="description" content="Friendly community messaging with custom memoji and username-only sign in.A project by KarnavGandhi(Karnavgandhi21@gmail.com)
-    ">
-  <title>ChatByKarnav | ChatByKarnav</title>
+  <meta name="description" content="Friendly community messaging with custom memoji and username-only sign in.">
+  <title>Messages | ChatByKarnav</title>
   <link rel="icon" type="image/png" href="lgo.png">
   <style>
     :root {
@@ -1246,6 +1245,8 @@
       $('subtitle').textContent = 'Private conversation';
       $('chat-avatar').textContent = peer.memoji || '🙂';
       startChat();
+      changeView('chat');
+      $('sidebar').classList.remove('open');
     }
 
     async function searchPeople(term = '') {
