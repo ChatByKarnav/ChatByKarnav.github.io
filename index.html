@@ -8,7 +8,80 @@
   <title>Messages | ChatByKarnav</title>
   <link rel="icon" type="image/png" href="lgo.png">
   <style>
-    :root {
+    /* 1. Smooth theme, button, and input transitions */
+body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, input, textarea {
+  transition: background 0.3s ease, background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 2. Message bubble pop-in animation */
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.msg-row {
+  animation: msgIn 0.24s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* 3. View switching fade-in (Chats, People, Profile) */
+@keyframes viewFade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-view:not(.hidden), .page.active {
+  animation: viewFade 0.22s ease-out;
+}
+
+/* 4. Popups & banners (Emoji picker, Reply banner, Toast) */
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.emoji-pop:not(.hidden), .reply-banner:not(.hidden) {
+  animation: popIn 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.toast:not(.hidden) {
+  animation: popIn 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 5. Mobile sidebar slide-in */
+@media (max-width: 760px) {
+  .sidebar {
+    display: flex !important;
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+}:root {
       color-scheme: light;
       --bg-gradient: radial-gradient(circle at 12% 18%, #d9e8ff 0%, transparent 45%),
                      radial-gradient(circle at 88% 15%, #f3dcff 0%, transparent 42%),
