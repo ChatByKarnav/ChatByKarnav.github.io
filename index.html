@@ -673,20 +673,7 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, updateProfile, deleteUser } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, limitToLast, onSnapshot, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    const manifest = {
-      name: 'ChatByKarnav',
-      short_name: 'ChatByKarnav',
-      start_url: '.',
-      display: 'standalone',
-      background_color: '#eef2f9',
-      theme_color: '#0a84ff',
-      icons: [{ src: 'lgo.png', sizes: '192x192', type: 'image/png' }]
-    };
-    const manifestLink = document.createElement('link');
-    manifestLink.rel = 'manifest';
-    manifestLink.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/json' }));
-    document.head.appendChild(manifestLink);
-
+    
     const config = {
       apiKey: 'AIzaSyAZs-dZA-Y8ZLjlBIOqhs9wSVeZjZjW_jA',
       authDomain: 'imessageclonekarnav.firebaseapp.com',
