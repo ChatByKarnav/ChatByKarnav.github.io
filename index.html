@@ -16,11 +16,11 @@
                      radial-gradient(circle at 88% 15%, #f3dcff 0%, transparent 42%),
                      radial-gradient(circle at 75% 85%, #d6f7ee 0%, transparent 48%),
                      linear-gradient(135deg, #eef2f9 0%, #e5eaf5 100%);
-      --glass: rgba(255, 255, 255, 0.52);
-      --glass-strong: rgba(255, 255, 255, 0.74);
-      --glass-subtle: rgba(255, 255, 255, 0.34);
-      --glass-border: rgba(255, 255, 255, 0.62);
-      --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      --glass: rgba(255, 255, 255, 0.42);
+      --glass-strong: rgba(255, 255, 255, 0.65);
+      --glass-subtle: rgba(255, 255, 255, 0.24);
+      --glass-border: rgba(255, 255, 255, 0.72);
+      --glass-highlight: inset 0 1.5px 1px rgba(255, 255, 255, 0.92), inset 0 -1px 1px rgba(255, 255, 255, 0.25);
       --text: #181920;
       --muted: #5c5e6b;
       --line: rgba(255, 255, 255, 0.45);
@@ -28,8 +28,8 @@
       --blue-glass: linear-gradient(135deg, rgba(10, 132, 255, 0.88), rgba(0, 102, 235, 0.92));
       --green: #32c759;
       --bubble: rgba(255, 255, 255, 0.64);
-      --shadow: 0 16px 40px rgba(20, 30, 60, 0.12);
-      --blur: blur(24px) saturate(180%);
+      --shadow: 0 20px 48px rgba(20, 30, 60, 0.14), 0 4px 12px rgba(20, 30, 60, 0.06);
+      --blur: blur(36px) saturate(210%);
     }
 
     body.dark {
@@ -38,16 +38,16 @@
                      radial-gradient(circle at 85% 18%, rgba(102, 42, 138, 0.38) 0%, transparent 42%),
                      radial-gradient(circle at 72% 85%, rgba(16, 105, 92, 0.35) 0%, transparent 48%),
                      linear-gradient(135deg, #0b0d14 0%, #111420 100%);
-      --glass: rgba(28, 30, 40, 0.56);
-      --glass-strong: rgba(36, 39, 52, 0.76);
+      --glass: rgba(28, 32, 46, 0.48);
+      --glass-strong: rgba(38, 42, 60, 0.68);
       --glass-subtle: rgba(255, 255, 255, 0.06);
-      --glass-border: rgba(255, 255, 255, 0.16);
-      --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      --glass-border: rgba(255, 255, 255, 0.22);
+      --glass-highlight: inset 0 1.5px 1px rgba(255, 255, 255, 0.26), inset 0 -1px 1px rgba(255, 255, 255, 0.06);
       --text: #f4f5fa;
       --muted: #a2a6b8;
       --line: rgba(255, 255, 255, 0.12);
       --bubble: rgba(45, 48, 64, 0.62);
-      --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      --shadow: 0 24px 56px rgba(0, 0, 0, 0.55), 0 4px 16px rgba(0, 0, 0, 0.3);
     }
 
     * { box-sizing: border-box; }
@@ -65,9 +65,9 @@
       transition: background 0.3s ease, background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
-    button, input, textarea { font: inherit; }
+    button, input, textarea, select { font: inherit; }
     button { cursor: pointer; }
-    button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid rgba(10, 132, 255, 0.4); outline-offset: 2px; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid rgba(10, 132, 255, 0.4); outline-offset: 2px; }
 
     .hidden { display: none !important; }
     .muted { color: var(--muted); }
@@ -85,6 +85,7 @@
       z-index: 200;
     }
 
+    /* Pre-login Welcome Screen */
     .welcome-screen {
       max-width: 440px;
       margin: 10vh auto;
@@ -155,8 +156,8 @@
     .forgot-link { display: block; margin: -6px 0 14px auto; border: 0; background: transparent; color: var(--blue); font-size: 13px; font-weight: 600; padding: 2px 4px; }
     .forgot-link:hover { text-decoration: underline; }
 
-    .memoji-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .memoji-option { width: 44px; height: 44px; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--glass-subtle); font-size: 26px; display: grid; place-items: center; }
+    .memoji-picker { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; max-height: 150px; overflow-y: auto; padding: 2px; }
+    .memoji-option { width: 42px; height: 42px; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--glass-subtle); font-size: 24px; display: grid; place-items: center; }
     .memoji-option:hover { transform: scale(1.06); }
     .memoji-option.active { border-color: var(--blue); background: rgba(10, 132, 255, 0.18); box-shadow: 0 4px 12px rgba(10, 132, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.4); }
 
@@ -191,7 +192,15 @@
     .nav { flex: 1; border: 1px solid transparent; background: transparent; color: var(--muted); padding: 10px 12px; border-radius: 12px; font-weight: 600; }
     .nav.active { background: var(--glass-strong); border-color: var(--glass-border); color: var(--blue); box-shadow: 0 2px 10px rgba(0,0,0,.06), var(--glass-highlight); }
 
-    .section-label { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 700; padding: 16px 18px 8px; }
+    /* 24h Status Bar */
+    .status-bar { display: flex; gap: 10px; padding: 12px 18px 4px; overflow-x: auto; scrollbar-width: none; }
+    .status-bar::-webkit-scrollbar { display: none; }
+    .status-chip { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; background: transparent; border: 0; color: var(--text); font-size: 11px; padding: 0; }
+    .status-ring { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: var(--glass-strong); border: 2px solid var(--blue); box-shadow: var(--glass-highlight); }
+    .status-chip.mine .status-ring { border-style: dashed; border-color: var(--muted); }
+    .status-name { max-width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+
+    .section-label { color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-size: 11px; font-weight: 700; padding: 14px 18px 8px; }
     .threads { padding: 0 12px 12px; overflow: auto; }
 
     .thread { width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid transparent; border-radius: 16px; background: transparent; text-align: left; color: var(--text); margin-bottom: 4px; }
@@ -213,7 +222,7 @@
     .top h1 { margin: 0; font-size: 20px; letter-spacing: -.04em; }
     .subtitle { color: var(--muted); font-size: 12px; margin-top: 3px; }
     .subtitle.online { color: var(--green); font-weight: 600; }
-    .main-actions { display: flex; gap: 6px; }
+    .main-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
     .home-welcome {
       flex: 1;
@@ -243,6 +252,7 @@
     @keyframes msgIn { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
     @keyframes viewFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
     @keyframes popIn { from { opacity: 0; transform: translateY(8px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes slamIn { 0% { transform: scale(1.6); opacity: 0; } 60% { transform: scale(0.95); opacity: 1; } 100% { transform: scale(1); } }
 
     .chat-view:not(.hidden), .page.active { animation: viewFade 0.22s ease-out; }
     .emoji-pop:not(.hidden), .reply-banner:not(.hidden), .toast:not(.hidden) { animation: popIn 0.2s cubic-bezier(0.22, 1, 0.36, 1); }
@@ -271,8 +281,18 @@
     .msg-row.mine .bubble { background: var(--blue-glass); color: white; border-color: rgba(255, 255, 255, 0.25); box-shadow: 0 6px 18px rgba(10, 132, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35); border-radius: 20px 20px 6px 20px; }
     .msg-row.mine .bubble a { color: #e0f0ff; }
 
+    /* iMessage Effects */
+    .bubble.fx-slam { animation: slamIn 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+    .bubble.fx-ink { filter: blur(7px); cursor: pointer; user-select: none; transition: filter 0.3s ease; }
+    .bubble.fx-ink.revealed { filter: blur(0); cursor: default; user-select: text; }
+
+    .confetti-piece { position: fixed; width: 8px; height: 8px; border-radius: 2px; pointer-events: none; z-index: 300; animation: confettiFall 1.4s ease-out forwards; }
+    @keyframes confettiFall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+
     .msg-img { display: block; max-width: 260px; max-height: 260px; border-radius: 14px; margin-bottom: 4px; object-fit: cover; cursor: pointer; }
-    .msg-audio { max-width: 240px; height: 36px; margin-bottom: 2px; }
+    .audio-wrap { display: flex; align-items: center; gap: 6px; }
+    .msg-audio { max-width: 210px; height: 36px; margin-bottom: 2px; }
+    .speed-btn { border: 1px solid var(--glass-border); background: var(--glass-strong); color: var(--text); border-radius: 999px; padding: 3px 8px; font-size: 11px; font-weight: 700; }
 
     .poll-card { display: flex; flex-direction: column; gap: 6px; min-width: 220px; }
     .poll-q { font-weight: 700; margin-bottom: 2px; }
@@ -288,6 +308,10 @@
     .reaction-pill.mine { border-color: var(--blue); background: rgba(10, 132, 255, 0.16); }
 
     .composer-wrap { border-top: 1px solid var(--line); background: var(--glass-subtle); padding: 12px 18px 16px; }
+    .effect-picker { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .effect-pill { border: 1px solid var(--glass-border); background: var(--glass-subtle); color: var(--text); border-radius: 999px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
+    .effect-pill.active { background: var(--blue-glass); color: white; border-color: transparent; }
+
     .reply-banner { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: 14px; margin-bottom: 8px; padding: 8px 10px; color: var(--muted); font-size: 12px; }
 
     .composer { display: flex; align-items: flex-end; gap: 6px; }
@@ -296,7 +320,7 @@
     .send-btn { width: 46px; height: 46px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 16px; background: var(--blue-glass); color: white; font-size: 20px; box-shadow: 0 6px 16px rgba(10, 132, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4); flex-shrink: 0; }
     .send-btn:disabled { opacity: .5; cursor: not-allowed; }
 
-    .emoji-pop { background: var(--glass-strong); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 18px; box-shadow: var(--shadow), var(--glass-highlight); width: min(360px, calc(100vw - 50px)); padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .emoji-pop { background: var(--glass-strong); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 18px; box-shadow: var(--shadow), var(--glass-highlight); width: min(360px, calc(100vw - 50px)); padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; max-height: 180px; overflow-y: auto; }
     .emoji-pop button { border: 0; background: transparent; border-radius: 10px; width: 42px; height: 42px; font-size: 24px; }
     .emoji-pop button:hover { background: var(--glass-subtle); }
 
@@ -312,15 +336,27 @@
     .form-card input, .form-card textarea { width: 100%; margin-top: 6px; border: 1px solid var(--glass-border); background: var(--glass-strong); color: var(--text); border-radius: 12px; padding: 10px 12px; }
     .profile-actions { margin-top: 16px; }
 
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(10px); display: grid; place-items: center; z-index: 90; padding: 16px; }
-    .modal-card { width: 100%; max-width: 420px; background: var(--glass-strong); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 24px; padding: 22px; box-shadow: var(--shadow), var(--glass-highlight); }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 20, 35, 0.35); backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); display: grid; place-items: center; z-index: 90; padding: 16px; }
+    .modal-card { width: 100%; max-width: 420px; background: linear-gradient(145deg, var(--glass-strong), var(--glass)); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 28px; padding: 24px; box-shadow: var(--shadow), var(--glass-highlight); animation: popIn 0.22s cubic-bezier(0.22, 1, 0.36, 1); }
     .modal-card h3 { margin: 0 0 12px; }
     .member-list { max-height: 180px; overflow: auto; display: flex; flex-direction: column; gap: 6px; margin: 10px 0 14px; }
     .member-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: var(--glass-subtle); font-size: 14px; }
 
-    .install-guide-list { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 16px; font-size: 13px; color: var(--muted); }
-    .install-step { padding: 10px 12px; border-radius: 14px; background: var(--glass-subtle); border: 1px solid var(--glass-border); line-height: 1.45; }
-    .install-step strong { color: var(--text); display: block; margin-bottom: 3px; }
+    /* Interactive Liquid Glass Install Guide */
+    .install-select-row { display: flex; gap: 8px; margin-bottom: 12px; }
+    .install-select-row select { flex: 1; border: 1px solid var(--glass-border); border-radius: 14px; background: var(--glass-subtle); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--glass-highlight); color: var(--text); padding: 10px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .install-select-row select:hover { background: var(--glass-strong); }
+    .install-steps-box { padding: 16px; border-radius: 18px; background: linear-gradient(160deg, var(--glass-subtle), rgba(255, 255, 255, 0.08)); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); box-shadow: var(--glass-highlight); font-size: 13px; line-height: 1.6; margin-bottom: 18px; }
+    .install-steps-box ol { margin: 0; padding-left: 18px; }
+    .install-steps-box li { margin-bottom: 8px; }
+    .install-steps-box li:last-child { margin-bottom: 0; }
+
+    /* Starred & Onboarding Tour */
+    .starred-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+    .starred-item { padding: 10px 12px; border-radius: 14px; background: var(--glass-subtle); border: 1px solid var(--glass-border); font-size: 13px; }
+    .tour-steps { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 18px; }
+    .tour-step { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--glass-subtle); border: 1px solid var(--glass-border); font-size: 13px; line-height: 1.45; }
+    .tour-icon { font-size: 20px; flex-shrink: 0; }
 
     .lightbox-img { max-width: 92vw; max-height: 86vh; border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); object-fit: contain; }
 
@@ -399,6 +435,7 @@
         <button class="nav" type="button" data-view="people">People</button>
         <button class="nav" type="button" data-view="profile">Profile</button>
       </div>
+      <div class="status-bar" id="status-bar"></div>
       <div class="section-label">Conversations</div>
       <div class="threads" id="threads"></div>
       <button class="fab-new-chat" id="fab-new-chat" type="button" title="New chat">＋</button>
@@ -422,9 +459,13 @@
           </div>
         </div>
         <div class="main-actions">
+          <button class="icon-btn hidden" id="disappear-toggle" title="24h Disappearing Messages">⏳</button>
+          <button class="icon-btn hidden" id="archive-toggle" title="Archive chat">📥</button>
           <button class="icon-btn hidden" id="mute-toggle" title="Mute chat">🔔</button>
           <button class="icon-btn hidden" id="block-toggle" title="Block user">🚫</button>
+          <button class="icon-btn" id="starred-btn" title="Starred messages">⭐</button>
           <button class="icon-btn" id="install-guide-btn" title="Install App">📲</button>
+          <button class="icon-btn" id="help-tour-btn" title="App Guide">❓</button>
           <button class="icon-btn" id="notify-toggle" title="Notifications">🔔</button>
           <button class="icon-btn" id="theme-toggle" title="Toggle theme">☀️</button>
         </div>
@@ -454,6 +495,12 @@
         </div>
         <div class="composer-wrap">
           <div id="emoji-pop" class="emoji-pop hidden"></div>
+          <div id="effect-picker" class="effect-picker hidden">
+            <button type="button" class="effect-pill active" data-fx="">Normal</button>
+            <button type="button" class="effect-pill" data-fx="slam">💥 Slam</button>
+            <button type="button" class="effect-pill" data-fx="confetti">🎉 Confetti</button>
+            <button type="button" class="effect-pill" data-fx="ink">🫥 Invisible Ink</button>
+          </div>
           <div id="reply-banner" class="reply-banner hidden">
             <span id="reply-label">Replying to ...</span>
             <button class="icon-btn" id="cancel-reply" type="button" title="Cancel reply">✕</button>
@@ -463,6 +510,7 @@
             <button class="emoji-toggle" id="photo-toggle" type="button" title="Send photo">📷</button>
             <button class="emoji-toggle" id="voice-toggle" type="button" title="Record voice note (max 15s)">🎤</button>
             <button class="emoji-toggle" id="poll-toggle" type="button" title="Create poll">📊</button>
+            <button class="emoji-toggle" id="fx-toggle" type="button" title="Message Effects">✨</button>
             <input id="photo-input" type="file" accept="image/*" class="hidden">
             <textarea id="message-input" rows="1" maxlength="2000" placeholder="Type a message"></textarea>
             <button class="send-btn" id="send" type="button" title="Send">➤</button>
@@ -508,30 +556,76 @@
     </main>
   </div>
 
-  <!-- Install PWA Guide Modal -->
+  <!-- Interactive Install PWA Guide Modal -->
   <div id="install-modal" class="modal-backdrop hidden">
     <div class="modal-card">
       <h3>Install ChatByKarnav</h3>
-      <p class="muted" style="font-size: 13px; margin: 0 0 10px;">
-        Add ChatByKarnav to your home screen to use it like a native app.
+      <p class="muted" style="font-size: 13px; margin: 0 0 12px;">
+        Select your device to get the exact steps:
       </p>
-      <div class="install-guide-list">
-        <div class="install-step">
-          <strong>📱 Android (Chrome)</strong>
-          Tap the <b>⋮</b> menu at the top right and select <b>Add to Home screen</b> or <b>Install app</b>.
-        </div>
-        <div class="install-step">
-          <strong>🍎 iPhone / iPad (Safari)</strong>
-          Tap the <b>Share</b> icon (square with ↑ arrow) at the bottom, scroll down, and tap <b>Add to Home Screen</b>.
-        </div>
-        <div class="install-step">
-          <strong>💻 Desktop (Chrome / Edge)</strong>
-          Click the <b>Install (⊕)</b> icon on the right side of the address bar.
-        </div>
+      <div class="install-select-row">
+        <select id="install-os" aria-label="Select Operating System">
+          <option value="android">Android</option>
+          <option value="ios">iPhone / iPad</option>
+          <option value="windows">Windows</option>
+          <option value="mac">Mac</option>
+        </select>
+        <select id="install-browser" aria-label="Select Browser or Version"></select>
       </div>
+      <div id="install-steps-box" class="install-steps-box"></div>
       <div class="auth-actions">
         <button type="button" id="native-install-btn" class="btn primary hidden">Install Now</button>
         <button type="button" id="close-install-modal" class="btn secondary" style="flex: 1;">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- One-Time Onboarding Guide Modal -->
+  <div id="tour-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>Welcome to ChatByKarnav 👋</h3>
+      <p class="muted" style="font-size:13px; margin:0;">Here is a quick tour of what you can do:</p>
+      <div class="tour-steps">
+        <div class="tour-step">
+          <span class="tour-icon">✨</span>
+          <div><strong>iMessage Effects:</strong> Tap <b>✨</b> before sending to use <b>Slam</b>, <b>Confetti</b>, or <b>Invisible Ink</b> (tap to reveal).</div>
+        </div>
+        <div class="tour-step">
+          <span class="tour-icon">⏳</span>
+          <div><strong>WhatsApp Tools:</strong> Toggle <b>⏳</b> in private chats for 24h disappearing messages, tap <b>1x</b> on voice notes to speed them up, or post a <b>24h Status</b> at the top.</div>
+        </div>
+        <div class="tour-step">
+          <span class="tour-icon">⭐</span>
+          <div><strong>Organize:</strong> Hover or tap any message to <b>Reply</b>, <b>React</b>, <b>Pin 📌</b>, or <b>Star ⭐</b> it for later.</div>
+        </div>
+        <div class="tour-step">
+          <span class="tour-icon">📲</span>
+          <div><strong>Install as App:</strong> Tap <b>📲</b> anytime to add ChatByKarnav to your phone's home screen.</div>
+        </div>
+      </div>
+      <button type="button" id="close-tour" class="btn primary" style="width:100%;">Start Messaging</button>
+    </div>
+  </div>
+
+  <!-- Starred Messages Modal -->
+  <div id="starred-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>⭐ Starred Messages</h3>
+      <div id="starred-list" class="starred-list"></div>
+      <button type="button" id="close-starred" class="btn secondary" style="width:100%;">Close</button>
+    </div>
+  </div>
+
+  <!-- Post Status Modal -->
+  <div id="status-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>Post 24h Status</h3>
+      <label class="field">Your Mood / Update
+        <input id="status-input" maxlength="100" placeholder="e.g. Studying for finals ☕">
+      </label>
+      <div class="auth-actions">
+        <button type="button" id="cancel-status" class="btn secondary">Cancel</button>
+        <button type="button" id="save-status" class="btn primary">Post</button>
       </div>
     </div>
   </div>
@@ -575,7 +669,7 @@
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, updateProfile, deleteUser } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, limitToLast, onSnapshot, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, limitToLast, onSnapshot, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
     const manifest = {
       name: 'ChatByKarnav',
@@ -602,16 +696,25 @@
 
     const app = initializeApp(config);
     const auth = getAuth(app);
-    const db = getFirestore(app);
+    const db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
     const $ = (id) => document.getElementById(id);
 
-    const MEMOJIS = ['🙂','😎','🤠','😊','😺','🐶','🦊','🤖','🦄','👾','🧑‍💻','🥳'];
+    const MEMOJIS = [
+      '🙂','😎','🤠','😊','🥳','🤩','😇','🤓',
+      '😜','🫠','😴','🤯','😤','🥺','🤫','🫡',
+      '😺','🐶','🦊','🐼','🐨','🦁','🐸','🐵',
+      '🦄','🐲','🤖','👾','👻','👽','🧑‍💻','🥷'
+    ];
     const REACTIONS = ['❤️','😂','👍','😮','🙏'];
 
     let user = null;
     let profile = {};
     let blockedUsers = [];
     let mutedThreads = [];
+    let starredMessages = [];
+    let archivedThreads = [];
     let active = 'global';
     let activePeer = null;
     let stopMessages = null;
@@ -631,6 +734,8 @@
     let audioChunks = [];
     let recordTimer = null;
     let deferredPrompt = null;
+    let selectedEffect = '';
+    let disappear24h = false;
 
     function safeText(v) { return String(v ?? '').trim(); }
     function initials(name) { const t = safeText(name); return t ? t.split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toUpperCase() : '?'; }
@@ -654,6 +759,19 @@
         osc.connect(gain); gain.connect(ctx.destination);
         osc.start(); osc.stop(ctx.currentTime + 0.2);
       } catch (_) {}
+    }
+
+    function launchConfetti() {
+      const colors = ['#0a84ff', '#32c759', '#ff9f0a', '#ff375f', '#bf5af2'];
+      for (let i = 0; i < 36; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti-piece';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.background = colors[i % colors.length];
+        c.style.animationDelay = Math.random() * 0.4 + 's';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 1800);
+      }
     }
 
     function applyTheme() {
@@ -690,12 +808,14 @@
     function clearReply() { reply = null; $('reply-banner').classList.add('hidden'); }
 
     function renderTextWithLinks(container, text) {
-      const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const parts = text.split(urlRegex);
+      const parts = text.split(/(https?:\/\/[^\s]+)/g);
       parts.forEach((part) => {
-        if (urlRegex.test(part)) {
+        if (/^https?:\/\/[^\s]+$/.test(part)) {
           const a = document.createElement('a');
-          a.href = part; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = part;
+          a.href = part;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = part;
           container.appendChild(a);
         } else {
           container.appendChild(document.createTextNode(part));
@@ -709,16 +829,37 @@
       item.className = 'thread' + (thread.id === active ? ' selected' : '');
       item.dataset.threadId = thread.id;
       const isMuted = mutedThreads.includes(thread.id);
-      item.innerHTML = `
-        <span class="avatar">${thread.avatar}</span>
-        <span class="thread-copy">
-          <span class="thread-title">
-            <span>${thread.name} ${isMuted ? '🔇' : ''}</span>
-            ${thread.unread ? '<span class="badge">new</span>' : ''}
-          </span>
-          <span class="thread-preview">${thread.preview || 'No messages yet'}</span>
-        </span>
-      `;
+
+      const avatarEl = document.createElement('span');
+      avatarEl.className = 'avatar';
+      avatarEl.textContent = thread.avatar;
+
+      const copyEl = document.createElement('span');
+      copyEl.className = 'thread-copy';
+
+      const titleEl = document.createElement('span');
+      titleEl.className = 'thread-title';
+
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = `${thread.name}${isMuted ? ' 🔇' : ''}`;
+      titleEl.appendChild(nameSpan);
+
+      if (thread.unread) {
+        const badge = document.createElement('span');
+        badge.className = 'badge';
+        badge.textContent = 'new';
+        titleEl.appendChild(badge);
+      }
+
+      const previewEl = document.createElement('span');
+      previewEl.className = 'thread-preview';
+      previewEl.textContent = thread.preview || 'No messages yet';
+
+      copyEl.appendChild(titleEl);
+      copyEl.appendChild(previewEl);
+      item.appendChild(avatarEl);
+      item.appendChild(copyEl);
+
       item.addEventListener('click', () => {
         msgLimit = 50;
         if (thread.type === 'global') {
@@ -726,16 +867,19 @@
           $('title').textContent = 'Community chat'; $('subtitle').textContent = 'Everyone in the community';
           $('subtitle').classList.remove('online'); $('chat-avatar').textContent = '🌐';
           $('mute-toggle').classList.add('hidden'); $('block-toggle').classList.add('hidden');
+          $('archive-toggle').classList.add('hidden'); $('disappear-toggle').classList.add('hidden');
         } else if (thread.type === 'group') {
           active = thread.id; activePeer = null;
           $('title').textContent = thread.name; $('subtitle').textContent = `${thread.membersCount || 2} members`;
           $('subtitle').classList.remove('online'); $('chat-avatar').textContent = '👥';
           $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.add('hidden');
+          $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
         } else {
           active = thread.id; activePeer = thread.peer;
           $('title').textContent = thread.name; $('subtitle').textContent = 'Private conversation';
           $('chat-avatar').textContent = thread.avatar;
           $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.remove('hidden');
+          $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
         }
         updateMuteBlockIcons();
         document.querySelectorAll('.thread').forEach((n) => n.classList.toggle('selected', n.dataset.threadId === active));
@@ -758,6 +902,7 @@
         const q = query(collection(db, 'conversations'), where('members', 'array-contains', user.uid), orderBy('updatedAt', 'desc'), limit(40));
         const snapshot = await getDocs(q);
         for (const docSnap of snapshot.docs) {
+          if (archivedThreads.includes(docSnap.id)) continue;
           const data = docSnap.data();
           const members = Array.isArray(data.members) ? data.members : [];
           if (data.isGroup) {
@@ -806,12 +951,17 @@
 
       const pinDocRef = active === 'global' ? doc(db, 'settings', 'global_pin') : doc(db, 'conversations', active);
       stopPin = onSnapshot(pinDocRef, (snap) => {
-        const pinned = snap.exists() ? snap.data().pinnedMessage : null;
+        const data = snap.exists() ? snap.data() : {};
+        const pinned = data.pinnedMessage;
         if (pinned?.text) {
           $('pinned-text').textContent = `${pinned.sender}: ${pinned.text}`;
           $('pinned-bar').classList.remove('hidden');
         } else {
           $('pinned-bar').classList.add('hidden');
+        }
+        if (active !== 'global') {
+          disappear24h = !!data.disappear24h;
+          $('disappear-toggle').style.background = disappear24h ? 'rgba(10, 132, 255, 0.25)' : '';
         }
       });
 
@@ -847,6 +997,16 @@
         const updated = users.includes(user.uid) ? users.filter((u) => u !== user.uid) : [...users, user.uid];
         await updateDoc(msgRef, { [`reactions.${emoji}`]: updated });
       } catch (err) { console.error(err); }
+    }
+
+    async function toggleStarMessage(id, msg) {
+      if (!user) return;
+      const exists = starredMessages.some((s) => s.id === id);
+      starredMessages = exists
+        ? starredMessages.filter((s) => s.id !== id)
+        : [{ id, sender: msg.sender || 'Member', text: msg.text || 'Media' }, ...starredMessages].slice(0, 50);
+      await setDoc(doc(db, 'users', user.uid), { starred: starredMessages }, { merge: true });
+      showToast(exists ? 'Removed from Starred.' : 'Message starred ⭐');
     }
 
     async function editMessage(msgId, oldText) {
@@ -932,6 +1092,7 @@
 
       docs.forEach((messageSnap) => {
         const message = messageSnap.data();
+        if (message.expiresAt && Date.now() > message.expiresAt) return;
         if (blockedUsers.includes(message.uid)) return;
         if (searchTerm && !(message.text || '').toLowerCase().includes(searchTerm) && !(message.sender || '').toLowerCase().includes(searchTerm)) return;
 
@@ -958,7 +1119,7 @@
         const meta = document.createElement('div');
         meta.className = 'msg-meta';
         const timeStr = message.timestamp?.toDate ? new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(message.timestamp.toDate()) : '';
-        meta.textContent = `${message.sender || 'Member'} • ${timeStr}${message.edited ? ' (edited)' : ''}`;
+        meta.textContent = `${message.sender || 'Member'} • ${timeStr}${message.edited ? ' (edited)' : ''}${message.expiresAt ? ' ⏳' : ''}`;
 
         if (isMine && active !== 'global') {
           const ticks = document.createElement('span');
@@ -979,6 +1140,11 @@
         pinBtn.type = 'button'; pinBtn.className = 'msg-action-btn'; pinBtn.textContent = '📌'; pinBtn.title = 'Pin';
         pinBtn.addEventListener('click', () => pinMessage(message));
         actions.appendChild(pinBtn);
+
+        const starBtn = document.createElement('button');
+        starBtn.type = 'button'; starBtn.className = 'msg-action-btn'; starBtn.textContent = '⭐'; starBtn.title = 'Star';
+        starBtn.addEventListener('click', () => toggleStarMessage(messageSnap.id, message));
+        actions.appendChild(starBtn);
 
         REACTIONS.forEach((emoji) => {
           const rBtn = document.createElement('button');
@@ -1018,6 +1184,13 @@
 
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
+        if (message.effect === 'slam') bubble.classList.add('fx-slam');
+        if (message.effect === 'ink') {
+          bubble.classList.add('fx-ink');
+          bubble.title = 'Tap to reveal';
+          bubble.addEventListener('click', () => bubble.classList.toggle('revealed'));
+        }
+        if (message.effect === 'confetti' && !isInitialLoad) launchConfetti();
 
         if (message.image) {
           const img = document.createElement('img');
@@ -1029,9 +1202,20 @@
           bubble.appendChild(img);
         }
         if (message.audio) {
+          const aWrap = document.createElement('div');
+          aWrap.className = 'audio-wrap';
           const aud = document.createElement('audio');
           aud.src = message.audio; aud.controls = true; aud.className = 'msg-audio';
-          bubble.appendChild(aud);
+          const spd = document.createElement('button');
+          spd.type = 'button'; spd.className = 'speed-btn'; spd.textContent = '1x';
+          spd.addEventListener('click', () => {
+            const next = aud.playbackRate === 1 ? 1.5 : aud.playbackRate === 1.5 ? 2 : 1;
+            aud.playbackRate = next;
+            spd.textContent = next + 'x';
+          });
+          aWrap.appendChild(aud);
+          aWrap.appendChild(spd);
+          bubble.appendChild(aWrap);
         }
         if (message.poll) {
           const pCard = document.createElement('div');
@@ -1044,7 +1228,12 @@
             btn.type = 'button';
             const votes = opt.votes || [];
             btn.className = 'poll-opt' + (votes.includes(user.uid) ? ' voted' : '');
-            btn.innerHTML = `<span>${opt.text}</span><span>${votes.length}</span>`;
+            const optText = document.createElement('span');
+            optText.textContent = opt.text;
+            const voteCount = document.createElement('span');
+            voteCount.textContent = votes.length;
+            btn.appendChild(optText);
+            btn.appendChild(voteCount);
             btn.addEventListener('click', () => votePoll(messageSnap.id, idx));
             pCard.appendChild(btn);
           });
@@ -1090,7 +1279,8 @@
       try {
         const payload = {
           uid: user.uid, sender: profile.displayName || 'User', memoji: profile.memoji || '🙂',
-          text, ...extra, read: false, timestamp: serverTimestamp(),
+          text, effect: selectedEffect, ...extra, read: false, timestamp: serverTimestamp(),
+          ...(disappear24h && active !== 'global' ? { expiresAt: Date.now() + 86400000 } : {}),
           ...(reply ? { replyTo: { id: reply.id, text: reply.text, sender: reply.sender } } : {})
         };
 
@@ -1106,6 +1296,9 @@
         }
 
         textarea.value = '';
+        selectedEffect = '';
+        document.querySelectorAll('.effect-pill').forEach((b) => b.classList.toggle('active', b.dataset.fx === ''));
+        $('effect-picker').classList.add('hidden');
         clearReply();
       } catch (err) {
         console.error(err);
@@ -1177,6 +1370,7 @@
         $('subtitle').textContent = 'Private conversation';
         $('chat-avatar').textContent = peer.memoji || '🙂';
         $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.remove('hidden');
+        $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
         updateMuteBlockIcons();
         await loadThreads();
         startChat();
@@ -1191,6 +1385,35 @@
     function updateMuteBlockIcons() {
       $('mute-toggle').textContent = mutedThreads.includes(active) ? '🔇' : '🔔';
       if (activePeer) $('block-toggle').textContent = blockedUsers.includes(activePeer.uid) ? '✅' : '🚫';
+    }
+
+    async function loadStatuses() {
+      const bar = $('status-bar'); if (!bar || !user) return;
+      bar.innerHTML = '';
+
+      const myChip = document.createElement('button');
+      myChip.type = 'button'; myChip.className = 'status-chip mine';
+      myChip.innerHTML = '<span class="status-ring">＋</span><span class="status-name">My Status</span>';
+      myChip.addEventListener('click', () => $('status-modal').classList.remove('hidden'));
+      bar.appendChild(myChip);
+
+      try {
+        const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+        const snap = await getDocs(query(collection(db, 'statuses'), limit(30)));
+        snap.docs.forEach((d) => {
+          const st = d.data();
+          const ts = st.updatedAt?.toMillis ? st.updatedAt.toMillis() : 0;
+          if (ts < cutoff || !st.text) return;
+
+          const chip = document.createElement('button');
+          chip.type = 'button'; chip.className = 'status-chip';
+          const ring = document.createElement('span'); ring.className = 'status-ring'; ring.textContent = st.memoji || '🙂';
+          const name = document.createElement('span'); name.className = 'status-name'; name.textContent = st.name || 'Member';
+          chip.appendChild(ring); chip.appendChild(name);
+          chip.addEventListener('click', () => showToast(`${st.name}: "${st.text}"`));
+          bar.appendChild(chip);
+        });
+      } catch (err) { console.warn('Status load failed', err); }
     }
 
     async function searchPeople(term = '') {
@@ -1212,16 +1435,43 @@
         people.forEach((person) => {
           const card = document.createElement('div');
           card.className = 'person-card';
-          card.innerHTML = `
-            <div class="person-head">
-              <span class="avatar">${person.memoji || '🙂'}</span>
-              <div><strong>${person.displayName || 'Member'}</strong><div class="muted">${person.grade || ''} ${person.division || ''}</div></div>
-            </div>
-            <div class="muted">${person.school || 'School not set'}</div>
-            <div>${person.bio || 'No bio yet.'}</div>
-            <button class="btn primary" type="button">Message</button>
-          `;
-          card.querySelector('button').addEventListener('click', () => openPrivate(person));
+
+          const head = document.createElement('div');
+          head.className = 'person-head';
+
+          const av = document.createElement('span');
+          av.className = 'avatar';
+          av.textContent = person.memoji || '🙂';
+
+          const info = document.createElement('div');
+          const strong = document.createElement('strong');
+          strong.textContent = person.displayName || 'Member';
+          const gradeDiv = document.createElement('div');
+          gradeDiv.className = 'muted';
+          gradeDiv.textContent = `${person.grade || ''} ${person.division || ''}`.trim();
+          info.appendChild(strong);
+          info.appendChild(gradeDiv);
+
+          head.appendChild(av);
+          head.appendChild(info);
+
+          const schoolEl = document.createElement('div');
+          schoolEl.className = 'muted';
+          schoolEl.textContent = person.school || 'School not set';
+
+          const bioEl = document.createElement('div');
+          bioEl.textContent = person.bio || 'No bio yet.';
+
+          const msgBtn = document.createElement('button');
+          msgBtn.className = 'btn primary';
+          msgBtn.type = 'button';
+          msgBtn.textContent = 'Message';
+          msgBtn.addEventListener('click', () => openPrivate(person));
+
+          card.appendChild(head);
+          card.appendChild(schoolEl);
+          card.appendChild(bioEl);
+          card.appendChild(msgBtn);
           box.appendChild(card);
         });
       } catch (error) { console.error(error); setStatus('people-status', 'Could not load people.', true); }
@@ -1308,6 +1558,8 @@
       const prefs = prefsDoc.exists() ? prefsDoc.data() : {};
       blockedUsers = Array.isArray(prefs.blocked) ? prefs.blocked : [];
       mutedThreads = Array.isArray(prefs.muted) ? prefs.muted : [];
+      starredMessages = Array.isArray(prefs.starred) ? prefs.starred : [];
+      archivedThreads = Array.isArray(prefs.archived) ? prefs.archived : [];
 
       const fallbackName = user.displayName || (user.email ? user.email.split('@')[0] : 'You');
       profile = {
@@ -1322,11 +1574,151 @@
       renderMemojiPicker(profile.memoji);
 
       setPresence(true);
+      loadStatuses();
       loadThreads();
       changeView('home');
       searchPeople('');
+
+      if (!localStorage.getItem('cbk_tour_seen')) {
+        $('tour-modal').classList.remove('hidden');
+        localStorage.setItem('cbk_tour_seen', '1');
+      }
     }
 
+    /* Interactive Install Guide */
+    const INSTALL_GUIDES = {
+      android: {
+        options: [
+          { id: 'chrome', name: 'Chrome (Android 10+)' },
+          { id: 'samsung', name: 'Samsung Internet' },
+          { id: 'edge', name: 'Microsoft Edge' }
+        ],
+        steps: {
+          chrome: [
+            'Tap the <b>More (⋮)</b> menu at the top right.',
+            'Tap <b>Add to Home screen</b> (or <b>Install app</b>).',
+            'Tap <b>Install</b> to confirm.'
+          ],
+          samsung: [
+            'Tap the <b>Menu (≡)</b> button at the bottom right.',
+            'Tap <b>Add page to</b> → <b>Home screen</b>.',
+            'Tap <b>Add</b>.'
+          ],
+          edge: [
+            'Tap the <b>More (⋯)</b> menu at the bottom.',
+            'Tap <b>Add to phone</b> → <b>Install</b>.'
+          ]
+        }
+      },
+      ios: {
+        options: [
+          { id: 'safari', name: 'Safari (iOS 16+)' },
+          { id: 'chrome', name: 'Chrome (iOS 16.4+)' }
+        ],
+        steps: {
+          safari: [
+            'Tap the <b>Share (↑)</b> button at the bottom.',
+            'Scroll down and tap <b>Add to Home Screen</b>.',
+            'Tap <b>Add</b> at the top right.'
+          ],
+          chrome: [
+            'Tap the <b>Share (↑)</b> icon in the top-right address bar.',
+            'Scroll down and tap <b>Add to Home Screen</b>.',
+            'Tap <b>Add</b>.'
+          ]
+        }
+      },
+      windows: {
+        options: [
+          { id: 'chrome', name: 'Chrome (Win 10/11)' },
+          { id: 'edge', name: 'Edge (Win 10/11)' }
+        ],
+        steps: {
+          chrome: [
+            'Click the <b>More (⋮)</b> menu at the top right.',
+            'Go to <b>Cast, save, and share</b> → <b>Install ChatByKarnav…</b>.',
+            'Click <b>Install</b>.'
+          ],
+          edge: [
+            'Click the <b>Settings and more (⋯)</b> menu at the top right.',
+            'Go to <b>Apps</b> → <b>Install this site as an app</b>.',
+            'Click <b>Install</b>.'
+          ]
+        }
+      },
+      mac: {
+        options: [
+          { id: 'safari', name: 'Safari (macOS Sonoma+)' },
+          { id: 'chrome', name: 'Chrome' }
+        ],
+        steps: {
+          safari: [
+            'Click <b>File</b> in the top menu bar (or the <b>Share</b> button).',
+            'Click <b>Add to Dock…</b>.',
+            'Click <b>Add</b>.'
+          ],
+          chrome: [
+            'Click the <b>More (⋮)</b> menu at the top right.',
+            'Go to <b>Cast, save, and share</b> → <b>Install ChatByKarnav…</b>.',
+            'Click <b>Install</b>.'
+          ]
+        }
+      }
+    };
+
+    function updateInstallBrowserOptions() {
+      const os = $('install-os').value;
+      const browserSelect = $('install-browser');
+      browserSelect.innerHTML = '';
+      INSTALL_GUIDES[os].options.forEach((opt) => {
+        const o = document.createElement('option');
+        o.value = opt.id; o.textContent = opt.name;
+        browserSelect.appendChild(o);
+      });
+      renderInstallSteps();
+    }
+
+    function renderInstallSteps() {
+      const os = $('install-os').value;
+      const browser = $('install-browser').value;
+      const steps = INSTALL_GUIDES[os].steps[browser] || [];
+      $('install-steps-box').innerHTML = `<ol>${steps.map((s) => `<li>${s}</li>`).join('')}</ol>`;
+    }
+
+    function detectOS() {
+      const ua = navigator.userAgent.toLowerCase();
+      if (/android/.test(ua)) return 'android';
+      if (/iphone|ipad|ipod/.test(ua)) return 'ios';
+      if (/mac/.test(ua)) return 'mac';
+      return 'windows';
+    }
+
+    $('install-os').addEventListener('change', updateInstallBrowserOptions);
+    $('install-browser').addEventListener('change', renderInstallSteps);
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      $('native-install-btn').classList.remove('hidden');
+    });
+
+    $('install-guide-btn').addEventListener('click', () => {
+      $('install-os').value = detectOS();
+      updateInstallBrowserOptions();
+      $('install-modal').classList.remove('hidden');
+    });
+    $('close-install-modal').addEventListener('click', () => $('install-modal').classList.add('hidden'));
+    $('install-modal').addEventListener('click', (e) => { if (e.target === $('install-modal')) $('install-modal').classList.add('hidden'); });
+    $('native-install-btn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') { showToast('App installed!'); $('install-modal').classList.add('hidden'); }
+      deferredPrompt = null;
+      $('native-install-btn').classList.add('hidden');
+    });
+
+    /* Event Listeners */
     $('welcome-continue').addEventListener('click', () => {
       $('welcome-screen').classList.add('hidden');
       $('login').classList.remove('hidden');
@@ -1354,23 +1746,15 @@
         if (!snap.exists()) {
           const name = u.displayName || (u.email ? u.email.split('@')[0] : 'Member');
           await setDoc(profileRef, {
-            displayName: name,
-            displayNameLower: name.toLowerCase(),
+            displayName: name, displayNameLower: name.toLowerCase(),
             memoji: $('memoji-value').value || '🙂',
-            grade: '',
-            division: '',
-            school: '',
-            bio: '',
-            updatedAt: serverTimestamp()
+            grade: '', division: '', school: '', bio: '', updatedAt: serverTimestamp()
           }, { merge: true });
         }
       } catch (error) {
-        console.error(error);
-        const msg = error?.code === 'auth/popup-closed-by-user'
-          ? 'Sign-in popup was closed.'
-          : error?.code === 'auth/account-exists-with-different-credential'
-            ? 'An account already exists with this email using a password.'
-            : 'Could not complete Google sign-in.';
+        const msg = error?.code === 'auth/popup-closed-by-user' ? 'Sign-in popup was closed.'
+          : error?.code === 'auth/account-exists-with-different-credential' ? 'An account already exists with this email using a password.'
+          : 'Could not complete Google sign-in.';
         setStatus('auth-status', msg, true);
       }
     });
@@ -1379,10 +1763,8 @@
 
     $('change-password-btn').addEventListener('click', async () => {
       if (!user?.email) return;
-      try {
-        await sendPasswordResetEmail(auth, user.email);
-        showToast('Password reset link sent to your email.');
-      } catch (err) { showToast('Could not send reset email.', true); }
+      try { await sendPasswordResetEmail(auth, user.email); showToast('Password reset link sent to your email.'); }
+      catch (err) { showToast('Could not send reset email.', true); }
     });
 
     $('delete-account-btn').addEventListener('click', async () => {
@@ -1392,11 +1774,7 @@
         await deleteUser(auth.currentUser);
         showToast('Account deleted.');
       } catch (err) {
-        if (err?.code === 'auth/requires-recent-login') {
-          showToast('Please sign out and sign back in before deleting your account.', true);
-        } else {
-          showToast('Could not delete account.', true);
-        }
+        showToast(err?.code === 'auth/requires-recent-login' ? 'Please sign out and sign back in before deleting your account.' : 'Could not delete account.', true);
       }
     });
 
@@ -1414,28 +1792,59 @@
     $('message-input').addEventListener('input', () => { setTyping(true); clearTimeout(typingTimer); typingTimer = setTimeout(() => setTyping(false), 1800); });
     $('photo-toggle').addEventListener('click', () => $('photo-input').click());
     $('photo-input').addEventListener('change', (e) => { if (e.target.files?.[0]) { compressAndSendPhoto(e.target.files[0]); e.target.value = ''; } });
-
     $('lightbox').addEventListener('click', () => $('lightbox').classList.add('hidden'));
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      $('native-install-btn').classList.remove('hidden');
+    $('help-tour-btn').addEventListener('click', () => $('tour-modal').classList.remove('hidden'));
+    $('close-tour').addEventListener('click', () => $('tour-modal').classList.add('hidden'));
+
+    $('fx-toggle').addEventListener('click', () => $('effect-picker').classList.toggle('hidden'));
+    document.querySelectorAll('.effect-pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        selectedEffect = btn.dataset.fx;
+        document.querySelectorAll('.effect-pill').forEach((b) => b.classList.toggle('active', b === btn));
+      });
     });
 
-    $('install-guide-btn').addEventListener('click', () => $('install-modal').classList.remove('hidden'));
-    $('close-install-modal').addEventListener('click', () => $('install-modal').classList.add('hidden'));
-    $('install-modal').addEventListener('click', (e) => { if (e.target === $('install-modal')) $('install-modal').classList.add('hidden'); });
-    $('native-install-btn').addEventListener('click', async () => {
-      if (!deferredPrompt) return;
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        showToast('App installed!');
-        $('install-modal').classList.add('hidden');
+    $('disappear-toggle').addEventListener('click', async () => {
+      if (active === 'global' || !user) return;
+      disappear24h = !disappear24h;
+      await setDoc(doc(db, 'conversations', active), { disappear24h }, { merge: true });
+      $('disappear-toggle').style.background = disappear24h ? 'rgba(10, 132, 255, 0.25)' : '';
+      showToast(disappear24h ? '24h Disappearing Messages ON ⏳' : 'Disappearing Messages OFF');
+    });
+
+    $('starred-btn').addEventListener('click', () => {
+      const list = $('starred-list'); list.innerHTML = '';
+      if (!starredMessages.length) {
+        list.innerHTML = '<div class="muted" style="text-align:center; padding:16px;">No starred messages yet.</div>';
+      } else {
+        starredMessages.forEach((s) => {
+          const item = document.createElement('div'); item.className = 'starred-item';
+          const strong = document.createElement('strong'); strong.textContent = s.sender + ': ';
+          const span = document.createElement('span'); span.textContent = s.text;
+          item.appendChild(strong); item.appendChild(span); list.appendChild(item);
+        });
       }
-      deferredPrompt = null;
-      $('native-install-btn').classList.add('hidden');
+      $('starred-modal').classList.remove('hidden');
+    });
+    $('close-starred').addEventListener('click', () => $('starred-modal').classList.add('hidden'));
+
+    $('archive-toggle').addEventListener('click', async () => {
+      if (!user || active === 'global') return;
+      archivedThreads = archivedThreads.includes(active) ? archivedThreads.filter((id) => id !== active) : [...archivedThreads, active];
+      await setDoc(doc(db, 'users', user.uid), { archived: archivedThreads }, { merge: true });
+      loadThreads(); changeView('home'); showToast('Chat archived.');
+    });
+
+    $('cancel-status').addEventListener('click', () => $('status-modal').classList.add('hidden'));
+    $('save-status').addEventListener('click', async () => {
+      const text = $('status-input').value.trim();
+      if (!text) return;
+      await setDoc(doc(db, 'statuses', user.uid), {
+        name: profile.displayName || 'Member', memoji: profile.memoji || '🙂', text, updatedAt: serverTimestamp()
+      });
+      $('status-input').value = ''; $('status-modal').classList.add('hidden');
+      loadStatuses(); showToast('Status posted for 24h!');
     });
 
     $('voice-toggle').addEventListener('click', async () => {
@@ -1449,7 +1858,8 @@
         mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
         mediaRecorder.onstop = () => {
           stream.getTracks().forEach((t) => t.stop());
-          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          const mimeType = mediaRecorder.mimeType || 'audio/webm';
+          const blob = new Blob(audioChunks, { type: mimeType });
           const reader = new FileReader();
           reader.onloadend = () => sendMessage({ audio: reader.result });
           reader.readAsDataURL(blob);
@@ -1493,7 +1903,9 @@
         const p = d.data();
         const label = document.createElement('label');
         label.className = 'member-item';
-        label.innerHTML = `<input type="checkbox" value="${d.id}"> <span>${p.memoji || '🙂'} ${p.displayName || 'Member'}</span>`;
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = d.id;
+        const span = document.createElement('span'); span.textContent = `${p.memoji || '🙂'} ${p.displayName || 'Member'}`;
+        label.appendChild(cb); label.appendChild(span);
         list.appendChild(label);
       });
     });
@@ -1510,6 +1922,7 @@
       await loadThreads();
       msgLimit = 50; active = ref.id; activePeer = null;
       $('title').textContent = name; $('subtitle').textContent = `${members.length} members`; $('chat-avatar').textContent = '👥';
+      $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
       startChat(); changeView('chat');
     });
 
