@@ -71,6 +71,18 @@
     .muted { color: var(--muted); }
     .danger { color: #ff453a; }
 
+    .offline-banner {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: #ff453a;
+      color: white;
+      text-align: center;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      z-index: 200;
+    }
+
     .auth {
       max-width: 460px;
       margin: 8vh auto;
@@ -102,11 +114,17 @@
     .memoji-option:hover { transform: scale(1.06); }
     .memoji-option.active { border-color: var(--blue); background: rgba(10, 132, 255, 0.18); box-shadow: 0 4px 12px rgba(10, 132, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.4); }
 
-    .auth-actions, .profile-actions { display: flex; gap: 10px; }
+    .auth-actions, .profile-actions { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn { border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 16px; font-weight: 700; }
     .btn:hover { transform: translateY(-1px); }
     .btn.primary { background: var(--blue-glass); color: white; flex: 1; border-color: rgba(255, 255, 255, 0.28); box-shadow: 0 8px 20px rgba(10, 132, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
     .btn.secondary { background: var(--glass-subtle); color: var(--text); }
+    .btn.danger-btn { background: rgba(255, 69, 58, 0.16); color: #ff453a; border-color: rgba(255, 69, 58, 0.4); }
+
+    .oauth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0 12px; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .oauth-divider::before, .oauth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+    .google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--glass-strong); color: var(--text); }
+
     .auth-status { min-height: 20px; margin-top: 12px; font-size: 14px; color: var(--muted); }
 
     .shell { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; max-width: 1500px; margin: 0 auto; padding: 16px; min-height: 100vh; }
@@ -159,6 +177,7 @@
     .pinned-bar strong { color: var(--blue); }
 
     .messages { flex: 1; overflow: auto; padding: 16px 18px 10px; display: flex; flex-direction: column; gap: 10px; }
+    .load-more-btn { align-self: center; font-size: 12px; padding: 6px 14px; border-radius: 999px; margin-bottom: 6px; }
 
     @keyframes msgIn { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
     @keyframes viewFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
@@ -227,16 +246,18 @@
     .person-head { display: flex; align-items: center; gap: 12px; }
     .person-card .avatar { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 22px; background: linear-gradient(145deg, rgba(223, 232, 255, 0.85), rgba(231, 238, 251, 0.95)); border: 1px solid rgba(255, 255, 255, 0.6); color: #2c3355; }
 
-    .form-card { background: var(--glass-subtle); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px; max-width: 620px; box-shadow: 0 8px 24px rgba(0,0,0,.06), var(--glass-highlight); }
+    .form-card { background: var(--glass-subtle); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 22px; padding: 20px; max-width: 620px; box-shadow: 0 8px 24px rgba(0,0,0,.06), var(--glass-highlight); margin-bottom: 18px; }
     .form-grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
     .form-card input, .form-card textarea { width: 100%; margin-top: 6px; border: 1px solid var(--glass-border); background: var(--glass-strong); color: var(--text); border-radius: 12px; padding: 10px 12px; }
     .profile-actions { margin-top: 16px; }
 
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); backdrop-filter: blur(8px); display: grid; place-items: center; z-index: 90; padding: 16px; }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(10px); display: grid; place-items: center; z-index: 90; padding: 16px; }
     .modal-card { width: 100%; max-width: 420px; background: var(--glass-strong); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 24px; padding: 22px; box-shadow: var(--shadow), var(--glass-highlight); }
     .modal-card h3 { margin: 0 0 12px; }
     .member-list { max-height: 180px; overflow: auto; display: flex; flex-direction: column; gap: 6px; margin: 10px 0 14px; }
     .member-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: var(--glass-subtle); font-size: 14px; }
+
+    .lightbox-img { max-width: 92vw; max-height: 86vh; border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); object-fit: contain; }
 
     .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--glass-strong); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); color: var(--text); padding: 12px 18px; border-radius: 999px; box-shadow: var(--shadow), var(--glass-highlight); z-index: 100; }
 
@@ -252,6 +273,8 @@
   </style>
 </head>
 <body>
+  <div id="offline-banner" class="offline-banner hidden">You are offline. Reconnecting…</div>
+
   <div class="auth" id="login">
     <div class="brand"><span class="brand-mark">✉</span>ChatByKarnav</div>
     <p>Sign in with your email and password.</p>
@@ -269,6 +292,8 @@
         <input id="memoji-value" type="hidden" value="🙂">
       </div>
       <div class="auth-actions"><button id="auth-submit" class="btn primary" type="submit">Sign in</button></div>
+      <div class="oauth-divider"><span>or</span></div>
+      <button type="button" id="google-signin" class="btn google-btn">Continue with Google</button>
       <div id="auth-status" class="auth-status" role="status" aria-live="polite"></div>
     </form>
   </div>
@@ -363,7 +388,7 @@
       <section class="page" id="view-profile">
         <h2>Your profile</h2>
         <p class="muted">Choose what other members can see.</p>
-        <form id="profile-form" class="form-card" style="max-width: 620px; margin-top: 18px;">
+        <form id="profile-form" class="form-card" style="margin-top: 18px;">
           <div class="form-grid">
             <label class="field">Display name <input id="display-name" maxlength="40" required></label>
             <label class="field">Memoji <input id="profile-memoji" maxlength="8" value="🙂"></label>
@@ -375,8 +400,21 @@
           <div class="profile-actions"><button class="btn primary" type="submit">Save profile</button></div>
           <div id="profile-status" class="auth-status" role="status" aria-live="polite"></div>
         </form>
+
+        <div class="form-card">
+          <h3 style="margin-top:0;">Account settings</h3>
+          <div class="profile-actions">
+            <button type="button" id="change-password-btn" class="btn secondary">Change password</button>
+            <button type="button" id="delete-account-btn" class="btn danger-btn">Delete account</button>
+          </div>
+        </div>
       </section>
     </main>
+  </div>
+
+  <!-- Photo Lightbox -->
+  <div id="lightbox" class="modal-backdrop hidden">
+    <img id="lightbox-img" class="lightbox-img" alt="Full size photo">
   </div>
 
   <!-- Group Chat Modal -->
@@ -412,10 +450,9 @@
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut, updateProfile } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, updateProfile, deleteUser } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+    import { getFirestore, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, limitToLast, onSnapshot, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    // Inject PWA Manifest dynamically
     const manifest = {
       name: 'ChatByKarnav',
       short_name: 'ChatByKarnav',
@@ -460,6 +497,9 @@
     let typingTimer = null;
     let allThreads = [];
     let lastSnapshot = null;
+    let msgLimit = 50;
+    let isInitialLoad = true;
+    let unreadBgCount = 0;
     let reply = null;
     let sendLock = false;
     let currentAuthMode = 'signin';
@@ -475,6 +515,21 @@
       clearTimeout(showToast.timer); showToast.timer = setTimeout(() => el.classList.add('hidden'), 2500);
     }
     function setStatus(id, text, bad = false) { const el = $(id); if (el) { el.textContent = text; el.classList.toggle('danger', bad); } }
+
+    function playChime() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(660, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(); osc.stop(ctx.currentTime + 0.2);
+      } catch (_) {}
+    }
 
     function applyTheme() {
       const dark = localStorage.getItem('chat-theme') === 'dark';
@@ -540,6 +595,7 @@
         </span>
       `;
       item.addEventListener('click', () => {
+        msgLimit = 50;
         if (thread.type === 'global') {
           active = 'global'; activePeer = null;
           $('title').textContent = 'Community chat'; $('subtitle').textContent = 'Everyone in the community';
@@ -623,7 +679,6 @@
       if (stopTyping) { stopTyping(); stopTyping = null; }
       if (stopPin) { stopPin(); stopPin = null; }
 
-      // Watch pinned message
       const pinDocRef = active === 'global' ? doc(db, 'settings', 'global_pin') : doc(db, 'conversations', active);
       stopPin = onSnapshot(pinDocRef, (snap) => {
         const pinned = snap.exists() ? snap.data().pinnedMessage : null;
@@ -675,10 +730,8 @@
       const trimmed = nextText.trim();
       if (!trimmed || trimmed === oldText) return;
       const msgRef = active === 'global' ? doc(db, 'global_messages', msgId) : doc(db, 'conversations', active, 'messages', msgId);
-      try {
-        await updateDoc(msgRef, { text: trimmed, edited: true });
-        showToast('Message updated.');
-      } catch (err) { showToast('Could not edit message.', true); }
+      try { await updateDoc(msgRef, { text: trimmed, edited: true }); showToast('Message updated.'); }
+      catch (err) { showToast('Could not edit message.', true); }
     }
 
     async function deleteMessage(msgId) {
@@ -737,6 +790,15 @@
       const box = $('messages'); if (!box) return;
       const docs = [...snapshot.docs];
       box.innerHTML = '';
+
+      if (docs.length >= msgLimit) {
+        const moreBtn = document.createElement('button');
+        moreBtn.type = 'button';
+        moreBtn.className = 'btn secondary load-more-btn';
+        moreBtn.textContent = 'Load older messages';
+        moreBtn.addEventListener('click', () => { msgLimit += 50; startChat(); });
+        box.appendChild(moreBtn);
+      }
 
       if (!docs.length) { box.innerHTML = '<div class="empty muted">No messages yet. Say hello 👋</div>'; return; }
 
@@ -835,7 +897,10 @@
         if (message.image) {
           const img = document.createElement('img');
           img.src = message.image; img.className = 'msg-img'; img.alt = 'Shared photo';
-          img.addEventListener('click', () => window.open(message.image, '_blank'));
+          img.addEventListener('click', () => {
+            $('lightbox-img').src = message.image;
+            $('lightbox').classList.remove('hidden');
+          });
           bubble.appendChild(img);
         }
         if (message.audio) {
@@ -948,12 +1013,19 @@
     function startChat() {
       if (stopMessages) stopMessages();
       stopMessages = null;
+      isInitialLoad = true;
       watchPeerStatus();
 
       const box = $('messages'); if (!box) return;
       box.innerHTML = '<div class="empty muted">Loading messages…</div>';
 
-      stopMessages = onSnapshot(query(messagesRef(), orderBy('timestamp', 'asc')), (snapshot) => {
+      stopMessages = onSnapshot(query(messagesRef(), orderBy('timestamp', 'asc'), limitToLast(msgLimit)), (snapshot) => {
+        if (!isInitialLoad && document.hidden && !mutedThreads.includes(active)) {
+          unreadBgCount++;
+          document.title = `(${unreadBgCount}) Messages | ChatByKarnav`;
+          playChime();
+        }
+        isInitialLoad = false;
         lastSnapshot = snapshot;
         renderMessages(snapshot);
         markMessagesRead(snapshot);
@@ -965,6 +1037,7 @@
 
     async function openPrivate(peer) {
       if (!user || !peer?.uid) return;
+      msgLimit = 50;
       const ids = [user.uid, peer.uid].sort();
       const cid = ids.join('_');
       const ref = doc(db, 'conversations', cid);
@@ -1136,7 +1209,62 @@
       catch (err) { setStatus('auth-status', 'Could not send reset email.', true); }
     });
 
+    $('google-signin').addEventListener('click', async () => {
+      setStatus('auth-status', 'Opening Google sign-in…');
+      try {
+        const result = await signInWithPopup(auth, new GoogleAuthProvider());
+        const u = result.user;
+        const profileRef = doc(db, 'publicProfiles', u.uid);
+        const snap = await getDoc(profileRef);
+        if (!snap.exists()) {
+          const name = u.displayName || (u.email ? u.email.split('@')[0] : 'Member');
+          await setDoc(profileRef, {
+            displayName: name,
+            displayNameLower: name.toLowerCase(),
+            memoji: $('memoji-value').value || '🙂',
+            grade: '',
+            division: '',
+            school: '',
+            bio: '',
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        }
+      } catch (error) {
+        console.error(error);
+        const msg = error?.code === 'auth/popup-closed-by-user'
+          ? 'Sign-in popup was closed.'
+          : error?.code === 'auth/account-exists-with-different-credential'
+            ? 'An account already exists with this email using a password.'
+            : 'Could not complete Google sign-in.';
+        setStatus('auth-status', msg, true);
+      }
+    });
+
     $('profile-form').addEventListener('submit', saveProfile);
+
+    $('change-password-btn').addEventListener('click', async () => {
+      if (!user?.email) return;
+      try {
+        await sendPasswordResetEmail(auth, user.email);
+        showToast('Password reset link sent to your email.');
+      } catch (err) { showToast('Could not send reset email.', true); }
+    });
+
+    $('delete-account-btn').addEventListener('click', async () => {
+      if (!user || !confirm('Are you sure? This will permanently delete your account and profile.')) return;
+      try {
+        await deleteDoc(doc(db, 'publicProfiles', user.uid));
+        await deleteUser(auth.currentUser);
+        showToast('Account deleted.');
+      } catch (err) {
+        if (err?.code === 'auth/requires-recent-login') {
+          showToast('Please sign out and sign back in before deleting your account.', true);
+        } else {
+          showToast('Could not delete account.', true);
+        }
+      }
+    });
+
     $('people-form').addEventListener('submit', (e) => { e.preventDefault(); searchPeople($('people-search').value.trim()); });
     $('thread-search').addEventListener('input', (e) => {
       const term = e.target.value.trim().toLowerCase();
@@ -1151,13 +1279,11 @@
     $('photo-toggle').addEventListener('click', () => $('photo-input').click());
     $('photo-input').addEventListener('change', (e) => { if (e.target.files?.[0]) { compressAndSendPhoto(e.target.files[0]); e.target.value = ''; } });
 
-    // Voice note recording (max 15s)
+    $('lightbox').addEventListener('click', () => $('lightbox').classList.add('hidden'));
+
     $('voice-toggle').addEventListener('click', async () => {
       if (mediaRecorder && mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
-        clearTimeout(recordTimer);
-        $('voice-toggle').classList.remove('recording');
-        return;
+        mediaRecorder.stop(); clearTimeout(recordTimer); $('voice-toggle').classList.remove('recording'); return;
       }
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -1178,13 +1304,11 @@
       } catch (err) { showToast('Microphone permission denied.', true); }
     });
 
-    // Unpin button
     $('unpin-btn').addEventListener('click', async () => {
       const pinDocRef = active === 'global' ? doc(db, 'settings', 'global_pin') : doc(db, 'conversations', active);
       try { await setDoc(pinDocRef, { pinnedMessage: null }, { merge: true }); } catch (_) {}
     });
 
-    // Mute & Block toggles
     $('mute-toggle').addEventListener('click', async () => {
       if (!user || active === 'global') return;
       mutedThreads = mutedThreads.includes(active) ? mutedThreads.filter((id) => id !== active) : [...mutedThreads, active];
@@ -1202,7 +1326,6 @@
       showToast(blockedUsers.includes(uid) ? 'User blocked.' : 'User unblocked.');
     });
 
-    // Group Chat Modal
     $('new-group-btn').addEventListener('click', async () => {
       $('group-modal').classList.remove('hidden');
       const list = $('group-members-list'); list.innerHTML = 'Loading members...';
@@ -1228,12 +1351,11 @@
       });
       $('group-modal').classList.add('hidden'); $('group-name').value = '';
       await loadThreads();
-      active = ref.id; activePeer = null;
+      msgLimit = 50; active = ref.id; activePeer = null;
       $('title').textContent = name; $('subtitle').textContent = `${members.length} members`; $('chat-avatar').textContent = '👥';
       startChat(); changeView('chat');
     });
 
-    // Poll Modal
     $('poll-toggle').addEventListener('click', () => $('poll-modal').classList.remove('hidden'));
     $('cancel-poll').addEventListener('click', () => $('poll-modal').classList.add('hidden'));
     $('create-poll-submit').addEventListener('click', async () => {
@@ -1280,7 +1402,17 @@
     }
 
     document.querySelectorAll('.nav').forEach((b) => b.addEventListener('click', () => changeView(b.dataset.view)));
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && user) setPresence(true); });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        unreadBgCount = 0;
+        document.title = 'Messages | ChatByKarnav';
+        if (user) setPresence(true);
+      }
+    });
+
+    window.addEventListener('offline', () => $('offline-banner').classList.remove('hidden'));
+    window.addEventListener('online', () => $('offline-banner').classList.add('hidden'));
 
     renderMemojiPicker('🙂');
     changeView('chat');
