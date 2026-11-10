@@ -4,9 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0a84ff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="description" content="Friendly community messaging with custom memoji and email sign in.">
   <title>Messages | ChatByKarnav</title>
   <link rel="icon" type="image/png" href="lgo.png">
+  <link rel="apple-touch-icon" href="lgo.png">
   <style>
     :root {
       color-scheme: light;
@@ -83,7 +85,6 @@
       z-index: 200;
     }
 
-    /* Pre-login Welcome Screen */
     .welcome-screen {
       max-width: 440px;
       margin: 10vh auto;
@@ -214,7 +215,6 @@
     .subtitle.online { color: var(--green); font-weight: 600; }
     .main-actions { display: flex; gap: 6px; }
 
-    /* Post-login Home Welcome Screen */
     .home-welcome {
       flex: 1;
       display: flex;
@@ -318,6 +318,10 @@
     .member-list { max-height: 180px; overflow: auto; display: flex; flex-direction: column; gap: 6px; margin: 10px 0 14px; }
     .member-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: var(--glass-subtle); font-size: 14px; }
 
+    .install-guide-list { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 16px; font-size: 13px; color: var(--muted); }
+    .install-step { padding: 10px 12px; border-radius: 14px; background: var(--glass-subtle); border: 1px solid var(--glass-border); line-height: 1.45; }
+    .install-step strong { color: var(--text); display: block; margin-bottom: 3px; }
+
     .lightbox-img { max-width: 92vw; max-height: 86vh; border-radius: 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); object-fit: contain; }
 
     .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--glass-strong); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); color: var(--text); padding: 12px 18px; border-radius: 999px; box-shadow: var(--shadow), var(--glass-highlight); z-index: 100; }
@@ -420,6 +424,7 @@
         <div class="main-actions">
           <button class="icon-btn hidden" id="mute-toggle" title="Mute chat">🔔</button>
           <button class="icon-btn hidden" id="block-toggle" title="Block user">🚫</button>
+          <button class="icon-btn" id="install-guide-btn" title="Install App">📲</button>
           <button class="icon-btn" id="notify-toggle" title="Notifications">🔔</button>
           <button class="icon-btn" id="theme-toggle" title="Toggle theme">☀️</button>
         </div>
@@ -501,6 +506,34 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <!-- Install PWA Guide Modal -->
+  <div id="install-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>Install ChatByKarnav</h3>
+      <p class="muted" style="font-size: 13px; margin: 0 0 10px;">
+        Add ChatByKarnav to your home screen to use it like a native app.
+      </p>
+      <div class="install-guide-list">
+        <div class="install-step">
+          <strong>📱 Android (Chrome)</strong>
+          Tap the <b>⋮</b> menu at the top right and select <b>Add to Home screen</b> or <b>Install app</b>.
+        </div>
+        <div class="install-step">
+          <strong>🍎 iPhone / iPad (Safari)</strong>
+          Tap the <b>Share</b> icon (square with ↑ arrow) at the bottom, scroll down, and tap <b>Add to Home Screen</b>.
+        </div>
+        <div class="install-step">
+          <strong>💻 Desktop (Chrome / Edge)</strong>
+          Click the <b>Install (⊕)</b> icon on the right side of the address bar.
+        </div>
+      </div>
+      <div class="auth-actions">
+        <button type="button" id="native-install-btn" class="btn primary hidden">Install Now</button>
+        <button type="button" id="close-install-modal" class="btn secondary" style="flex: 1;">Got it</button>
+      </div>
+    </div>
   </div>
 
   <!-- Photo Lightbox -->
@@ -597,6 +630,7 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let recordTimer = null;
+    let deferredPrompt = null;
 
     function safeText(v) { return String(v ?? '').trim(); }
     function initials(name) { const t = safeText(name); return t ? t.split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toUpperCase() : '?'; }
@@ -1382,6 +1416,27 @@
     $('photo-input').addEventListener('change', (e) => { if (e.target.files?.[0]) { compressAndSendPhoto(e.target.files[0]); e.target.value = ''; } });
 
     $('lightbox').addEventListener('click', () => $('lightbox').classList.add('hidden'));
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      $('native-install-btn').classList.remove('hidden');
+    });
+
+    $('install-guide-btn').addEventListener('click', () => $('install-modal').classList.remove('hidden'));
+    $('close-install-modal').addEventListener('click', () => $('install-modal').classList.add('hidden'));
+    $('install-modal').addEventListener('click', (e) => { if (e.target === $('install-modal')) $('install-modal').classList.add('hidden'); });
+    $('native-install-btn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        showToast('App installed!');
+        $('install-modal').classList.add('hidden');
+      }
+      deferredPrompt = null;
+      $('native-install-btn').classList.add('hidden');
+    });
 
     $('voice-toggle').addEventListener('click', async () => {
       if (mediaRecorder && mediaRecorder.state === 'recording') {
