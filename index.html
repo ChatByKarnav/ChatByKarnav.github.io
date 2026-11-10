@@ -1979,6 +1979,11 @@
     applyTheme();
     setAuthMode('signin');
     onAuthStateChanged(auth, signedIn);
-  </script>
+ if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => console.error('SW failed:', err));
+  });
+}
+</script>
 </body>
 </html>
