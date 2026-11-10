@@ -59,7 +59,7 @@
       color: var(--text);
     }
 
-    body, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, input, textarea {
+    body, .welcome-screen, .auth, .sidebar, .main, .bubble, .btn, .icon-btn, .thread, .person-card, input, textarea {
       transition: background 0.3s ease, background-color 0.3s ease, color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
     }
 
@@ -83,6 +83,50 @@
       z-index: 200;
     }
 
+    /* Pre-login Welcome Screen */
+    .welcome-screen {
+      max-width: 440px;
+      margin: 10vh auto;
+      background: var(--glass);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      border: 1px solid var(--glass-border);
+      border-radius: 28px;
+      box-shadow: var(--shadow), var(--glass-highlight);
+      padding: 40px 28px 32px;
+      text-align: center;
+      animation: viewFade 0.25s ease-out;
+    }
+
+    .welcome-icon {
+      width: 76px;
+      height: 76px;
+      margin: 0 auto 20px;
+      border-radius: 24px;
+      display: grid;
+      place-items: center;
+      background: var(--blue-glass);
+      color: white;
+      font-size: 36px;
+      box-shadow: 0 12px 28px rgba(10, 132, 255, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .welcome-screen h1 { margin: 0 0 10px; font-size: 26px; letter-spacing: -0.03em; }
+    .welcome-screen p { margin: 0 0 20px; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+    .about-us {
+      margin: 0 0 22px;
+      padding: 12px 16px;
+      border-radius: 16px;
+      background: var(--glass-subtle);
+      border: 1px solid var(--glass-border);
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .about-us strong { color: var(--text); }
+    .welcome-terms { margin-top: 16px; font-size: 12px; color: var(--muted); }
+
     .auth {
       max-width: 460px;
       margin: 8vh auto;
@@ -93,6 +137,7 @@
       border-radius: 28px;
       box-shadow: var(--shadow), var(--glass-highlight);
       padding: 30px 26px;
+      animation: viewFade 0.22s ease-out;
     }
 
     .brand { display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 28px; letter-spacing: -.04em; margin-bottom: 10px; }
@@ -129,7 +174,7 @@
 
     .shell { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; max-width: 1500px; margin: 0 auto; padding: 16px; min-height: 100vh; }
     .sidebar, .main { background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 26px; box-shadow: var(--shadow), var(--glass-highlight); min-height: calc(100vh - 32px); overflow: hidden; }
-    .sidebar { display: flex; flex-direction: column; }
+    .sidebar { display: flex; flex-direction: column; position: relative; }
 
     .side-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 18px 12px; border-bottom: 1px solid var(--line); }
     .brand-small { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 22px; }
@@ -168,6 +213,22 @@
     .subtitle { color: var(--muted); font-size: 12px; margin-top: 3px; }
     .subtitle.online { color: var(--green); font-weight: 600; }
     .main-actions { display: flex; gap: 6px; }
+
+    /* Post-login Home Welcome Screen */
+    .home-welcome {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px;
+      gap: 12px;
+      animation: viewFade 0.22s ease-out;
+    }
+    .home-welcome .brand-mark { width: 68px; height: 68px; font-size: 32px; border-radius: 22px; margin-bottom: 6px; }
+    .home-welcome h2 { margin: 0; font-size: 26px; letter-spacing: -0.03em; }
+    .home-welcome p { margin: 0; max-width: 360px; color: var(--muted); font-size: 14px; }
 
     .chat-view, .page { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .message-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 18px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; }
@@ -261,11 +322,14 @@
 
     .toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); background: var(--glass-strong); backdrop-filter: var(--blur); border: 1px solid var(--glass-border); color: var(--text); padding: 12px 18px; border-radius: 999px; box-shadow: var(--shadow), var(--glass-highlight); z-index: 100; }
 
+    .fab-new-chat { display: none; }
+
     @media (max-width: 760px) {
       .shell { display: block; padding: 0; min-height: 100vh; }
       .sidebar, .main { min-height: 100vh; border-radius: 0; border: 0; }
       .sidebar { display: flex !important; position: fixed; inset: 0; z-index: 20; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); pointer-events: none; }
       .sidebar.open { transform: translateX(0); pointer-events: auto; }
+      .fab-new-chat { display: grid; place-items: center; position: fixed; right: 20px; bottom: 80px; width: 56px; height: 56px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.35); background: var(--blue-glass); color: white; font-size: 24px; box-shadow: 0 10px 26px rgba(10, 132, 255, 0.38); z-index: 25; }
       .top { padding-inline: 12px; }
       .message-tools, .messages, .composer-wrap { padding-left: 12px; padding-right: 12px; }
       .msg-row { max-width: 88%; }
@@ -275,7 +339,22 @@
 <body>
   <div id="offline-banner" class="offline-banner hidden">You are offline. Reconnecting…</div>
 
-  <div class="auth" id="login">
+  <!-- Pre-login Welcome Screen -->
+  <div class="welcome-screen" id="welcome-screen">
+    <div class="welcome-icon">✉</div>
+    <h1>Welcome to ChatByKarnav</h1>
+    <p>Fast, simple, and private community messaging with your friends and classmates.</p>
+    <div class="about-us">
+      <strong>About Us:</strong> ChatByKarnav is made by <strong>Karnav</strong> and is an iMessage copy built for fast, simple, and private messaging.
+    </div>
+    <button type="button" id="welcome-continue" class="btn primary" style="width: 100%;">
+      Agree and continue
+    </button>
+    <div class="welcome-terms">Tap "Agree and continue" to sign in or create an account.</div>
+  </div>
+
+  <!-- Login / Sign Up Screen -->
+  <div class="auth hidden" id="login">
     <div class="brand"><span class="brand-mark">✉</span>ChatByKarnav</div>
     <p>Sign in with your email and password.</p>
     <div class="auth-toggle" aria-label="Authentication mode selector">
@@ -298,6 +377,7 @@
     </form>
   </div>
 
+  <!-- Main App Shell -->
   <div class="shell hidden" id="app">
     <aside class="sidebar" id="sidebar">
       <div class="side-head">
@@ -317,6 +397,7 @@
       </div>
       <div class="section-label">Conversations</div>
       <div class="threads" id="threads"></div>
+      <button class="fab-new-chat" id="fab-new-chat" type="button" title="New chat">＋</button>
       <div class="side-footer">
         <div class="person-head">
           <span class="self-avatar" id="self-avatar">🙂</span>
@@ -344,7 +425,17 @@
         </div>
       </header>
 
-      <section class="chat-view" id="view-chat">
+      <!-- Post-login Home Welcome Screen -->
+      <section class="home-welcome" id="home-welcome">
+        <div class="brand-mark">✉</div>
+        <h2>ChatByKarnav</h2>
+        <p>Select a conversation from the left to start messaging, or tap <strong>＋</strong> to find someone new.</p>
+        <div class="about-us" style="max-width: 380px; margin-top: 8px;">
+          <strong>About Us:</strong> ChatByKarnav is made by <strong>Karnav</strong> and is an iMessage copy built for fast, simple, and private messaging.
+        </div>
+      </section>
+
+      <section class="chat-view hidden" id="view-chat">
         <div class="message-tools">
           <span id="chat-status">Messages are live</span>
           <input id="message-search" placeholder="Find in conversation" aria-label="Find in conversation">
@@ -1161,7 +1252,9 @@
     async function signedIn(userSession) {
       user = userSession;
       if (!user) {
-        $('login').classList.remove('hidden'); $('app').classList.add('hidden');
+        $('welcome-screen').classList.remove('hidden');
+        $('login').classList.add('hidden');
+        $('app').classList.add('hidden');
         if (stopMessages) { stopMessages(); stopMessages = null; }
         if (stopPresence) { stopPresence(); stopPresence = null; }
         if (stopTyping) { stopTyping(); stopTyping = null; }
@@ -1169,7 +1262,9 @@
         return;
       }
 
-      $('login').classList.add('hidden'); $('app').classList.remove('hidden');
+      $('welcome-screen').classList.add('hidden');
+      $('login').classList.add('hidden');
+      $('app').classList.remove('hidden');
 
       const [profileDoc, prefsDoc] = await Promise.all([
         getDoc(doc(db, 'publicProfiles', user.uid)),
@@ -1194,9 +1289,15 @@
 
       setPresence(true);
       loadThreads();
-      startChat();
+      changeView('home');
       searchPeople('');
     }
+
+    $('welcome-continue').addEventListener('click', () => {
+      $('welcome-screen').classList.add('hidden');
+      $('login').classList.remove('hidden');
+      $('auth-email')?.focus();
+    });
 
     document.querySelectorAll('.auth-toggle button').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
     $('auth-form').addEventListener('submit', handleAuthSubmit);
@@ -1271,7 +1372,8 @@
       renderThreads(term ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term)) : allThreads);
     });
     $('message-search').addEventListener('input', () => { if (lastSnapshot) renderMessages(lastSnapshot); });
-    $('new-chat').addEventListener('click', () => { $('sidebar').classList.toggle('open'); changeView('people'); });
+    $('new-chat').addEventListener('click', () => { $('sidebar').classList.remove('open'); changeView('people'); });
+    $('fab-new-chat').addEventListener('click', () => { $('sidebar').classList.remove('open'); changeView('people'); });
     $('logout').addEventListener('click', async () => { try { await setPresence(false); await signOut(auth); } catch (_) {} });
     $('send').addEventListener('click', () => sendMessage());
     $('message-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
@@ -1390,14 +1492,16 @@
     $('mobile-back').addEventListener('click', () => $('sidebar').classList.add('open'));
 
     function changeView(view) {
-      const target = view || 'chat';
-      document.querySelectorAll('.nav').forEach((b) => b.classList.toggle('active', b.dataset.view === target));
+      const target = view || 'home';
+      document.querySelectorAll('.nav').forEach((b) => b.classList.toggle('active', b.dataset.view === (target === 'home' ? 'chat' : target)));
+      $('home-welcome').classList.toggle('hidden', target !== 'home');
       $('view-chat').classList.toggle('hidden', target !== 'chat');
       $('view-people').classList.toggle('hidden', target !== 'people');
       $('view-profile').classList.toggle('hidden', target !== 'profile');
       $('view-chat').classList.toggle('active', target === 'chat');
       $('view-people').classList.toggle('active', target === 'people');
       $('view-profile').classList.toggle('active', target === 'profile');
+      if (target === 'home') $('sidebar').classList.add('open');
       if (target === 'people') searchPeople('');
     }
 
@@ -1415,7 +1519,6 @@
     window.addEventListener('online', () => $('offline-banner').classList.add('hidden'));
 
     renderMemojiPicker('🙂');
-    changeView('chat');
     applyTheme();
     setAuthMode('signin');
     onAuthStateChanged(auth, signedIn);
