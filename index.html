@@ -417,6 +417,29 @@
       justify-content: space-between;
     }
     .locked-folder-btn:hover { background: var(--glass-strong); }
+ /* Custom Wallpapers & Bubble Colours */
+    .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 14px; }
+    .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--glass-border); cursor: pointer; }
+    .swatch.active { border-color: var(--text); transform: scale(1.12); }
+
+    /* Group Call Video Grid */
+    .group-video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 8px;
+      width: 100%;
+      height: 100%;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    .group-video-tile {
+      width: 100%;
+      height: 100%;
+      min-height: 120px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: #181920;
+    }
   </style>
 </head>
 <body>
@@ -719,6 +742,7 @@
       <div class="auth-actions" style="justify-content: center;">
         <button type="button" id="toggle-mic-btn" class="btn secondary">🎤 Mute</button>
         <button type="button" id="toggle-cam-btn" class="btn secondary">📷 Cam Off</button>
+        <button type="button" id="share-screen-btn" class="btn secondary">🖥️ Share</button>
         <button type="button" id="accept-call-btn" class="btn primary hidden">📞 Answer</button>
         <button type="button" id="hangup-btn" class="btn danger-btn">End Call</button>
       </div>
@@ -753,7 +777,50 @@
       </div>
     </div>
   </div>
+<!-- Archived Chats Modal -->
+  <div id="archived-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>📥 Archived Chats</h3>
+      <div id="archived-list" class="starred-list"></div>
+      <button type="button" id="close-archived" class="btn secondary" style="width:100%;">Close</button>
+    </div>
+  </div>
 
+  <!-- Group Management Modal -->
+  <div id="group-manage-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>👥 Group Settings</h3>
+      <label class="field">Rename Group
+        <div style="display:flex; gap:6px; margin-top:6px;">
+          <input id="rename-group-input" maxlength="40" style="margin-top:0;">
+          <button type="button" id="rename-group-btn" class="btn primary" style="flex:0 0 auto;">Save</button>
+        </div>
+      </label>
+      <div class="muted" style="font-size:13px; margin-top:10px;">Members (tap ✕ to remove):</div>
+      <div id="manage-members-list" class="member-list"></div>
+      <div class="muted" style="font-size:13px;">Add Member:</div>
+      <div style="display:flex; gap:6px; margin:6px 0 14px;">
+        <select id="add-member-select" style="flex:1; padding:8px; border-radius:12px; border:1px solid var(--glass-border); background:var(--glass-subtle); color:var(--text);"></select>
+        <button type="button" id="add-member-btn" class="btn secondary">Add</button>
+      </div>
+      <div class="auth-actions">
+        <button type="button" id="leave-group-btn" class="btn danger-btn">Leave Group</button>
+        <button type="button" id="close-group-manage" class="btn secondary" style="flex:1;">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Wallpaper & Bubble Colour Modal -->
+  <div id="appearance-modal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <h3>🎨 Appearance</h3>
+      <div class="muted" style="font-size:13px;">Chat Wallpaper</div>
+      <div class="swatch-row" id="wallpaper-swatches"></div>
+      <div class="muted" style="font-size:13px;">Sent Bubble Colour</div>
+      <div class="swatch-row" id="bubble-swatches"></div>
+      <button type="button" id="close-appearance" class="btn primary" style="width:100%;">Done</button>
+    </div>
+  </div>
   <div id="toast" class="toast hidden"></div>
 
   <script type="module">
@@ -2072,9 +2139,11 @@
     }
 
     // === GLOBAL AUDIO & VIDEO CALLS WITH SYSTEM NOTIFICATIONS ===
+    // === GLOBAL 1-ON-1 & GROUP CALLS + SCREEN SHARING ===
     (function () {
       const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
-      let pc = null, localStream = null, stopCallListener = null, ringInterval = null;
+      const peers = {}; // Multi-peer map for group & 1-on-1 calls
+      let localStream = null, screenStream = null, stopCallListener = null, ringInterval = null;
       let incomingChatId = null, incomingCallData = null;
 
       const actionsBar = document.querySelector('.main-actions');
@@ -2086,9 +2155,9 @@
       actionsBar?.prepend(audioBtn);
 
       const observer = new MutationObserver(() => {
-        const isPrivate = typeof active !== 'undefined' && active !== 'global' && typeof activePeer !== 'undefined' && activePeer;
-        audioBtn.classList.toggle('hidden', !isPrivate);
-        videoBtn.classList.toggle('hidden', !isPrivate);
+        const isChat = typeof active !== 'undefined' && active !== 'global';
+        audioBtn.classList.toggle('hidden', !isChat);
+        videoBtn.classList.toggle('hidden', !isChat);
       });
       observer.observe(document.getElementById('title'), { childList: true });
 
@@ -2098,8 +2167,7 @@
           if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
           try {
             const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
+            const osc = ctx.createOscillator(), gain = ctx.createGain();
             osc.type = 'sine';
             osc.frequency.setValueAtTime(440, ctx.currentTime);
             osc.frequency.setValueAtTime(480, ctx.currentTime + 0.2);
@@ -2114,30 +2182,8 @@
       }
 
       function stopRingtone() {
-        clearInterval(ringInterval);
-        ringInterval = null;
+        clearInterval(ringInterval); ringInterval = null;
         if (navigator.vibrate) navigator.vibrate(0);
-      }
-
-      async function showCallNotification(callerName, withVideo, chatId) {
-        if (Notification.permission !== 'granted') return;
-        const reg = await navigator.serviceWorker?.getRegistration();
-        const title = `${callerName} is calling…`;
-        const options = {
-          body: withVideo ? 'Incoming Video Call' : 'Incoming Audio Call',
-          icon: './lgo.png',
-          badge: './lgo.png',
-          tag: 'incoming-call',
-          requireInteraction: true,
-          vibrate: [300, 150, 300],
-          data: { chatId },
-          actions: [
-            { action: 'answer', title: '📞 Answer' },
-            { action: 'decline', title: '❌ Decline' }
-          ]
-        };
-        if (reg) reg.showNotification(title, options);
-        else new Notification(title, options);
       }
 
       async function setupMedia(withVideo) {
@@ -2145,50 +2191,85 @@
         document.getElementById('local-video').srcObject = localStream;
         document.getElementById('local-video').classList.toggle('hidden', !withVideo);
         document.getElementById('toggle-cam-btn').classList.toggle('hidden', !withVideo);
+        document.getElementById('share-screen-btn').classList.toggle('hidden', !withVideo);
+      }
 
-        pc = new RTCPeerConnection(servers);
+      function createPeerConnection(chatId, remoteUid, isInitiator) {
+        if (peers[remoteUid]) return peers[remoteUid];
+        const pc = new RTCPeerConnection(servers);
+        peers[remoteUid] = pc;
         localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+
+        const stage = document.getElementById('video-stage');
         const remoteStream = new MediaStream();
-        document.getElementById('remote-video').srcObject = remoteStream;
-        pc.ontrack = (e) => e.streams[0].getTracks().forEach((t) => remoteStream.addTrack(t));
+        pc.ontrack = (e) => {
+          e.streams[0].getTracks().forEach((t) => remoteStream.addTrack(t));
+          let vid = document.getElementById('remote-vid-' + remoteUid);
+          if (!vid) {
+            // Use main #remote-video for first peer, or grid for group
+            const mainRemote = document.getElementById('remote-video');
+            if (!mainRemote.srcObject) {
+              mainRemote.srcObject = remoteStream;
+              mainRemote.id = 'remote-vid-' + remoteUid;
+            } else {
+              stage.classList.add('group-video-grid');
+              vid = document.createElement('video');
+              vid.id = 'remote-vid-' + remoteUid;
+              vid.className = 'group-video-tile';
+              vid.autoplay = true; vid.playsInline = true;
+              vid.srcObject = remoteStream;
+              stage.appendChild(vid);
+            }
+          }
+        };
+
+        const signalDoc = doc(db, 'conversations', chatId, 'calls', `${[user.uid, remoteUid].sort().join('_')}`);
+        const myCandidates = collection(signalDoc, isInitiator ? 'offerCandidates' : 'answerCandidates');
+        const theirCandidates = collection(signalDoc, isInitiator ? 'answerCandidates' : 'offerCandidates');
+
+        pc.onicecandidate = (e) => e.candidate && addDoc(myCandidates, e.candidate.toJSON());
+
+        onSnapshot(theirCandidates, (snap) => {
+          snap.docChanges().forEach((c) => {
+            if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(() => {});
+          });
+        });
+
+        return { pc, signalDoc };
       }
 
       async function startCall(withVideo) {
         if (!active || active === 'global') return;
         incomingChatId = active;
         document.getElementById('call-modal').classList.remove('hidden');
-        document.getElementById('call-title').textContent = `Calling ${activePeer?.displayName || 'User'}…`;
+        document.getElementById('call-title').textContent = `Calling ${document.getElementById('title').textContent}…`;
         document.getElementById('call-status').textContent = withVideo ? 'Video Call' : 'Audio Call';
         document.getElementById('accept-call-btn').classList.add('hidden');
 
         await setupMedia(withVideo);
+        const convSnap = await getDoc(doc(db, 'conversations', active));
+        const members = (convSnap.data()?.members || []).filter((id) => id !== user.uid);
+
         const callDoc = doc(db, 'conversations', active, 'calls', 'active_call');
-        const offerCandidates = collection(callDoc, 'offerCandidates');
-        const answerCandidates = collection(callDoc, 'answerCandidates');
-
-        pc.onicecandidate = (e) => e.candidate && addDoc(offerCandidates, e.candidate.toJSON());
-
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
         await setDoc(callDoc, {
           caller: user.uid, callerName: profile.displayName || 'Member',
-          withVideo, offer: { sdp: offer.sdp, type: offer.type }, status: 'ringing'
+          withVideo, status: 'ringing', participants: [user.uid]
         });
 
-        stopCallListener = onSnapshot(callDoc, (snap) => {
-          const data = snap.data();
-          if (!data || data.status === 'ended') return hangUp(false);
-          if (!pc.currentRemoteDescription && data.answer) {
-            pc.setRemoteDescription(new RTCSessionDescription(data.answer));
-            document.getElementById('call-status').textContent = 'Connected';
-          }
-        });
+        for (const peerUid of members) {
+          const { pc, signalDoc } = createPeerConnection(active, peerUid, true);
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          await setDoc(signalDoc, { offer: { sdp: offer.sdp, type: offer.type } });
 
-        onSnapshot(answerCandidates, (snap) => {
-          snap.docChanges().forEach((c) => {
-            if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data()));
+          onSnapshot(signalDoc, (snap) => {
+            const d = snap.data();
+            if (d?.answer && !pc.currentRemoteDescription) {
+              pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+              document.getElementById('call-status').textContent = 'Connected';
+            }
           });
-        });
+        }
       }
 
       async function answerCall(chatId, data) {
@@ -2198,21 +2279,15 @@
         document.getElementById('call-status').textContent = 'Connected';
         await setupMedia(data.withVideo);
 
-        const callDoc = doc(db, 'conversations', chatId, 'calls', 'active_call');
-        const offerCandidates = collection(callDoc, 'offerCandidates');
-        const answerCandidates = collection(callDoc, 'answerCandidates');
-        pc.onicecandidate = (e) => e.candidate && addDoc(answerCandidates, e.candidate.toJSON());
-
-        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
-        const answer = await pc.createAnswer();
-        await pc.setLocalDescription(answer);
-        await updateDoc(callDoc, { answer: { type: answer.type, sdp: answer.sdp }, status: 'connected' });
-
-        onSnapshot(offerCandidates, (snap) => {
-          snap.docChanges().forEach((c) => {
-            if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data()));
-          });
-        });
+        const { pc, signalDoc } = createPeerConnection(chatId, data.caller, false);
+        const sigSnap = await getDoc(signalDoc);
+        if (sigSnap.exists() && sigSnap.data().offer) {
+          await pc.setRemoteDescription(new RTCSessionDescription(sigSnap.data().offer));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          await updateDoc(signalDoc, { answer: { type: answer.type, sdp: answer.sdp } });
+        }
+        await updateDoc(doc(db, 'conversations', chatId, 'calls', 'active_call'), { status: 'connected' });
       }
 
       async function hangUp(notify = true) {
@@ -2221,12 +2296,45 @@
         if (notify && targetChat && targetChat !== 'global') {
           updateDoc(doc(db, 'conversations', targetChat, 'calls', 'active_call'), { status: 'ended' }).catch(() => {});
         }
-        if (stopCallListener) { stopCallListener(); stopCallListener = null; }
-        if (pc) { pc.close(); pc = null; }
+        Object.values(peers).forEach((p) => p.close());
+        for (const k in peers) delete peers[k];
         if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+        if (screenStream) { screenStream.getTracks().forEach((t) => t.stop()); screenStream = null; }
+        document.querySelectorAll('.group-video-tile').forEach((el) => el.remove());
+        const mainVid = document.querySelector('#video-stage video');
+        if (mainVid) { mainVid.id = 'remote-video'; mainVid.srcObject = null; }
         incomingChatId = null; incomingCallData = null;
         document.getElementById('call-modal').classList.add('hidden');
       }
+
+      // Screen Sharing Toggle
+      document.getElementById('share-screen-btn').addEventListener('click', async (e) => {
+        if (!screenStream) {
+          try {
+            screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            const screenTrack = screenStream.getVideoTracks()[0];
+            Object.values(peers).forEach((pc) => {
+              const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+              if (sender) sender.replaceTrack(screenTrack);
+            });
+            document.getElementById('local-video').srcObject = screenStream;
+            e.target.textContent = '🛑 Stop Share';
+            screenTrack.onended = () => document.getElementById('share-screen-btn').click();
+          } catch (_) {}
+        } else {
+          screenStream.getTracks().forEach((t) => t.stop());
+          screenStream = null;
+          const camTrack = localStream?.getVideoTracks()[0];
+          if (camTrack) {
+            Object.values(peers).forEach((pc) => {
+              const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
+              if (sender) sender.replaceTrack(camTrack);
+            });
+            document.getElementById('local-video').srcObject = localStream;
+          }
+          e.target.textContent = '🖥️ Share';
+        }
+      });
 
       onAuthStateChanged(auth, (u) => {
         if (!u) return;
@@ -2236,7 +2344,7 @@
             const callDoc = doc(db, 'conversations', convDoc.id, 'calls', 'active_call');
             onSnapshot(callDoc, (cSnap) => {
               const data = cSnap.data();
-              if (data?.status === 'ringing' && data.caller !== u.uid && !pc) {
+              if (data?.status === 'ringing' && data.caller !== u.uid && !Object.keys(peers).length) {
                 incomingChatId = convDoc.id;
                 incomingCallData = data;
                 document.getElementById('call-modal').classList.remove('hidden');
@@ -2246,19 +2354,12 @@
                 ansBtn.classList.remove('hidden');
                 ansBtn.onclick = () => answerCall(convDoc.id, data);
                 startRingtone();
-                if (document.hidden) showCallNotification(data.callerName, data.withVideo, convDoc.id);
-              } else if (data?.status === 'ended' && (pc || !document.getElementById('call-modal').classList.contains('hidden'))) {
+              } else if (data?.status === 'ended' && (Object.keys(peers).length || !document.getElementById('call-modal').classList.contains('hidden'))) {
                 hangUp(false);
               }
             });
           });
         });
-      });
-
-      navigator.serviceWorker?.addEventListener('message', (e) => {
-        if (e.data?.type !== 'CALL_ACTION') return;
-        if (e.data.action === 'answer' && incomingCallData) answerCall(e.data.chatId, incomingCallData);
-        else if (e.data.action === 'decline') hangUp(true);
       });
 
       audioBtn.addEventListener('click', () => startCall(false));
@@ -2444,6 +2545,194 @@
         };
         openPinModal('toggle', toggleLock);
       });
+    })();
+ // === UNARCHIVE UI, GROUP MANAGEMENT & CUSTOM APPEARANCE ===
+    (function () {
+      const actionsBar = document.querySelector('.main-actions');
+
+      // 1. ARCHIVED CHATS DRAWER
+      const sideFooter = document.querySelector('.side-footer > div:last-child, #logout')?.parentNode;
+      const archDrawerBtn = document.createElement('button');
+      archDrawerBtn.className = 'icon-btn';
+      archDrawerBtn.title = 'Archived Chats';
+      archDrawerBtn.textContent = '📥';
+      sideFooter?.insertBefore(archDrawerBtn, document.getElementById('logout'));
+
+      archDrawerBtn.addEventListener('click', async () => {
+        const list = document.getElementById('archived-list');
+        list.innerHTML = '';
+        if (!archivedThreads.length) {
+          list.innerHTML = '<div class="muted" style="text-align:center; padding:16px;">No archived chats.</div>';
+        } else {
+          for (const cid of archivedThreads) {
+            const snap = await getDoc(doc(db, 'conversations', cid));
+            const name = snap.exists() ? (snap.data().groupName || 'Private Chat') : cid;
+            const row = document.createElement('div');
+            row.className = 'starred-item';
+            row.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
+            row.innerHTML = `<span>${name}</span>`;
+            const unarch = document.createElement('button');
+            unarch.className = 'btn secondary';
+            unarch.style.padding = '4px 10px';
+            unarch.textContent = 'Unarchive';
+            unarch.onclick = async () => {
+              archivedThreads = archivedThreads.filter((id) => id !== cid);
+              await setDoc(doc(db, 'users', user.uid), { archived: archivedThreads }, { merge: true });
+              row.remove();
+              loadThreads();
+              showToast('Chat unarchived.');
+            };
+            row.appendChild(unarch);
+            list.appendChild(row);
+          }
+        }
+        document.getElementById('archived-modal').classList.remove('hidden');
+      });
+      document.getElementById('close-archived').addEventListener('click', () => {
+        document.getElementById('archived-modal').classList.add('hidden');
+      });
+
+      // 2. GROUP MANAGEMENT (Rename, Add/Remove Members, Leave)
+      const grpManageBtn = document.createElement('button');
+      grpManageBtn.id = 'grp-manage-btn';
+      grpManageBtn.className = 'icon-btn hidden';
+      grpManageBtn.title = 'Group Settings';
+      grpManageBtn.textContent = '⚙️';
+      actionsBar?.prepend(grpManageBtn);
+
+      const titleObs = new MutationObserver(async () => {
+        if (typeof active === 'undefined' || active === 'global') return grpManageBtn.classList.add('hidden');
+        const snap = await getDoc(doc(db, 'conversations', active));
+        grpManageBtn.classList.toggle('hidden', !snap.data()?.isGroup);
+      });
+      titleObs.observe(document.getElementById('title'), { childList: true });
+
+      async function openGroupManage() {
+        const convSnap = await getDoc(doc(db, 'conversations', active));
+        const data = convSnap.data();
+        if (!data?.isGroup) return;
+        document.getElementById('rename-group-input').value = data.groupName || '';
+        const list = document.getElementById('manage-members-list');
+        list.innerHTML = '';
+
+        const members = data.members || [];
+        for (const uid of members) {
+          const pSnap = await getDoc(doc(db, 'publicProfiles', uid));
+          const p = pSnap.exists() ? pSnap.data() : { displayName: 'Member', memoji: '🙂' };
+          const item = document.createElement('div');
+          item.className = 'member-item';
+          item.style.justifyContent = 'space-between';
+          item.innerHTML = `<span>${p.memoji || '🙂'} ${p.displayName || 'Member'}</span>`;
+          if (uid !== user.uid) {
+            const rm = document.createElement('button');
+            rm.className = 'msg-action-btn'; rm.textContent = '✕';
+            rm.onclick = async () => {
+              const updated = members.filter((id) => id !== uid);
+              await updateDoc(doc(db, 'conversations', active), { members: updated });
+              openGroupManage();
+            };
+            item.appendChild(rm);
+          }
+          list.appendChild(item);
+        }
+
+        const sel = document.getElementById('add-member-select');
+        sel.innerHTML = '';
+        const allPeople = await getDocs(query(collection(db, 'publicProfiles'), limit(50)));
+        allPeople.docs.forEach((d) => {
+          if (!members.includes(d.id)) {
+            const opt = document.createElement('option');
+            opt.value = d.id;
+            opt.textContent = `${d.data().memoji || '🙂'} ${d.data().displayName || 'Member'}`;
+            sel.appendChild(opt);
+          }
+        });
+        document.getElementById('group-manage-modal').classList.remove('hidden');
+      }
+
+      grpManageBtn.addEventListener('click', openGroupManage);
+      document.getElementById('close-group-manage').addEventListener('click', () => document.getElementById('group-manage-modal').classList.add('hidden'));
+
+      document.getElementById('rename-group-btn').addEventListener('click', async () => {
+        const name = document.getElementById('rename-group-input').value.trim();
+        if (!name) return;
+        await updateDoc(doc(db, 'conversations', active), { groupName: name });
+        document.getElementById('title').textContent = name;
+        loadThreads();
+        showToast('Group renamed.');
+      });
+
+      document.getElementById('add-member-btn').addEventListener('click', async () => {
+        const uid = document.getElementById('add-member-select').value;
+        if (!uid) return;
+        const snap = await getDoc(doc(db, 'conversations', active));
+        const members = [...(snap.data()?.members || []), uid];
+        await updateDoc(doc(db, 'conversations', active), { members });
+        openGroupManage();
+      });
+
+      document.getElementById('leave-group-btn').addEventListener('click', async () => {
+        if (!confirm('Leave this group?')) return;
+        const snap = await getDoc(doc(db, 'conversations', active));
+        const members = (snap.data()?.members || []).filter((id) => id !== user.uid);
+        await updateDoc(doc(db, 'conversations', active), { members });
+        document.getElementById('group-manage-modal').classList.add('hidden');
+        loadThreads();
+        changeView('home');
+        showToast('You left the group.');
+      });
+
+      // 3. CUSTOM WALLPAPERS & BUBBLE COLOURS
+      const WALLPAPERS = [
+        { name: 'Default', val: '' },
+        { name: 'Aurora', val: 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)' },
+        { name: 'Mint', val: 'linear-gradient(135deg, #d4fc79, #96e6a1)' },
+        { name: 'Midnight', val: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)' },
+        { name: 'Sunset', val: 'linear-gradient(135deg, #ff7e5f, #feb47b)' }
+      ];
+      const BUBBLES = [
+        { name: 'Blue', val: 'linear-gradient(135deg, rgba(10, 132, 255, 0.88), rgba(0, 102, 235, 0.92))' },
+        { name: 'Emerald', val: 'linear-gradient(135deg, #10b981, #059669)' },
+        { name: 'Violet', val: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' },
+        { name: 'Rose', val: 'linear-gradient(135deg, #f43f5e, #e11d48)' }
+      ];
+
+      const appBtn = document.createElement('button');
+      appBtn.className = 'icon-btn'; appBtn.title = 'Wallpaper & Colours'; appBtn.textContent = '🎨';
+      actionsBar?.appendChild(appBtn);
+
+      function applyAppearance() {
+        const wp = localStorage.getItem('cbk_wallpaper');
+        const bb = localStorage.getItem('cbk_bubble');
+        if (wp) document.body.style.background = wp;
+        else document.body.style.background = '';
+        if (bb) document.documentElement.style.setProperty('--blue-glass', bb);
+      }
+
+      appBtn.addEventListener('click', () => {
+        const wpRow = document.getElementById('wallpaper-swatches'); wpRow.innerHTML = '';
+        WALLPAPERS.forEach((w) => {
+          const s = document.createElement('div');
+          s.className = 'swatch';
+          s.style.background = w.val || '#eef2f9';
+          s.title = w.name;
+          s.onclick = () => { localStorage.setItem('cbk_wallpaper', w.val); applyAppearance(); };
+          wpRow.appendChild(s);
+        });
+        const bbRow = document.getElementById('bubble-swatches'); bbRow.innerHTML = '';
+        BUBBLES.forEach((b) => {
+          const s = document.createElement('div');
+          s.className = 'swatch';
+          s.style.background = b.val;
+          s.title = b.name;
+          s.onclick = () => { localStorage.setItem('cbk_bubble', b.val); applyAppearance(); };
+          bbRow.appendChild(s);
+        });
+        document.getElementById('appearance-modal').classList.remove('hidden');
+      });
+
+      document.getElementById('close-appearance').addEventListener('click', () => document.getElementById('appearance-modal').classList.add('hidden'));
+      applyAppearance();
     })();
   </script>
 </body>
