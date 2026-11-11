@@ -2,31 +2,25 @@
 <html lang="en">
 <head>
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-  <script>
-    window.OneSignalDeferred = window.OneSignalDeferred || [];
-    OneSignalDeferred.push(async function(OneSignal) {
-      await OneSignal.init({
-       OneSignalDeferred.push(async function(OneSignal) {
+   <script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
     await OneSignal.init({
       appId: "431debda-c8c2-49be-811e-785e9c4e73ad",
       serviceWorkerPath: "sw.js",
       notifyButton: { enable: false }
     });
   });
-        appId: "431debda-c8c2-49be-811e-785e9c4e73ad",
-        notifyButton: { enable: false }
-      });
-    });
 
-    async function sendBackgroundPush(targetUid, title, body) {
-      if (!targetUid) return;
-      fetch('https://chatbykarnav-push.karnavgandhi21.workers.dev/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ targetUid, title, body })
-      }).catch(() => {});
-    }
-  </script>
+  window.sendBackgroundPush = async function(targetUid, title, body) {
+    if (!targetUid) return;
+    fetch('https://chatbykarnav-push.karnavgandhi21.workers.dev/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetUid, title, body })
+    }).catch(() => {});
+  };
+</script>
   <link rel="manifest" href="./manifest.json">
   <meta name="google-site-verification" content="f6Mth7HadHTq4pLwBLfUezmEBweDzSpRFQXruJh_ItU" />
   <meta charset="utf-8">
