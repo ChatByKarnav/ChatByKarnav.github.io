@@ -1,3 +1,4 @@
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 const CACHE_NAME = 'chatbykarnav-v1';
 const ASSETS = ['./', './index.html', './manifest.json', './lgo.png'];
 
