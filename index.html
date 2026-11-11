@@ -371,6 +371,52 @@
       .message-tools, .messages, .composer-wrap { padding-left: 12px; padding-right: 12px; }
       .msg-row { max-width: 88%; }
     }
+
+    /* Blur-on-Idle Overlay */
+    .idle-blur-active #app { filter: blur(18px) brightness(0.85); pointer-events: none; user-select: none; transition: filter 0.35s ease; }
+    .idle-lock-overlay { position: fixed; inset: 0; z-index: 250; display: grid; place-items: center; background: rgba(10, 14, 24, 0.25); backdrop-filter: blur(8px); }
+    .idle-lock-card { background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: 24px; padding: 24px 28px; text-align: center; box-shadow: var(--shadow); }
+
+    /* Floating Scroll-to-Bottom Pill */
+    .scroll-bottom-pill {
+      position: fixed;
+      right: 28px;
+      bottom: 96px;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-strong);
+      backdrop-filter: var(--blur);
+      -webkit-backdrop-filter: var(--blur);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 700;
+      box-shadow: var(--shadow), var(--glass-highlight);
+      animation: popIn 0.2s ease-out;
+    }
+    .scroll-bottom-pill:hover { transform: translateY(-2px); }
+    .scroll-pill-badge { background: var(--blue); color: white; font-size: 11px; padding: 1px 7px; border-radius: 999px; }
+
+    /* Locked Chats Folder Button */
+    .locked-folder-btn {
+      width: calc(100% - 24px);
+      margin: 8px 12px 4px;
+      padding: 10px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-subtle);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .locked-folder-btn:hover { background: var(--glass-strong); }
   </style>
 </head>
 <body>
@@ -675,6 +721,35 @@
         <button type="button" id="toggle-cam-btn" class="btn secondary">📷 Cam Off</button>
         <button type="button" id="accept-call-btn" class="btn primary hidden">📞 Answer</button>
         <button type="button" id="hangup-btn" class="btn danger-btn">End Call</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Scroll-to-Bottom Pill -->
+  <button type="button" id="scroll-bottom-pill" class="scroll-bottom-pill hidden">
+    <span>↓</span>
+    <span id="scroll-pill-badge" class="scroll-pill-badge hidden">0</span>
+  </button>
+
+  <!-- Idle Blur Unlock Overlay -->
+  <div id="idle-lock-overlay" class="idle-lock-overlay hidden">
+    <div class="idle-lock-card">
+      <div style="font-size: 32px; margin-bottom: 8px;">🔒</div>
+      <h3 style="margin: 0 0 6px;">Screen Blurred</h3>
+      <p class="muted" style="font-size: 13px; margin: 0 0 16px;">Hidden for privacy while idle.</p>
+      <button type="button" id="idle-unlock-btn" class="btn primary">Tap to Resume</button>
+    </div>
+  </div>
+
+  <!-- Locked Chats PIN Modal -->
+  <div id="pin-modal" class="modal-backdrop hidden" style="z-index: 160;">
+    <div class="modal-card" style="max-width: 340px; text-align: center;">
+      <h3 id="pin-modal-title">Locked Chats</h3>
+      <p id="pin-modal-desc" class="muted" style="font-size: 13px; margin: 0 0 14px;">Enter your 4-digit PIN</p>
+      <input id="pin-input" type="password" inputmode="numeric" maxlength="4" placeholder="••••" style="text-align: center; font-size: 24px; letter-spacing: 8px; width: 100%; padding: 10px; border-radius: 14px; border: 1px solid var(--glass-border); background: var(--glass-subtle); color: var(--text); margin-bottom: 14px;">
+      <div class="auth-actions">
+        <button type="button" id="pin-cancel-btn" class="btn secondary">Cancel</button>
+        <button type="button" id="pin-submit-btn" class="btn primary">Unlock</button>
       </div>
     </div>
   </div>
@@ -2197,6 +2272,177 @@
       document.getElementById('toggle-cam-btn').addEventListener('click', (e) => {
         const track = localStream?.getVideoTracks()[0];
         if (track) { track.enabled = !track.enabled; e.target.textContent = track.enabled ? '📷 Cam Off' : '📷 Cam On'; }
+      });
+    })();
+
+    // === PRIVACY & STEALTH + SCROLL PILL ===
+    (function () {
+      let idleTimer = null;
+      const lockOverlay = document.getElementById('idle-lock-overlay');
+      const appShell = document.getElementById('app');
+
+      function triggerIdleBlur() {
+        if (appShell.classList.contains('hidden')) return;
+        document.body.classList.add('idle-blur-active');
+        lockOverlay.classList.remove('hidden');
+      }
+
+      function resetIdleTimer() {
+        clearTimeout(idleTimer);
+        if (!document.body.classList.contains('idle-blur-active')) {
+          idleTimer = setTimeout(triggerIdleBlur, 60000);
+        }
+      }
+
+      document.getElementById('idle-unlock-btn').addEventListener('click', () => {
+        document.body.classList.remove('idle-blur-active');
+        lockOverlay.classList.add('hidden');
+        resetIdleTimer();
+      });
+
+      ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach((evt) =>
+        document.addEventListener(evt, resetIdleTimer, { passive: true })
+      );
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) triggerIdleBlur();
+      });
+      resetIdleTimer();
+
+      const msgBox = document.getElementById('messages');
+      const pill = document.getElementById('scroll-bottom-pill');
+      const badge = document.getElementById('scroll-pill-badge');
+      let unreadScrollCount = 0;
+
+      function isNearBottom() {
+        return msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight < 120;
+      }
+
+      msgBox?.addEventListener('scroll', () => {
+        if (isNearBottom()) {
+          pill.classList.add('hidden');
+          unreadScrollCount = 0;
+          badge.classList.add('hidden');
+        } else {
+          pill.classList.remove('hidden');
+        }
+      });
+
+      pill.addEventListener('click', () => {
+        msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
+        unreadScrollCount = 0;
+        badge.classList.add('hidden');
+        pill.classList.add('hidden');
+      });
+
+      const msgObserver = new MutationObserver(() => {
+        if (!isNearBottom() && !pill.classList.contains('hidden')) {
+          unreadScrollCount++;
+          badge.textContent = unreadScrollCount;
+          badge.classList.remove('hidden');
+        }
+      });
+      if (msgBox) msgObserver.observe(msgBox, { childList: true });
+
+      let lockedChats = JSON.parse(localStorage.getItem('cbk_locked_chats') || '[]');
+      let folderUnlocked = false;
+
+      const actionsBar = document.querySelector('.main-actions');
+      const lockChatBtn = document.createElement('button');
+      lockChatBtn.id = 'lock-chat-btn';
+      lockChatBtn.className = 'icon-btn hidden';
+      lockChatBtn.title = 'Lock / Hide Chat';
+      lockChatBtn.textContent = '🔒';
+      actionsBar?.prepend(lockChatBtn);
+
+      const titleObs = new MutationObserver(() => {
+        const isPrivateOrGroup = typeof active !== 'undefined' && active !== 'global';
+        lockChatBtn.classList.toggle('hidden', !isPrivateOrGroup);
+        lockChatBtn.textContent = lockedChats.includes(active) ? '🔓' : '🔒';
+      });
+      titleObs.observe(document.getElementById('title'), { childList: true });
+
+      const threadsEl = document.getElementById('threads');
+      const folderBtn = document.createElement('button');
+      folderBtn.type = 'button';
+      folderBtn.className = 'locked-folder-btn hidden';
+      folderBtn.innerHTML = '<span>🔒 Locked Chats</span><span id="locked-count" class="badge">0</span>';
+      threadsEl?.parentNode.insertBefore(folderBtn, threadsEl);
+
+      function syncLockedUI() {
+        folderBtn.classList.toggle('hidden', lockedChats.length === 0);
+        const countEl = document.getElementById('locked-count');
+        if (countEl) countEl.textContent = lockedChats.length;
+
+        document.querySelectorAll('#threads .thread').forEach((el) => {
+          const isLocked = lockedChats.includes(el.dataset.threadId);
+          el.classList.toggle('hidden', isLocked && !folderUnlocked);
+        });
+      }
+
+      const threadObs = new MutationObserver(syncLockedUI);
+      if (threadsEl) threadObs.observe(threadsEl, { childList: true });
+
+      function openPinModal(mode, onSuccess) {
+        const modal = document.getElementById('pin-modal');
+        const input = document.getElementById('pin-input');
+        const savedPin = localStorage.getItem('cbk_chat_pin');
+        document.getElementById('pin-modal-title').textContent = savedPin ? 'Enter PIN' : 'Set a 4-Digit PIN';
+        document.getElementById('pin-modal-desc').textContent = savedPin ? 'Enter your 4-digit PIN to continue' : 'Create a 4-digit PIN for Locked Chats';
+        input.value = '';
+        modal.classList.remove('hidden');
+        input.focus();
+
+        document.getElementById('pin-submit-btn').onclick = () => {
+          const val = input.value.trim();
+          if (!/^\d{4}$/.test(val)) return alert('Please enter a 4-digit number.');
+          if (!savedPin) {
+            localStorage.setItem('cbk_chat_pin', val);
+            modal.classList.add('hidden');
+            onSuccess();
+          } else if (val === savedPin) {
+            modal.classList.add('hidden');
+            onSuccess();
+          } else {
+            alert('Incorrect PIN.');
+            input.value = '';
+          }
+        };
+      }
+
+      document.getElementById('pin-cancel-btn').addEventListener('click', () => {
+        document.getElementById('pin-modal').classList.add('hidden');
+      });
+
+      folderBtn.addEventListener('click', () => {
+        if (folderUnlocked) {
+          folderUnlocked = false;
+          folderBtn.querySelector('span').textContent = '🔒 Locked Chats';
+          syncLockedUI();
+        } else {
+          openPinModal('unlock', () => {
+            folderUnlocked = true;
+            folderBtn.querySelector('span').textContent = '🔓 Hide Locked Chats';
+            syncLockedUI();
+          });
+        }
+      });
+
+      lockChatBtn.addEventListener('click', () => {
+        if (!active || active === 'global') return;
+        const toggleLock = () => {
+          if (lockedChats.includes(active)) {
+            lockedChats = lockedChats.filter((id) => id !== active);
+            showToast('Chat removed from Locked Chats.');
+          } else {
+            lockedChats.push(active);
+            showToast('Chat moved to Locked Chats 🔒');
+            changeView('home');
+          }
+          localStorage.setItem('cbk_locked_chats', JSON.stringify(lockedChats));
+          lockChatBtn.textContent = lockedChats.includes(active) ? '🔓' : '🔒';
+          syncLockedUI();
+        };
+        openPinModal('toggle', toggleLock);
       });
     })();
   </script>
