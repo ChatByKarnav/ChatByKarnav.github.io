@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-<link rel="manifest" href="./manifest.json">
+  <link rel="manifest" href="./manifest.json">
   <meta name="google-site-verification" content="f6Mth7HadHTq4pLwBLfUezmEBweDzSpRFQXruJh_ItU" />
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -87,7 +87,6 @@
       z-index: 200;
     }
 
-    /* Pre-login Welcome Screen */
     .welcome-screen {
       max-width: 440px;
       margin: 10vh auto;
@@ -194,7 +193,6 @@
     .nav { flex: 1; border: 1px solid transparent; background: transparent; color: var(--muted); padding: 10px 12px; border-radius: 12px; font-weight: 600; }
     .nav.active { background: var(--glass-strong); border-color: var(--glass-border); color: var(--blue); box-shadow: 0 2px 10px rgba(0,0,0,.06), var(--glass-highlight); }
 
-    /* 24h Status Bar */
     .status-bar { display: flex; gap: 10px; padding: 12px 18px 4px; overflow-x: auto; scrollbar-width: none; }
     .status-bar::-webkit-scrollbar { display: none; }
     .status-chip { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 54px; background: transparent; border: 0; color: var(--text); font-size: 11px; padding: 0; }
@@ -283,7 +281,6 @@
     .msg-row.mine .bubble { background: var(--blue-glass); color: white; border-color: rgba(255, 255, 255, 0.25); box-shadow: 0 6px 18px rgba(10, 132, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.35); border-radius: 20px 20px 6px 20px; }
     .msg-row.mine .bubble a { color: #e0f0ff; }
 
-    /* iMessage Effects */
     .bubble.fx-slam { animation: slamIn 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
     .bubble.fx-ink { filter: blur(7px); cursor: pointer; user-select: none; transition: filter 0.3s ease; }
     .bubble.fx-ink.revealed { filter: blur(0); cursor: default; user-select: text; }
@@ -344,7 +341,6 @@
     .member-list { max-height: 180px; overflow: auto; display: flex; flex-direction: column; gap: 6px; margin: 10px 0 14px; }
     .member-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: var(--glass-subtle); font-size: 14px; }
 
-    /* Interactive Liquid Glass Install Guide */
     .install-select-row { display: flex; gap: 8px; margin-bottom: 12px; }
     .install-select-row select { flex: 1; border: 1px solid var(--glass-border); border-radius: 14px; background: var(--glass-subtle); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--glass-highlight); color: var(--text); padding: 10px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
     .install-select-row select:hover { background: var(--glass-strong); }
@@ -353,7 +349,6 @@
     .install-steps-box li { margin-bottom: 8px; }
     .install-steps-box li:last-child { margin-bottom: 0; }
 
-    /* Starred & Onboarding Tour */
     .starred-list { max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
     .starred-item { padding: 10px 12px; border-radius: 14px; background: var(--glass-subtle); border: 1px solid var(--glass-border); font-size: 13px; }
     .tour-steps { display: flex; flex-direction: column; gap: 10px; margin: 14px 0 18px; }
@@ -666,6 +661,24 @@
     </div>
   </div>
 
+  <!-- Audio / Video Call Modal -->
+  <div id="call-modal" class="modal-backdrop hidden" style="z-index: 150;">
+    <div class="modal-card" style="max-width: 460px; text-align: center;">
+      <h3 id="call-title">Calling...</h3>
+      <p id="call-status" class="muted" style="font-size: 13px; margin: 0 0 14px;">Connecting...</p>
+      <div id="video-stage" style="position: relative; width: 100%; aspect-ratio: 4/3; background: #0b0d14; border-radius: 18px; overflow: hidden; margin-bottom: 16px;">
+        <video id="remote-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+        <video id="local-video" autoplay playsinline muted style="position: absolute; bottom: 10px; right: 10px; width: 100px; height: 130px; object-fit: cover; border-radius: 12px; border: 2px solid rgba(255,255,255,0.5); background: #181920;"></video>
+      </div>
+      <div class="auth-actions" style="justify-content: center;">
+        <button type="button" id="toggle-mic-btn" class="btn secondary">🎤 Mute</button>
+        <button type="button" id="toggle-cam-btn" class="btn secondary">📷 Cam Off</button>
+        <button type="button" id="accept-call-btn" class="btn primary hidden">📞 Answer</button>
+        <button type="button" id="hangup-btn" class="btn danger-btn">End Call</button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast hidden"></div>
 
   <script type="module">
@@ -673,7 +686,6 @@
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, updateProfile, deleteUser } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
     import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, limitToLast, onSnapshot, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    
     const config = {
       apiKey: 'AIzaSyAZs-dZA-Y8ZLjlBIOqhs9wSVeZjZjW_jA',
       authDomain: 'imessageclonekarnav.firebaseapp.com',
@@ -1574,7 +1586,6 @@
       }
     }
 
-    /* Interactive Install Guide */
     const INSTALL_GUIDES = {
       android: {
         options: [
@@ -1707,7 +1718,6 @@
       $('native-install-btn').classList.add('hidden');
     });
 
-    /* Event Listeners */
     $('welcome-continue').addEventListener('click', () => {
       $('welcome-screen').classList.add('hidden');
       $('login').classList.remove('hidden');
@@ -1979,11 +1989,216 @@
     applyTheme();
     setAuthMode('signin');
     onAuthStateChanged(auth, signedIn);
- if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((err) => console.error('SW failed:', err));
-  });
-}
-</script>
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch((err) => console.error('SW failed:', err));
+      });
+    }
+
+    // === GLOBAL AUDIO & VIDEO CALLS WITH SYSTEM NOTIFICATIONS ===
+    (function () {
+      const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
+      let pc = null, localStream = null, stopCallListener = null, ringInterval = null;
+      let incomingChatId = null, incomingCallData = null;
+
+      const actionsBar = document.querySelector('.main-actions');
+      const audioBtn = document.createElement('button');
+      audioBtn.id = 'audio-call-btn'; audioBtn.className = 'icon-btn hidden'; audioBtn.title = 'Audio Call'; audioBtn.textContent = '📞';
+      const videoBtn = document.createElement('button');
+      videoBtn.id = 'video-call-btn'; videoBtn.className = 'icon-btn hidden'; videoBtn.title = 'Video Call'; videoBtn.textContent = '📹';
+      actionsBar?.prepend(videoBtn);
+      actionsBar?.prepend(audioBtn);
+
+      const observer = new MutationObserver(() => {
+        const isPrivate = typeof active !== 'undefined' && active !== 'global' && typeof activePeer !== 'undefined' && activePeer;
+        audioBtn.classList.toggle('hidden', !isPrivate);
+        videoBtn.classList.toggle('hidden', !isPrivate);
+      });
+      observer.observe(document.getElementById('title'), { childList: true });
+
+      function startRingtone() {
+        stopRingtone();
+        const playRing = () => {
+          if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+          try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440, ctx.currentTime);
+            osc.frequency.setValueAtTime(480, ctx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.1, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+            osc.connect(gain); gain.connect(ctx.destination);
+            osc.start(); osc.stop(ctx.currentTime + 0.6);
+          } catch (_) {}
+        };
+        playRing();
+        ringInterval = setInterval(playRing, 2000);
+      }
+
+      function stopRingtone() {
+        clearInterval(ringInterval);
+        ringInterval = null;
+        if (navigator.vibrate) navigator.vibrate(0);
+      }
+
+      async function showCallNotification(callerName, withVideo, chatId) {
+        if (Notification.permission !== 'granted') return;
+        const reg = await navigator.serviceWorker?.getRegistration();
+        const title = `${callerName} is calling…`;
+        const options = {
+          body: withVideo ? 'Incoming Video Call' : 'Incoming Audio Call',
+          icon: './lgo.png',
+          badge: './lgo.png',
+          tag: 'incoming-call',
+          requireInteraction: true,
+          vibrate: [300, 150, 300],
+          data: { chatId },
+          actions: [
+            { action: 'answer', title: '📞 Answer' },
+            { action: 'decline', title: '❌ Decline' }
+          ]
+        };
+        if (reg) reg.showNotification(title, options);
+        else new Notification(title, options);
+      }
+
+      async function setupMedia(withVideo) {
+        localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: withVideo });
+        document.getElementById('local-video').srcObject = localStream;
+        document.getElementById('local-video').classList.toggle('hidden', !withVideo);
+        document.getElementById('toggle-cam-btn').classList.toggle('hidden', !withVideo);
+
+        pc = new RTCPeerConnection(servers);
+        localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+        const remoteStream = new MediaStream();
+        document.getElementById('remote-video').srcObject = remoteStream;
+        pc.ontrack = (e) => e.streams[0].getTracks().forEach((t) => remoteStream.addTrack(t));
+      }
+
+      async function startCall(withVideo) {
+        if (!active || active === 'global') return;
+        incomingChatId = active;
+        document.getElementById('call-modal').classList.remove('hidden');
+        document.getElementById('call-title').textContent = `Calling ${activePeer?.displayName || 'User'}…`;
+        document.getElementById('call-status').textContent = withVideo ? 'Video Call' : 'Audio Call';
+        document.getElementById('accept-call-btn').classList.add('hidden');
+
+        await setupMedia(withVideo);
+        const callDoc = doc(db, 'conversations', active, 'calls', 'active_call');
+        const offerCandidates = collection(callDoc, 'offerCandidates');
+        const answerCandidates = collection(callDoc, 'answerCandidates');
+
+        pc.onicecandidate = (e) => e.candidate && addDoc(offerCandidates, e.candidate.toJSON());
+
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await setDoc(callDoc, {
+          caller: user.uid, callerName: profile.displayName || 'Member',
+          withVideo, offer: { sdp: offer.sdp, type: offer.type }, status: 'ringing'
+        });
+
+        stopCallListener = onSnapshot(callDoc, (snap) => {
+          const data = snap.data();
+          if (!data || data.status === 'ended') return hangUp(false);
+          if (!pc.currentRemoteDescription && data.answer) {
+            pc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            document.getElementById('call-status').textContent = 'Connected';
+          }
+        });
+
+        onSnapshot(answerCandidates, (snap) => {
+          snap.docChanges().forEach((c) => {
+            if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data()));
+          });
+        });
+      }
+
+      async function answerCall(chatId, data) {
+        stopRingtone();
+        incomingChatId = chatId;
+        document.getElementById('accept-call-btn').classList.add('hidden');
+        document.getElementById('call-status').textContent = 'Connected';
+        await setupMedia(data.withVideo);
+
+        const callDoc = doc(db, 'conversations', chatId, 'calls', 'active_call');
+        const offerCandidates = collection(callDoc, 'offerCandidates');
+        const answerCandidates = collection(callDoc, 'answerCandidates');
+        pc.onicecandidate = (e) => e.candidate && addDoc(answerCandidates, e.candidate.toJSON());
+
+        await pc.setRemoteDescription(new RTCSessionDescription(data.offer));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await updateDoc(callDoc, { answer: { type: answer.type, sdp: answer.sdp }, status: 'connected' });
+
+        onSnapshot(offerCandidates, (snap) => {
+          snap.docChanges().forEach((c) => {
+            if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data()));
+          });
+        });
+      }
+
+      async function hangUp(notify = true) {
+        stopRingtone();
+        const targetChat = incomingChatId || active;
+        if (notify && targetChat && targetChat !== 'global') {
+          updateDoc(doc(db, 'conversations', targetChat, 'calls', 'active_call'), { status: 'ended' }).catch(() => {});
+        }
+        if (stopCallListener) { stopCallListener(); stopCallListener = null; }
+        if (pc) { pc.close(); pc = null; }
+        if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
+        incomingChatId = null; incomingCallData = null;
+        document.getElementById('call-modal').classList.add('hidden');
+      }
+
+      onAuthStateChanged(auth, (u) => {
+        if (!u) return;
+        const q = query(collection(db, 'conversations'), where('members', 'array-contains', u.uid));
+        onSnapshot(q, (snap) => {
+          snap.docs.forEach((convDoc) => {
+            const callDoc = doc(db, 'conversations', convDoc.id, 'calls', 'active_call');
+            onSnapshot(callDoc, (cSnap) => {
+              const data = cSnap.data();
+              if (data?.status === 'ringing' && data.caller !== u.uid && !pc) {
+                incomingChatId = convDoc.id;
+                incomingCallData = data;
+                document.getElementById('call-modal').classList.remove('hidden');
+                document.getElementById('call-title').textContent = `${data.callerName} is calling…`;
+                document.getElementById('call-status').textContent = data.withVideo ? 'Incoming Video Call' : 'Incoming Audio Call';
+                const ansBtn = document.getElementById('accept-call-btn');
+                ansBtn.classList.remove('hidden');
+                ansBtn.onclick = () => answerCall(convDoc.id, data);
+                startRingtone();
+                if (document.hidden) showCallNotification(data.callerName, data.withVideo, convDoc.id);
+              } else if (data?.status === 'ended' && (pc || !document.getElementById('call-modal').classList.contains('hidden'))) {
+                hangUp(false);
+              }
+            });
+          });
+        });
+      });
+
+      navigator.serviceWorker?.addEventListener('message', (e) => {
+        if (e.data?.type !== 'CALL_ACTION') return;
+        if (e.data.action === 'answer' && incomingCallData) answerCall(e.data.chatId, incomingCallData);
+        else if (e.data.action === 'decline') hangUp(true);
+      });
+
+      audioBtn.addEventListener('click', () => startCall(false));
+      videoBtn.addEventListener('click', () => startCall(true));
+      document.getElementById('hangup-btn').addEventListener('click', () => hangUp(true));
+
+      document.getElementById('toggle-mic-btn').addEventListener('click', (e) => {
+        const track = localStream?.getAudioTracks()[0];
+        if (track) { track.enabled = !track.enabled; e.target.textContent = track.enabled ? '🎤 Mute' : '🔇 Unmute'; }
+      });
+      document.getElementById('toggle-cam-btn').addEventListener('click', (e) => {
+        const track = localStream?.getVideoTracks()[0];
+        if (track) { track.enabled = !track.enabled; e.target.textContent = track.enabled ? '📷 Cam Off' : '📷 Cam On'; }
+      });
+    })();
+  </script>
 </body>
 </html>
