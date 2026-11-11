@@ -1,16 +1,25 @@
 <!doctype html>
 <html lang="en">
 <head>
-<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-<script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "431debda-c8c2-49be-811e-785e9c4e73ad",
-      notifyButton: { enable: false }
+  <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "431debda-c8c2-49be-811e-785e9c4e73ad",
+        notifyButton: { enable: false }
+      });
     });
-  });
-</script>  
+
+    async function sendBackgroundPush(targetUid, title, body) {
+      if (!targetUid) return;
+      fetch('https://chatbykarnav-push.karnavgandhi21.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUid, title, body })
+      }).catch(() => {});
+    }
+  </script>
   <link rel="manifest" href="./manifest.json">
   <meta name="google-site-verification" content="f6Mth7HadHTq4pLwBLfUezmEBweDzSpRFQXruJh_ItU" />
   <meta charset="utf-8">
@@ -427,7 +436,8 @@
       justify-content: space-between;
     }
     .locked-folder-btn:hover { background: var(--glass-strong); }
- /* Custom Wallpapers & Bubble Colours */
+
+    /* Custom Wallpapers & Bubble Colours */
     .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 14px; }
     .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--glass-border); cursor: pointer; }
     .swatch.active { border-color: var(--text); transform: scale(1.12); }
@@ -787,7 +797,8 @@
       </div>
     </div>
   </div>
-<!-- Archived Chats Modal -->
+
+  <!-- Archived Chats Modal -->
   <div id="archived-modal" class="modal-backdrop hidden">
     <div class="modal-card">
       <h3>📥 Archived Chats</h3>
@@ -831,8 +842,8 @@
       <button type="button" id="close-appearance" class="btn primary" style="width:100%;">Done</button>
     </div>
   </div>
-  <div id="toast" class="toast hidden"></div>
 
+  <div id="toast" class="toast hidden"></div>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, updateProfile, deleteUser } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
@@ -1446,6 +1457,7 @@
           await setDoc(doc(db, 'conversations', cid), {
             lastMessage: preview, lastSender: user.uid, updatedAt: serverTimestamp()
           }, { merge: true });
+          if (activePeer?.uid) sendBackgroundPush(activePeer.uid, profile.displayName || 'New Message', preview);
         }
 
         textarea.value = '';
@@ -1688,6 +1700,9 @@
 
     async function signedIn(userSession) {
       user = userSession;
+      if (user && window.OneSignalDeferred) {
+        OneSignalDeferred.push((OneSignal) => OneSignal.login(user.uid));
+      }
       if (!user) {
         $('welcome-screen').classList.remove('hidden');
         $('login').classList.add('hidden');
@@ -2105,8 +2120,12 @@
     $('cancel-reply').addEventListener('click', clearReply);
     $('theme-toggle').addEventListener('click', setTheme);
     $('notify-toggle').addEventListener('click', () => {
-      if (!('Notification' in window)) return showToast('Notifications are not supported here.', true);
-      Notification.requestPermission().then((p) => showToast(p === 'granted' ? 'Notifications enabled.' : 'Notifications were not enabled.'));
+      if (window.OneSignalDeferred) {
+        OneSignalDeferred.push(async (OneSignal) => {
+          await OneSignal.Notifications.requestPermission();
+          showToast('Push notifications enabled!');
+        });
+      }
     });
     $('mobile-back').addEventListener('click', () => $('sidebar').classList.add('open'));
 
@@ -2148,13 +2167,12 @@
       });
     }
 
-    // === GLOBAL AUDIO & VIDEO CALLS WITH SYSTEM NOTIFICATIONS ===
     // === GLOBAL 1-ON-1 & GROUP CALLS + SCREEN SHARING ===
     (function () {
       const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
-      const peers = {}; // Multi-peer map for group & 1-on-1 calls
-      let localStream = null, screenStream = null, stopCallListener = null, ringInterval = null;
-      let incomingChatId = null, incomingCallData = null;
+      const peers = {};
+      let localStream = null, screenStream = null, ringInterval = null;
+      let incomingChatId = null;
 
       const actionsBar = document.querySelector('.main-actions');
       const audioBtn = document.createElement('button');
@@ -2216,7 +2234,6 @@
           e.streams[0].getTracks().forEach((t) => remoteStream.addTrack(t));
           let vid = document.getElementById('remote-vid-' + remoteUid);
           if (!vid) {
-            // Use main #remote-video for first peer, or grid for group
             const mainRemote = document.getElementById('remote-video');
             if (!mainRemote.srcObject) {
               mainRemote.srcObject = remoteStream;
@@ -2265,6 +2282,7 @@
           caller: user.uid, callerName: profile.displayName || 'Member',
           withVideo, status: 'ringing', participants: [user.uid]
         });
+        if (activePeer?.uid) sendBackgroundPush(activePeer.uid, 'Incoming Call 📞', `${profile.displayName || 'Someone'} is calling you`);
 
         for (const peerUid of members) {
           const { pc, signalDoc } = createPeerConnection(active, peerUid, true);
@@ -2313,11 +2331,10 @@
         document.querySelectorAll('.group-video-tile').forEach((el) => el.remove());
         const mainVid = document.querySelector('#video-stage video');
         if (mainVid) { mainVid.id = 'remote-video'; mainVid.srcObject = null; }
-        incomingChatId = null; incomingCallData = null;
+        incomingChatId = null;
         document.getElementById('call-modal').classList.add('hidden');
       }
 
-      // Screen Sharing Toggle
       document.getElementById('share-screen-btn').addEventListener('click', async (e) => {
         if (!screenStream) {
           try {
@@ -2356,7 +2373,6 @@
               const data = cSnap.data();
               if (data?.status === 'ringing' && data.caller !== u.uid && !Object.keys(peers).length) {
                 incomingChatId = convDoc.id;
-                incomingCallData = data;
                 document.getElementById('call-modal').classList.remove('hidden');
                 document.getElementById('call-title').textContent = `${data.callerName} is calling…`;
                 document.getElementById('call-status').textContent = data.withVideo ? 'Incoming Video Call' : 'Incoming Audio Call';
@@ -2556,7 +2572,8 @@
         openPinModal('toggle', toggleLock);
       });
     })();
- // === UNARCHIVE UI, GROUP MANAGEMENT & CUSTOM APPEARANCE ===
+
+    // === UNARCHIVE UI, GROUP MANAGEMENT & CUSTOM APPEARANCE ===
     (function () {
       const actionsBar = document.querySelector('.main-actions');
 
