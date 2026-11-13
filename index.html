@@ -1906,8 +1906,7 @@
       catch (err) { setStatus('auth-status', 'Could not send reset email.', true); }
     });
 
-    $('google-signin').addEventListener('click', async () => {
-      setStatus('auth-status', 'Opening Google sign-in…');
+    
       try {
         const result = await signInWithPopup(auth, new GoogleAuthProvider());
         const u = result.user;
