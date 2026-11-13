@@ -2,25 +2,25 @@
 <html lang="en">
 <head>
   <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-   <script>
-  window.OneSignalDeferred = window.OneSignalDeferred || [];
-  OneSignalDeferred.push(async function(OneSignal) {
-    await OneSignal.init({
-      appId: "431debda-c8c2-49be-811e-785e9c4e73ad",
-      serviceWorkerPath: "OneSignalSDKWorker.js",
-      notifyButton: { enable: false }
+  <script>
+    window.OneSignalDeferred = window.OneSignalDeferred || [];
+    OneSignalDeferred.push(async function(OneSignal) {
+      await OneSignal.init({
+        appId: "431debda-c8c2-49be-811e-785e9c4e73ad",
+        serviceWorkerPath: "OneSignalSDKWorker.js",
+        notifyButton: { enable: false }
+      });
     });
-  });
 
-  window.sendBackgroundPush = async function(targetUid, title, body) {
-    if (!targetUid) return;
-    fetch('https://chatbykarnav-push.karnavgandhi21.workers.dev/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ targetUid, title, body })
-    }).catch(() => {});
-  };
-</script>
+    window.sendBackgroundPush = async function(targetUid, title, body) {
+      if (!targetUid) return;
+      fetch('https://chatbykarnav-push.karnavgandhi21.workers.dev/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUid, title, body })
+      }).catch(() => {});
+    };
+  </script>
   <link rel="manifest" href="./manifest.json">
   <meta name="google-site-verification" content="f6Mth7HadHTq4pLwBLfUezmEBweDzSpRFQXruJh_ItU" />
   <meta charset="utf-8">
@@ -189,10 +189,6 @@
     .btn.primary { background: var(--blue-glass); color: white; flex: 1; border-color: rgba(255, 255, 255, 0.28); box-shadow: 0 8px 20px rgba(10, 132, 255, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.4); }
     .btn.secondary { background: var(--glass-subtle); color: var(--text); }
     .btn.danger-btn { background: rgba(255, 69, 58, 0.16); color: #ff453a; border-color: rgba(255, 69, 58, 0.4); }
-
-    .oauth-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0 12px; color: var(--muted); font-size: 12px; font-weight: 600; }
-    .oauth-divider::before, .oauth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line); }
-    .google-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--glass-strong); color: var(--text); }
 
     .auth-status { min-height: 20px; margin-top: 12px; font-size: 14px; color: var(--muted); }
 
@@ -393,12 +389,10 @@
       .msg-row { max-width: 88%; }
     }
 
-    /* Blur-on-Idle Overlay */
     .idle-blur-active #app { filter: blur(18px) brightness(0.85); pointer-events: none; user-select: none; transition: filter 0.35s ease; }
     .idle-lock-overlay { position: fixed; inset: 0; z-index: 250; display: grid; place-items: center; background: rgba(10, 14, 24, 0.25); backdrop-filter: blur(8px); }
     .idle-lock-card { background: var(--glass-strong); border: 1px solid var(--glass-border); border-radius: 24px; padding: 24px 28px; text-align: center; box-shadow: var(--shadow); }
 
-    /* Floating Scroll-to-Bottom Pill */
     .scroll-bottom-pill {
       position: fixed;
       right: 28px;
@@ -422,7 +416,6 @@
     .scroll-bottom-pill:hover { transform: translateY(-2px); }
     .scroll-pill-badge { background: var(--blue); color: white; font-size: 11px; padding: 1px 7px; border-radius: 999px; }
 
-    /* Locked Chats Folder Button */
     .locked-folder-btn {
       width: calc(100% - 24px);
       margin: 8px 12px 4px;
@@ -439,12 +432,10 @@
     }
     .locked-folder-btn:hover { background: var(--glass-strong); }
 
-    /* Custom Wallpapers & Bubble Colours */
     .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 14px; }
     .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--glass-border); cursor: pointer; }
     .swatch.active { border-color: var(--text); transform: scale(1.12); }
 
-    /* Group Call Video Grid */
     .group-video-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -491,7 +482,7 @@
     </div>
     <form id="auth-form" novalidate>
       <label class="field">Email <input id="auth-email" type="email" maxlength="100" placeholder="you@example.com" autocomplete="email"></label>
-      <label class="field">Password <input id="password" type="password" minlength="6" maxlength="100" placeholder="Required" autocomplete="current-password"></label>
+      <label class="field">Password <input id="password" type="password" minlength="8" maxlength="100" placeholder="Min 8 characters" autocomplete="current-password"></label>
       <button type="button" id="forgot-password" class="forgot-link">Forgot password?</button>
       <div class="field memoji-wrap">
         Memoji
@@ -499,8 +490,6 @@
         <input id="memoji-value" type="hidden" value="🙂">
       </div>
       <div class="auth-actions"><button id="auth-submit" class="btn primary" type="submit">Sign in</button></div>
-      <div class="oauth-divider"><span>or</span></div>
-      
       <div id="auth-status" class="auth-status" role="status" aria-live="polite"></div>
     </form>
   </div>
@@ -596,8 +585,8 @@
           <div class="composer">
             <button class="emoji-toggle" id="emoji-toggle" type="button" title="Add emoji">😊</button>
             <button class="emoji-toggle" id="photo-toggle" type="button" title="Send photo">📷</button>
-           <button class="emoji-toggle" id="file-toggle" type="button" title="Send video, PDF, or file">📎</button>
-<input id="file-input" type="file" accept="video/*,application/pdf,.doc,.docx,.zip,.txt,image/*" class="hidden">
+            <button class="emoji-toggle" id="file-toggle" type="button" title="Send video, PDF, or file">📎</button>
+            <input id="file-input" type="file" accept="video/*,application/pdf,.doc,.docx,.zip,.txt,image/*" class="hidden">
             <button class="emoji-toggle" id="voice-toggle" type="button" title="Record voice note (max 15s)">🎤</button>
             <button class="emoji-toggle" id="poll-toggle" type="button" title="Create poll">📊</button>
             <button class="emoji-toggle" id="fx-toggle" type="button" title="Message Effects">✨</button>
@@ -650,9 +639,7 @@
   <div id="install-modal" class="modal-backdrop hidden">
     <div class="modal-card">
       <h3>Install ChatByKarnav</h3>
-      <p class="muted" style="font-size: 13px; margin: 0 0 12px;">
-        Select your device to get the exact steps:
-      </p>
+      <p class="muted" style="font-size: 13px; margin: 0 0 12px;">Select your device to get the exact steps:</p>
       <div class="install-select-row">
         <select id="install-os" aria-label="Select Operating System">
           <option value="android">Android</option>
@@ -848,25 +835,28 @@
   </div>
 
   <div id="toast" class="toast hidden"></div>
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, updateProfile, deleteUser } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-    import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, limitToLast, onSnapshot, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-    const config = {
-      apiKey: 'AIzaSyAZs-dZA-Y8ZLjlBIOqhs9wSVeZjZjW_jA',
-      authDomain: 'imessageclonekarnav.firebaseapp.com',
-      projectId: 'imessageclonekarnav',
-      storageBucket: 'imessageclonekarnav.firebasestorage.app',
-      messagingSenderId: '136086923449',
-      appId: '1:136086923449:web:b13eb6b0296f8e7e54d368'
-    };
+  <script>
+    // === 100% APPWRITE CLOUD BACKEND ===
+    const { Client, Account, Databases, Storage, ID, Query, Permission, Role } = Appwrite;
 
-    const app = initializeApp(config);
-    const auth = getAuth(app);
-    const db = initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-    });
+    const awClient = new Client()
+      .setEndpoint('https://nyc.cloud.appwrite.io/v1')
+      .setProject('6af69d7f00178e3e64c2');
+
+    const awAccount = new Account(awClient);
+    const awDb = new Databases(awClient);
+    const awStorage = new Storage(awClient);
+
+    const DB_ID = 'default';
+    const BUCKET_ID = '6af69e6400039d8f5222';
+    const USER_PERMS = [
+      Permission.create(Role.users()),
+      Permission.read(Role.users()),
+      Permission.update(Role.users()),
+      Permission.delete(Role.users())
+    ];
+
     const $ = (id) => document.getElementById(id);
 
     const MEMOJIS = [
@@ -875,7 +865,6 @@
       '😺','🐶','🦊','🐼','🐨','🦁','🐸','🐵',
       '🦄','🐲','🤖','👾','👻','👽','🧑‍💻','🥷'
     ];
-    const REACTIONS = ['❤️','😂','👍','😮','🙏'];
 
     let user = null;
     let profile = {};
@@ -885,13 +874,9 @@
     let archivedThreads = [];
     let active = 'global';
     let activePeer = null;
-    let stopMessages = null;
-    let stopPresence = null;
-    let stopTyping = null;
-    let stopPin = null;
-    let typingTimer = null;
+    let unsubRealtime = null;
     let allThreads = [];
-    let lastSnapshot = null;
+    let lastDocs = [];
     let msgLimit = 50;
     let isInitialLoad = true;
     let unreadBgCount = 0;
@@ -910,15 +895,43 @@
     function showToast(msg, isError = false) {
       const el = $('toast'); if (!el) return;
       el.textContent = msg; el.classList.toggle('danger', isError); el.classList.remove('hidden');
-      clearTimeout(showToast.timer); showToast.timer = setTimeout(() => el.classList.add('hidden'), 2500);
+      clearTimeout(showToast.timer); showToast.timer = setTimeout(() => el.classList.add('hidden'), 2600);
     }
     function setStatus(id, text, bad = false) { const el = $(id); if (el) { el.textContent = text; el.classList.toggle('danger', bad); } }
+
+    async function upsertDoc(colId, docId, data) {
+      try {
+        return await awDb.updateDocument(DB_ID, colId, docId, data);
+      } catch (e) {
+        if (e.code === 404) {
+          return await awDb.createDocument(DB_ID, colId, docId, data, USER_PERMS);
+        }
+        throw e;
+      }
+    }
+
+    async function createMessageDoc(data) {
+      const payload = {
+        convId: data.convId,
+        sender: data.sender,
+        senderName: data.senderName || 'Member',
+        text: data.text || '',
+        image: data.image || '',
+        video: data.video || '',
+        fileUrl: data.fileUrl || '',
+        fileName: data.fileName || '',
+        fileSize: data.fileSize || '',
+        audio: data.audio || '',
+        forwarded: !!data.forwarded,
+        deletedFor: data.deletedFor || []
+      };
+      return await awDb.createDocument(DB_ID, 'messages', ID.unique(), payload, USER_PERMS);
+    }
 
     function playChime() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(660, ctx.currentTime);
         osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.08);
@@ -927,19 +940,6 @@
         osc.connect(gain); gain.connect(ctx.destination);
         osc.start(); osc.stop(ctx.currentTime + 0.2);
       } catch (_) {}
-    }
-
-    function launchConfetti() {
-      const colors = ['#0a84ff', '#32c759', '#ff9f0a', '#ff375f', '#bf5af2'];
-      for (let i = 0; i < 36; i++) {
-        const c = document.createElement('div');
-        c.className = 'confetti-piece';
-        c.style.left = Math.random() * 100 + 'vw';
-        c.style.background = colors[i % colors.length];
-        c.style.animationDelay = Math.random() * 0.4 + 's';
-        document.body.appendChild(c);
-        setTimeout(() => c.remove(), 1800);
-      }
     }
 
     function applyTheme() {
@@ -980,15 +980,27 @@
       parts.forEach((part) => {
         if (/^https?:\/\/[^\s]+$/.test(part)) {
           const a = document.createElement('a');
-          a.href = part;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
-          a.textContent = part;
+          a.href = part; a.target = '_blank'; a.rel = 'noopener noreferrer'; a.textContent = part;
           container.appendChild(a);
         } else {
           container.appendChild(document.createTextNode(part));
         }
       });
+    }
+
+    function loadLocalPrefs() {
+      if (!user) return;
+      const p = JSON.parse(localStorage.getItem(`cbk_prefs_${user.$id}`) || '{}');
+      blockedUsers = p.blocked || [];
+      mutedThreads = p.muted || [];
+      starredMessages = p.starred || [];
+      archivedThreads = p.archived || [];
+    }
+    function saveLocalPrefs() {
+      if (!user) return;
+      localStorage.setItem(`cbk_prefs_${user.$id}`, JSON.stringify({
+        blocked: blockedUsers, muted: mutedThreads, starred: starredMessages, archived: archivedThreads
+      }));
     }
 
     function buildThreadCard(thread) {
@@ -1012,13 +1024,6 @@
       nameSpan.textContent = `${thread.name}${isMuted ? ' 🔇' : ''}`;
       titleEl.appendChild(nameSpan);
 
-      if (thread.unread) {
-        const badge = document.createElement('span');
-        badge.className = 'badge';
-        badge.textContent = 'new';
-        titleEl.appendChild(badge);
-      }
-
       const previewEl = document.createElement('span');
       previewEl.className = 'thread-preview';
       previewEl.textContent = thread.preview || 'No messages yet';
@@ -1028,34 +1033,36 @@
       item.appendChild(avatarEl);
       item.appendChild(copyEl);
 
-      item.addEventListener('click', () => {
-        msgLimit = 50;
-        if (thread.type === 'global') {
-          active = 'global'; activePeer = null;
-          $('title').textContent = 'Community chat'; $('subtitle').textContent = 'Everyone in the community';
-          $('subtitle').classList.remove('online'); $('chat-avatar').textContent = '🌐';
-          $('mute-toggle').classList.add('hidden'); $('block-toggle').classList.add('hidden');
-          $('archive-toggle').classList.add('hidden'); $('disappear-toggle').classList.add('hidden');
-        } else if (thread.type === 'group') {
-          active = thread.id; activePeer = null;
-          $('title').textContent = thread.name; $('subtitle').textContent = `${thread.membersCount || 2} members`;
-          $('subtitle').classList.remove('online'); $('chat-avatar').textContent = '👥';
-          $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.add('hidden');
-          $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
-        } else {
-          active = thread.id; activePeer = thread.peer;
-          $('title').textContent = thread.name; $('subtitle').textContent = 'Private conversation';
-          $('chat-avatar').textContent = thread.avatar;
-          $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.remove('hidden');
-          $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
-        }
-        updateMuteBlockIcons();
-        document.querySelectorAll('.thread').forEach((n) => n.classList.toggle('selected', n.dataset.threadId === active));
-        startChat();
-        changeView('chat');
-        $('sidebar').classList.remove('open');
-      });
+      item.addEventListener('click', () => openConversationByObj(thread));
       return item;
+    }
+
+    function openConversationByObj(thread) {
+      msgLimit = 50;
+      if (thread.type === 'global') {
+        active = 'global'; activePeer = null;
+        $('title').textContent = 'Community chat'; $('subtitle').textContent = 'Everyone in the community';
+        $('subtitle').classList.remove('online'); $('chat-avatar').textContent = '🌐';
+        $('mute-toggle').classList.add('hidden'); $('block-toggle').classList.add('hidden');
+        $('archive-toggle').classList.add('hidden'); $('disappear-toggle').classList.add('hidden');
+      } else if (thread.type === 'group') {
+        active = thread.id; activePeer = null;
+        $('title').textContent = thread.name; $('subtitle').textContent = `${thread.membersCount || 2} members`;
+        $('subtitle').classList.remove('online'); $('chat-avatar').textContent = '👥';
+        $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.add('hidden');
+        $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
+      } else {
+        active = thread.id; activePeer = thread.peer;
+        $('title').textContent = thread.name; $('subtitle').textContent = 'Private conversation';
+        $('chat-avatar').textContent = thread.avatar;
+        $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.remove('hidden');
+        $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
+      }
+      updateMuteBlockIcons();
+      document.querySelectorAll('.thread').forEach((n) => n.classList.toggle('selected', n.dataset.threadId === active));
+      fetchMessages();
+      changeView('chat');
+      $('sidebar').classList.remove('open');
     }
 
     function renderThreads(threads) {
@@ -1067,27 +1074,32 @@
       if (!user) return;
       const threads = [{ id: 'global', type: 'global', avatar: '🌐', name: 'Community chat', preview: 'Everyone in the community' }];
       try {
-        const q = query(collection(db, 'conversations'), where('members', 'array-contains', user.uid), orderBy('updatedAt', 'desc'), limit(40));
-        const snapshot = await getDocs(q);
-        for (const docSnap of snapshot.docs) {
-          if (archivedThreads.includes(docSnap.id)) continue;
-          const data = docSnap.data();
-          const members = Array.isArray(data.members) ? data.members : [];
-          if (data.isGroup) {
+        const res = await awDb.listDocuments(DB_ID, 'conversations', [
+          Query.contains('members', [user.$id]),
+          Query.orderDesc('$updatedAt'),
+          Query.limit(40)
+        ]);
+        for (const docSnap of res.documents) {
+          if (archivedThreads.includes(docSnap.$id)) continue;
+          const members = Array.isArray(docSnap.members) ? docSnap.members : [];
+          if (docSnap.isGroup) {
             threads.push({
-              id: docSnap.id, type: 'group', avatar: '👥',
-              name: data.groupName || 'Group Chat', preview: data.lastMessage || 'Group created',
-              membersCount: members.length, unread: data.lastSender && data.lastSender !== user.uid && docSnap.id !== active
+              id: docSnap.$id, type: 'group', avatar: '👥',
+              name: docSnap.name || docSnap.groupName || 'Group Chat',
+              preview: docSnap.lastMessage || 'Group created',
+              membersCount: members.length
             });
           } else {
-            const otherUid = members.find((id) => id !== user.uid);
+            const otherUid = members.find((id) => id !== user.$id);
             if (!otherUid || blockedUsers.includes(otherUid)) continue;
-            const peerSnap = await getDoc(doc(db, 'publicProfiles', otherUid));
-            const peer = peerSnap.exists() ? peerSnap.data() : { displayName: 'Member', memoji: '🙂' };
+            let peer = { uid: otherUid, name: docSnap.peerName || 'Member', avatar: '🙂' };
+            try {
+              const pDoc = await awDb.getDocument(DB_ID, 'publicProfiles', otherUid);
+              peer = { uid: otherUid, name: pDoc.name || pDoc.displayName || 'Member', avatar: pDoc.avatar || pDoc.memoji || '🙂' };
+            } catch (_) {}
             threads.push({
-              id: docSnap.id, type: 'private', avatar: peer.memoji || '🙂',
-              name: peer.displayName || 'Member', preview: data.lastMessage || 'New conversation',
-              peer: { uid: otherUid, ...peer }, unread: data.lastSender && data.lastSender !== user.uid && docSnap.id !== active
+              id: docSnap.$id, type: 'private', avatar: peer.avatar,
+              name: peer.name, preview: docSnap.lastMessage || 'New conversation', peer
             });
           }
         }
@@ -1098,83 +1110,24 @@
       renderThreads(term ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term)) : allThreads);
     }
 
-    function messagesRef() {
-      return active === 'global' ? collection(db, 'global_messages') : collection(db, 'conversations', active, 'messages');
-    }
+    async function fetchMessages() {
+      const box = $('messages'); if (!box || !user) return;
+      if (isInitialLoad) box.innerHTML = '<div class="empty muted">Loading messages…</div>';
 
-    async function setPresence(online) {
-      if (!user) return;
-      try { await setDoc(doc(db, 'users', user.uid, 'presence', 'current'), { online, lastSeen: serverTimestamp() }, { merge: true }); } catch (_) {}
-    }
-
-    async function setTyping(isTyping) {
-      if (!user || active === 'global') return;
-      try { await setDoc(doc(db, 'conversations', active), { [`typing_${user.uid}`]: isTyping }, { merge: true }); } catch (_) {}
-    }
-
-    function watchPeerStatus() {
-      if (stopPresence) { stopPresence(); stopPresence = null; }
-      if (stopTyping) { stopTyping(); stopTyping = null; }
-      if (stopPin) { stopPin(); stopPin = null; }
-
-      const pinDocRef = active === 'global' ? doc(db, 'settings', 'global_pin') : doc(db, 'conversations', active);
-      stopPin = onSnapshot(pinDocRef, (snap) => {
-        const data = snap.exists() ? snap.data() : {};
-        const pinned = data.pinnedMessage;
-        if (pinned?.text) {
-          $('pinned-text').textContent = `${pinned.sender}: ${pinned.text}`;
-          $('pinned-bar').classList.remove('hidden');
-        } else {
-          $('pinned-bar').classList.add('hidden');
-        }
-        if (active !== 'global') {
-          disappear24h = !!data.disappear24h;
-          $('disappear-toggle').style.background = disappear24h ? 'rgba(10, 132, 255, 0.25)' : '';
-        }
-      });
-
-      if (active === 'global' || !activePeer?.uid) return;
-      let peerOnlineText = 'Private conversation';
-
-      stopPresence = onSnapshot(doc(db, 'users', activePeer.uid, 'presence', 'current'), (snap) => {
-        if (!snap.exists()) return;
-        const data = snap.data();
-        if (data.online) { peerOnlineText = '● Online'; $('subtitle').classList.add('online'); }
-        else {
-          $('subtitle').classList.remove('online');
-          const d = data.lastSeen?.toDate ? data.lastSeen.toDate() : null;
-          peerOnlineText = d ? `Last seen ${new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(d)}` : 'Offline';
-        }
-        $('subtitle').textContent = peerOnlineText;
-      });
-
-      stopTyping = onSnapshot(doc(db, 'conversations', active), (snap) => {
-        if (!snap.exists()) return;
-        if (snap.data()[`typing_${activePeer.uid}`]) { $('subtitle').textContent = 'typing...'; $('subtitle').classList.add('online'); }
-        else { $('subtitle').textContent = peerOnlineText; }
-      });
-    }
-
-    async function toggleReaction(msgId, emoji) {
-      if (!user) return;
-      const msgRef = active === 'global' ? doc(db, 'global_messages', msgId) : doc(db, 'conversations', active, 'messages', msgId);
       try {
-        const snap = await getDoc(msgRef); if (!snap.exists()) return;
-        const reactions = snap.data().reactions || {};
-        const users = Array.isArray(reactions[emoji]) ? reactions[emoji] : [];
-        const updated = users.includes(user.uid) ? users.filter((u) => u !== user.uid) : [...users, user.uid];
-        await updateDoc(msgRef, { [`reactions.${emoji}`]: updated });
-      } catch (err) { console.error(err); }
-    }
-
-    async function toggleStarMessage(id, msg) {
-      if (!user) return;
-      const exists = starredMessages.some((s) => s.id === id);
-      starredMessages = exists
-        ? starredMessages.filter((s) => s.id !== id)
-        : [{ id, sender: msg.sender || 'Member', text: msg.text || 'Media' }, ...starredMessages].slice(0, 50);
-      await setDoc(doc(db, 'users', user.uid), { starred: starredMessages }, { merge: true });
-      showToast(exists ? 'Removed from Starred.' : 'Message starred ⭐');
+        const res = await awDb.listDocuments(DB_ID, 'messages', [
+          Query.equal('convId', active),
+          Query.orderDesc('$createdAt'),
+          Query.limit(msgLimit)
+        ]);
+        const docs = res.documents.reverse();
+        lastDocs = docs;
+        isInitialLoad = false;
+        renderMessages(docs);
+      } catch (error) {
+        console.error('Fetch messages error', error);
+        setStatus('chat-status', 'Could not load messages', true);
+      }
     }
 
     async function editMessage(msgId, oldText) {
@@ -1182,66 +1135,36 @@
       if (nextText === null) return;
       const trimmed = nextText.trim();
       if (!trimmed || trimmed === oldText) return;
-      const msgRef = active === 'global' ? doc(db, 'global_messages', msgId) : doc(db, 'conversations', active, 'messages', msgId);
-      try { await updateDoc(msgRef, { text: trimmed, edited: true }); showToast('Message updated.'); }
-      catch (err) { showToast('Could not edit message.', true); }
-    }
-
-    async function deleteMessage(msgId) {
-      if (!user) return;
-      const msgRef = active === 'global' ? doc(db, 'global_messages', msgId) : doc(db, 'conversations', active, 'messages', msgId);
-      try { await deleteDoc(msgRef); showToast('Message deleted.'); }
-      catch (err) { showToast('Could not delete message.', true); }
+      try {
+        await awDb.updateDocument(DB_ID, 'messages', msgId, { text: trimmed });
+        showToast('Message updated.');
+        fetchMessages();
+      } catch (err) { showToast('Could not edit message.', true); }
     }
 
     async function pinMessage(message) {
-      const pinDocRef = active === 'global' ? doc(db, 'settings', 'global_pin') : doc(db, 'conversations', active);
+      if (active === 'global') return showToast('Pinning is available in private & group chats.');
       try {
-        await setDoc(pinDocRef, { pinnedMessage: { sender: message.sender || 'Member', text: message.text || 'Media' } }, { merge: true });
+        await awDb.updateDocument(DB_ID, 'conversations', active, {
+          lastMessage: `📌 ${message.text || 'Pinned Media'}`
+        });
+        $('pinned-text').textContent = `${message.senderName || 'Member'}: ${message.text || 'Media'}`;
+        $('pinned-bar').classList.remove('hidden');
         showToast('Message pinned.');
       } catch (err) { showToast('Could not pin message.', true); }
     }
 
-    async function reportMessage(msgId, message) {
-      const reason = prompt('Why are you reporting this message? (e.g. spam, inappropriate)');
-      if (!reason || !reason.trim()) return;
-      try {
-        await addDoc(collection(db, 'reports'), {
-          messageId: msgId, chatId: active, reportedUid: message.uid,
-          reportedBy: user.uid, reason: reason.trim(), timestamp: serverTimestamp()
-        });
-        showToast('Report submitted. Thank you.');
-      } catch (err) { showToast('Could not submit report.', true); }
+    function toggleStarMessage(id, msg) {
+      const exists = starredMessages.some((s) => s.id === id);
+      starredMessages = exists
+        ? starredMessages.filter((s) => s.id !== id)
+        : [{ id, sender: msg.senderName || 'Member', text: msg.text || 'Media' }, ...starredMessages].slice(0, 50);
+      saveLocalPrefs();
+      showToast(exists ? 'Removed from Starred.' : 'Message starred ⭐');
     }
 
-    async function votePoll(msgId, optIndex) {
-      if (!user) return;
-      const msgRef = active === 'global' ? doc(db, 'global_messages', msgId) : doc(db, 'conversations', active, 'messages', msgId);
-      try {
-        const snap = await getDoc(msgRef); if (!snap.exists()) return;
-        const poll = snap.data().poll; if (!poll) return;
-        const options = poll.options.map((opt, idx) => {
-          const votes = (opt.votes || []).filter((id) => id !== user.uid);
-          if (idx === optIndex) votes.push(user.uid);
-          return { ...opt, votes };
-        });
-        await updateDoc(msgRef, { 'poll.options': options });
-      } catch (err) { console.error(err); }
-    }
-
-    function markMessagesRead(snapshot) {
-      if (active === 'global' || !user) return;
-      snapshot.docs.forEach((docSnap) => {
-        const m = docSnap.data();
-        if (m.uid !== user.uid && !m.read) {
-          updateDoc(doc(db, 'conversations', active, 'messages', docSnap.id), { read: true }).catch(() => {});
-        }
-      });
-    }
-
-    function renderMessages(snapshot) {
+    function renderMessages(docs) {
       const box = $('messages'); if (!box) return;
-      const docs = [...snapshot.docs];
       box.innerHTML = '';
 
       if (docs.length >= msgLimit) {
@@ -1249,7 +1172,7 @@
         moreBtn.type = 'button';
         moreBtn.className = 'btn secondary load-more-btn';
         moreBtn.textContent = 'Load older messages';
-        moreBtn.addEventListener('click', () => { msgLimit += 50; startChat(); });
+        moreBtn.addEventListener('click', () => { msgLimit += 50; fetchMessages(); });
         box.appendChild(moreBtn);
       }
 
@@ -1258,51 +1181,49 @@
       const searchTerm = $('message-search')?.value.trim().toLowerCase() || '';
       let lastDay = '';
 
-      docs.forEach((messageSnap) => {
-        const message = messageSnap.data();
-        if (message.expiresAt && Date.now() > message.expiresAt) return;
-        if (blockedUsers.includes(message.uid)) return;
-        if (searchTerm && !(message.text || '').toLowerCase().includes(searchTerm) && !(message.sender || '').toLowerCase().includes(searchTerm)) return;
+      docs.forEach((message) => {
+        if (Array.isArray(message.deletedFor) && message.deletedFor.includes(user.$id)) return;
+        if (blockedUsers.includes(message.sender)) return;
+        if (searchTerm && !(message.text || '').toLowerCase().includes(searchTerm) && !(message.senderName || '').toLowerCase().includes(searchTerm)) return;
 
-        const dayKey = message.timestamp?.toDate ? new Date(message.timestamp.toDate()).toDateString() : '';
+        const createdDate = message.$createdAt ? new Date(message.$createdAt) : null;
+        const dayKey = createdDate ? createdDate.toDateString() : '';
         if (dayKey && dayKey !== lastDay) {
           const divider = document.createElement('div');
           divider.className = 'day-divider';
-          divider.innerHTML = '<span>' + new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(message.timestamp.toDate())) + '</span>';
+          divider.innerHTML = '<span>' + new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric', year: 'numeric' }).format(createdDate) + '</span>';
           box.appendChild(divider);
           lastDay = dayKey;
         }
 
-        const isMine = message.uid === user.uid;
+        const isMine = message.sender === user.$id;
         const row = document.createElement('article');
         row.className = 'msg-row' + (isMine ? ' mine' : '');
 
         const avatar = document.createElement('div');
         avatar.className = 'msg-avatar';
-        avatar.textContent = message.memoji || (message.sender ? initials(message.sender) : '🙂');
+        avatar.textContent = message.senderName ? initials(message.senderName) : '🙂';
 
         const wrap = document.createElement('div');
         wrap.className = 'bubble-wrap';
 
         const meta = document.createElement('div');
         meta.className = 'msg-meta';
-        const timeStr = message.timestamp?.toDate ? new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(message.timestamp.toDate()) : '';
-        meta.textContent = `${message.sender || 'Member'} • ${timeStr}${message.edited ? ' (edited)' : ''}${message.expiresAt ? ' ⏳' : ''}`;
-
-        if (isMine && active !== 'global') {
-          const ticks = document.createElement('span');
-          ticks.className = 'msg-ticks' + (message.read ? ' read' : '');
-          ticks.textContent = message.read ? '✓✓' : '✓';
-          meta.appendChild(ticks);
-        }
+        const timeStr = createdDate ? new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(createdDate) : '';
+        meta.textContent = `${message.senderName || 'Member'} • ${timeStr}`;
 
         const actions = document.createElement('span');
         actions.className = 'msg-actions';
 
         const replyBtn = document.createElement('button');
         replyBtn.type = 'button'; replyBtn.className = 'msg-action-btn'; replyBtn.textContent = 'Reply';
-        replyBtn.addEventListener('click', () => setReply({ id: messageSnap.id, sender: message.sender || 'Member', text: message.text || '' }));
+        replyBtn.addEventListener('click', () => setReply({ id: message.$id, sender: message.senderName || 'Member', text: message.text || '' }));
         actions.appendChild(replyBtn);
+
+        const fwdBtn = document.createElement('button');
+        fwdBtn.type = 'button'; fwdBtn.className = 'msg-action-btn'; fwdBtn.textContent = '↪'; fwdBtn.title = 'Forward';
+        fwdBtn.addEventListener('click', () => window.openForwardModal?.(message));
+        actions.appendChild(fwdBtn);
 
         const pinBtn = document.createElement('button');
         pinBtn.type = 'button'; pinBtn.className = 'msg-action-btn'; pinBtn.textContent = '📌'; pinBtn.title = 'Pin';
@@ -1311,54 +1232,52 @@
 
         const starBtn = document.createElement('button');
         starBtn.type = 'button'; starBtn.className = 'msg-action-btn'; starBtn.textContent = '⭐'; starBtn.title = 'Star';
-        starBtn.addEventListener('click', () => toggleStarMessage(messageSnap.id, message));
+        starBtn.addEventListener('click', () => toggleStarMessage(message.$id, message));
         actions.appendChild(starBtn);
 
-        REACTIONS.forEach((emoji) => {
-          const rBtn = document.createElement('button');
-          rBtn.type = 'button'; rBtn.className = 'msg-action-btn'; rBtn.textContent = emoji;
-          rBtn.addEventListener('click', () => toggleReaction(messageSnap.id, emoji));
-          actions.appendChild(rBtn);
-        });
-
-        if (isMine) {
-          const canEdit = message.text && (!message.timestamp?.toDate || (Date.now() - message.timestamp.toDate().getTime()) < 15 * 60 * 1000);
-          if (canEdit) {
-            const editBtn = document.createElement('button');
-            editBtn.type = 'button'; editBtn.className = 'msg-action-btn'; editBtn.textContent = '✏️'; editBtn.title = 'Edit';
-            editBtn.addEventListener('click', () => editMessage(messageSnap.id, message.text));
-            actions.appendChild(editBtn);
-          }
-          const delBtn = document.createElement('button');
-          delBtn.type = 'button'; delBtn.className = 'msg-action-btn'; delBtn.textContent = '🗑'; delBtn.title = 'Delete';
-          delBtn.addEventListener('click', () => deleteMessage(messageSnap.id));
-          actions.appendChild(delBtn);
-        } else {
-          const repBtn = document.createElement('button');
-          repBtn.type = 'button'; repBtn.className = 'msg-action-btn'; repBtn.textContent = '🚩'; repBtn.title = 'Report';
-          repBtn.addEventListener('click', () => reportMessage(messageSnap.id, message));
-          actions.appendChild(repBtn);
+        if (isMine && message.text) {
+          const editBtn = document.createElement('button');
+          editBtn.type = 'button'; editBtn.className = 'msg-action-btn'; editBtn.textContent = '✏️'; editBtn.title = 'Edit';
+          editBtn.addEventListener('click', () => editMessage(message.$id, message.text));
+          actions.appendChild(editBtn);
         }
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button'; delBtn.className = 'msg-action-btn'; delBtn.textContent = '🗑'; delBtn.title = 'Delete';
+        delBtn.addEventListener('click', async () => {
+          if (isMine) {
+            const choice = prompt('Type 1 to Delete for Everyone, or 2 to Delete for Me:', '1');
+            if (choice === '1') {
+              await awDb.deleteDocument(DB_ID, 'messages', message.$id);
+              showToast('Deleted for everyone.');
+              fetchMessages();
+            } else if (choice === '2') {
+              const updated = [...(message.deletedFor || []), user.$id];
+              await awDb.updateDocument(DB_ID, 'messages', message.$id, { deletedFor: updated });
+              showToast('Deleted for you.');
+              fetchMessages();
+            }
+          } else if (confirm('Delete this message for you?')) {
+            const updated = [...(message.deletedFor || []), user.$id];
+            await awDb.updateDocument(DB_ID, 'messages', message.$id, { deletedFor: updated });
+            showToast('Deleted for you.');
+            fetchMessages();
+          }
+        });
+        actions.appendChild(delBtn);
 
         meta.appendChild(actions);
         wrap.appendChild(meta);
 
-        if (message.replyTo) {
-          const quote = document.createElement('div');
-          quote.className = 'reply-quote';
-          quote.textContent = `${message.replyTo.sender}: ${message.replyTo.text || 'Media'}`;
-          wrap.appendChild(quote);
-        }
-
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
-        if (message.effect === 'slam') bubble.classList.add('fx-slam');
-        if (message.effect === 'ink') {
-          bubble.classList.add('fx-ink');
-          bubble.title = 'Tap to reveal';
-          bubble.addEventListener('click', () => bubble.classList.toggle('revealed'));
+
+        if (message.forwarded) {
+          const tag = document.createElement('div');
+          tag.textContent = '↪ Forwarded';
+          tag.style.cssText = 'font-size:11px;font-style:italic;opacity:0.75;margin-bottom:3px;';
+          bubble.appendChild(tag);
         }
-        if (message.effect === 'confetti' && !isInitialLoad) launchConfetti();
 
         if (message.image) {
           const img = document.createElement('img');
@@ -1369,6 +1288,22 @@
           });
           bubble.appendChild(img);
         }
+
+        if (message.video) {
+          const vid = document.createElement('video');
+          vid.src = message.video; vid.controls = true; vid.playsInline = true;
+          vid.style.cssText = 'max-width: 260px; max-height: 260px; border-radius: 14px; display: block; margin-bottom: 4px;';
+          bubble.appendChild(vid);
+        }
+
+        if (message.fileUrl) {
+          const card = document.createElement('a');
+          card.href = message.fileUrl; card.target = '_blank'; card.rel = 'noopener noreferrer';
+          card.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: rgba(0,0,0,0.12); text-decoration: none; color: inherit; font-weight: 600; font-size: 13px; margin-bottom: 4px;';
+          card.innerHTML = `<span style="font-size:20px;">📄</span><div><div>${message.fileName || 'Document'}</div><div style="font-size:11px; opacity:0.8;">${message.fileSize || 'Tap to open'}</div></div>`;
+          bubble.appendChild(card);
+        }
+
         if (message.audio) {
           const aWrap = document.createElement('div');
           aWrap.className = 'audio-wrap';
@@ -1378,55 +1313,18 @@
           spd.type = 'button'; spd.className = 'speed-btn'; spd.textContent = '1x';
           spd.addEventListener('click', () => {
             const next = aud.playbackRate === 1 ? 1.5 : aud.playbackRate === 1.5 ? 2 : 1;
-            aud.playbackRate = next;
-            spd.textContent = next + 'x';
+            aud.playbackRate = next; spd.textContent = next + 'x';
           });
-          aWrap.appendChild(aud);
-          aWrap.appendChild(spd);
+          aWrap.appendChild(aud); aWrap.appendChild(spd);
           bubble.appendChild(aWrap);
         }
-        if (message.poll) {
-          const pCard = document.createElement('div');
-          pCard.className = 'poll-card';
-          const qEl = document.createElement('div');
-          qEl.className = 'poll-q'; qEl.textContent = '📊 ' + message.poll.question;
-          pCard.appendChild(qEl);
-          message.poll.options.forEach((opt, idx) => {
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            const votes = opt.votes || [];
-            btn.className = 'poll-opt' + (votes.includes(user.uid) ? ' voted' : '');
-            const optText = document.createElement('span');
-            optText.textContent = opt.text;
-            const voteCount = document.createElement('span');
-            voteCount.textContent = votes.length;
-            btn.appendChild(optText);
-            btn.appendChild(voteCount);
-            btn.addEventListener('click', () => votePoll(messageSnap.id, idx));
-            pCard.appendChild(btn);
-          });
-          bubble.appendChild(pCard);
-        }
+
         if (message.text) {
           const txt = document.createElement('div');
           renderTextWithLinks(txt, message.text);
           bubble.appendChild(txt);
         }
         wrap.appendChild(bubble);
-
-        if (message.reactions) {
-          const rRow = document.createElement('div');
-          rRow.className = 'reactions-row';
-          Object.entries(message.reactions).forEach(([emoji, users]) => {
-            if (!Array.isArray(users) || !users.length) return;
-            const pill = document.createElement('button');
-            pill.type = 'button'; pill.className = 'reaction-pill' + (users.includes(user.uid) ? ' mine' : '');
-            pill.textContent = `${emoji} ${users.length}`;
-            pill.addEventListener('click', () => toggleReaction(messageSnap.id, emoji));
-            rRow.appendChild(pill);
-          });
-          if (rRow.children.length) wrap.appendChild(rRow);
-        }
 
         row.appendChild(avatar); row.appendChild(wrap); box.appendChild(row);
       });
@@ -1437,31 +1335,45 @@
     async function sendMessage(extra = {}) {
       if (!user || sendLock) return;
       const textarea = $('message-input');
-      const text = textarea.value.trim();
-      if (!text && !extra.image && !extra.audio && !extra.poll) return;
+      const rawText = textarea.value.trim();
+      const text = reply ? `↪ [${reply.sender}: ${reply.text.slice(0, 30)}] ${rawText}` : rawText;
+      if (!text && !extra.image && !extra.video && !extra.fileUrl && !extra.audio) return;
 
       sendLock = true;
       $('send').disabled = true;
-      setTyping(false);
 
       try {
-        const payload = {
-          uid: user.uid, sender: profile.displayName || 'User', memoji: profile.memoji || '🙂',
-          text, effect: selectedEffect, ...extra, read: false, timestamp: serverTimestamp(),
-          ...(disappear24h && active !== 'global' ? { expiresAt: Date.now() + 86400000 } : {}),
-          ...(reply ? { replyTo: { id: reply.id, text: reply.text, sender: reply.sender } } : {})
-        };
+        const senderName = profile.name || user.name || 'User';
+        await createMessageDoc({
+          convId: active,
+          sender: user.$id,
+          senderName,
+          text,
+          image: extra.image || '',
+          video: extra.video || '',
+          fileUrl: extra.fileUrl || '',
+          fileName: extra.fileName || '',
+          fileSize: extra.fileSize || '',
+          audio: extra.audio || '',
+          forwarded: !!extra.forwarded,
+          deletedFor: []
+        });
 
-        if (active === 'global') {
-          await addDoc(collection(db, 'global_messages'), payload);
-        } else {
-          const cid = active;
-          await addDoc(collection(db, 'conversations', cid, 'messages'), payload);
-          const preview = text ? text.slice(0, 100) : extra.image ? '📷 Photo' : extra.audio ? '🎤 Voice note' : '📊 Poll';
-          await setDoc(doc(db, 'conversations', cid), {
-            lastMessage: preview, lastSender: user.uid, updatedAt: serverTimestamp()
-          }, { merge: true });
-          if (activePeer?.uid) sendBackgroundPush(activePeer.uid, profile.displayName || 'New Message', preview);
+        if (active !== 'global') {
+          const preview = text ? text.slice(0, 100) : extra.image ? '📷 Photo' : extra.video ? '🎥 Video' : extra.fileUrl ? `📄 ${extra.fileName || 'File'}` : '🎤 Voice note';
+          await awDb.updateDocument(DB_ID, 'conversations', active, { lastMessage: preview }).catch(() => {});
+
+          try {
+            const conv = await awDb.getDocument(DB_ID, 'conversations', active);
+            const members = conv.members || [];
+            const mutedBy = conv.mutedBy || [];
+            const title = conv.isGroup ? `${conv.name || 'Group'}: ${senderName}` : senderName;
+            members.forEach((uid) => {
+              if (uid !== user.$id && !mutedBy.includes(uid)) {
+                window.sendBackgroundPush?.(uid, title, preview);
+              }
+            });
+          } catch (_) {}
         }
 
         textarea.value = '';
@@ -1469,6 +1381,7 @@
         document.querySelectorAll('.effect-pill').forEach((b) => b.classList.toggle('active', b.dataset.fx === ''));
         $('effect-picker').classList.add('hidden');
         clearReply();
+        fetchMessages();
       } catch (err) {
         console.error(err);
         showToast('Message failed to send.', true);
@@ -1477,74 +1390,60 @@
         $('send').disabled = false;
       }
     }
+    window.sendMessage = sendMessage;
 
-    function compressAndSendPhoto(file) {
-      if (!file || !file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const max = 600;
-          let w = img.width, h = img.height;
-          if (w > max || h > max) { if (w > h) { h = Math.round((h * max) / w); w = max; } else { w = Math.round((w * max) / h); h = max; } }
-          const canvas = document.createElement('canvas');
-          canvas.width = w; canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-          sendMessage({ image: canvas.toDataURL('image/jpeg', 0.65) });
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function startChat() {
-      if (stopMessages) stopMessages();
-      stopMessages = null;
-      isInitialLoad = true;
-      watchPeerStatus();
-
-      const box = $('messages'); if (!box) return;
-      box.innerHTML = '<div class="empty muted">Loading messages…</div>';
-
-      stopMessages = onSnapshot(query(messagesRef(), orderBy('timestamp', 'asc'), limitToLast(msgLimit)), (snapshot) => {
-        if (!isInitialLoad && document.hidden && !mutedThreads.includes(active)) {
-          unreadBgCount++;
-          document.title = `(${unreadBgCount}) Messages | ChatByKarnav`;
-          playChime();
+    async function uploadAndSendFile(file) {
+      if (!file) return;
+      if (file.size > 30 * 1024 * 1024) return showToast('File must be under 30 MB.', true);
+      showToast(`Uploading ${file.name}…`);
+      try {
+        const uploaded = await awStorage.createFile(BUCKET_ID, ID.unique(), file);
+        const fileUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=6af69d7f00178e3e64c2`;
+        if (file.type.startsWith('image/')) {
+          await sendMessage({ image: fileUrl });
+        } else if (file.type.startsWith('video/')) {
+          await sendMessage({ video: fileUrl, fileName: file.name });
+        } else {
+          await sendMessage({ fileUrl, fileName: file.name, fileSize: (file.size / 1024).toFixed(0) + ' KB' });
         }
-        isInitialLoad = false;
-        lastSnapshot = snapshot;
-        renderMessages(snapshot);
-        markMessagesRead(snapshot);
-      }, (error) => {
-        console.error('Chat snapshot error', error);
-        setStatus('chat-status', 'Could not load messages', true);
-      });
+        showToast('Sent!');
+      } catch (err) {
+        console.error('Upload error:', err);
+        showToast('Upload failed. Check Appwrite bucket permissions.', true);
+      }
     }
 
     async function openPrivate(peer) {
       if (!user || !peer?.uid) return;
       msgLimit = 50;
-      const ids = [user.uid, peer.uid].sort();
-      const cid = ids.join('_');
-      const ref = doc(db, 'conversations', cid);
-
       try {
-        const snapshot = await getDoc(ref);
-        if (!snapshot.exists()) {
-          await setDoc(ref, { members: ids, createdAt: serverTimestamp(), lastMessage: '', updatedAt: serverTimestamp() });
+        const existing = await awDb.listDocuments(DB_ID, 'conversations', [
+          Query.equal('isGroup', false),
+          Query.contains('members', [user.$id])
+        ]);
+        let conv = existing.documents.find((c) => Array.isArray(c.members) && c.members.includes(peer.uid) && c.members.length === 2);
+
+        if (!conv) {
+          conv = await awDb.createDocument(DB_ID, 'conversations', ID.unique(), {
+            name: peer.name || 'Direct Chat',
+            peerName: peer.name || 'Direct Chat',
+            members: [user.$id, peer.uid],
+            admins: [user.$id],
+            mutedBy: [],
+            isGroup: false,
+            lastMessage: '',
+            createdBy: user.$id
+          }, USER_PERMS);
         }
-        active = cid; activePeer = peer;
-        $('title').textContent = peer.displayName || 'Private chat';
-        $('subtitle').textContent = 'Private conversation';
-        $('chat-avatar').textContent = peer.memoji || '🙂';
-        $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.remove('hidden');
-        $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
-        updateMuteBlockIcons();
+
+        openConversationByObj({
+          id: conv.$id,
+          type: 'private',
+          avatar: peer.avatar || '🙂',
+          name: peer.name || 'Private chat',
+          peer
+        });
         await loadThreads();
-        startChat();
-        changeView('chat');
-        $('sidebar').classList.remove('open');
       } catch (error) {
         console.error('Failed to open private chat:', error);
         showToast('Could not start private chat.', true);
@@ -1568,18 +1467,17 @@
 
       try {
         const cutoff = Date.now() - 24 * 60 * 60 * 1000;
-        const snap = await getDocs(query(collection(db, 'statuses'), limit(30)));
-        snap.docs.forEach((d) => {
-          const st = d.data();
-          const ts = st.updatedAt?.toMillis ? st.updatedAt.toMillis() : 0;
-          if (ts < cutoff || !st.text) return;
+        const snap = await awDb.listDocuments(DB_ID, 'statuses', [Query.orderDesc('$updatedAt'), Query.limit(30)]);
+        snap.documents.forEach((st) => {
+          const ts = st.$updatedAt ? new Date(st.$updatedAt).getTime() : 0;
+          if (ts < cutoff || !st.caption) return;
 
           const chip = document.createElement('button');
           chip.type = 'button'; chip.className = 'status-chip';
-          const ring = document.createElement('span'); ring.className = 'status-ring'; ring.textContent = st.memoji || '🙂';
+          const ring = document.createElement('span'); ring.className = 'status-ring'; ring.textContent = '💬';
           const name = document.createElement('span'); name.className = 'status-name'; name.textContent = st.name || 'Member';
           chip.appendChild(ring); chip.appendChild(name);
-          chip.addEventListener('click', () => showToast(`${st.name}: "${st.text}"`));
+          chip.addEventListener('click', () => showToast(`${st.name}: "${st.caption}"`));
           bar.appendChild(chip);
         });
       } catch (err) { console.warn('Status load failed', err); }
@@ -1589,14 +1487,18 @@
       const box = $('people-results'); if (!box) return;
       box.innerHTML = ''; setStatus('people-status', 'Searching…');
       try {
-        const snapshot = await getDocs(query(collection(db, 'publicProfiles'), limit(100)));
+        const snapshot = await awDb.listDocuments(DB_ID, 'publicProfiles', [Query.limit(100)]);
         const text = term.toLowerCase();
-        const people = snapshot.docs.map((d) => ({ uid: d.id, ...d.data() })).filter((p) => {
-          if (!p.displayName && !p.bio && !p.school) return false;
-          if (!text) return p.uid !== user.uid;
-          const haystack = [p.displayName, p.school, p.bio, p.grade, p.division].join(' ').toLowerCase();
-          return p.uid !== user.uid && haystack.includes(text);
-        }).slice(0, 20);
+        const people = snapshot.documents.map((d) => ({
+          uid: d.uid || d.$id,
+          name: d.name || d.displayName || 'Member',
+          avatar: d.avatar || d.memoji || '🙂',
+          email: d.email || ''
+        })).filter((p) => {
+          if (p.uid === user.$id) return false;
+          if (!text) return true;
+          return [p.name, p.email].join(' ').toLowerCase().includes(text);
+        }).slice(0, 25);
 
         if (!people.length) { setStatus('people-status', 'No community members found.'); return; }
         setStatus('people-status', `${people.length} member${people.length === 1 ? '' : 's'} found.`);
@@ -1610,26 +1512,15 @@
 
           const av = document.createElement('span');
           av.className = 'avatar';
-          av.textContent = person.memoji || '🙂';
+          av.textContent = person.avatar;
 
           const info = document.createElement('div');
           const strong = document.createElement('strong');
-          strong.textContent = person.displayName || 'Member';
-          const gradeDiv = document.createElement('div');
-          gradeDiv.className = 'muted';
-          gradeDiv.textContent = `${person.grade || ''} ${person.division || ''}`.trim();
+          strong.textContent = person.name;
           info.appendChild(strong);
-          info.appendChild(gradeDiv);
 
           head.appendChild(av);
           head.appendChild(info);
-
-          const schoolEl = document.createElement('div');
-          schoolEl.className = 'muted';
-          schoolEl.textContent = person.school || 'School not set';
-
-          const bioEl = document.createElement('div');
-          bioEl.textContent = person.bio || 'No bio yet.';
 
           const msgBtn = document.createElement('button');
           msgBtn.className = 'btn primary';
@@ -1638,8 +1529,6 @@
           msgBtn.addEventListener('click', () => openPrivate(person));
 
           card.appendChild(head);
-          card.appendChild(schoolEl);
-          card.appendChild(bioEl);
           card.appendChild(msgBtn);
           box.appendChild(card);
         });
@@ -1652,18 +1541,17 @@
       const name = $('display-name').value.trim();
       if (!name) { setStatus('profile-status', 'Display name is required.', true); return; }
 
-      const memoji = $('profile-memoji').value.trim() || '🙂';
-      const next = {
-        displayName: name, displayNameLower: name.toLowerCase(), memoji,
-        grade: $('grade').value.trim(), division: $('division').value.trim(),
-        school: $('school').value.trim(), bio: $('bio').value.trim(), updatedAt: serverTimestamp()
-      };
-
+      const avatar = $('profile-memoji').value.trim() || '🙂';
       try {
-        await setDoc(doc(db, 'publicProfiles', user.uid), next, { merge: true });
-        await updateProfile(auth.currentUser, { displayName: name });
-        profile = { ...profile, ...next };
-        $('self-name').textContent = name; $('self-avatar').textContent = memoji;
+        await awAccount.updateName(name);
+        await upsertDoc(DB_ID, 'publicProfiles', user.$id, {
+          uid: user.$id,
+          name,
+          email: user.email || '',
+          avatar
+        });
+        profile = { ...profile, name, avatar };
+        $('self-name').textContent = name; $('self-avatar').textContent = avatar;
         showToast('Profile saved.');
       } catch (error) { console.error(error); setStatus('profile-status', 'Could not save profile.', true); }
     }
@@ -1672,49 +1560,81 @@
       event.preventDefault();
       const email = $('auth-email').value.trim();
       const password = $('password').value;
-      const memoji = $('memoji-value').value || '🙂';
+      const avatar = $('memoji-value').value || '🙂';
 
       if (!email || !email.includes('@')) { setStatus('auth-status', 'Please enter a valid email address.', true); return; }
-      if (password.length < 6) { setStatus('auth-status', 'Password must be at least 6 characters.', true); return; }
+      if (password.length < 8) { setStatus('auth-status', 'Password must be at least 8 characters.', true); return; }
 
       const defaultName = email.split('@')[0].slice(0, 30) || 'Member';
       setStatus('auth-status', currentAuthMode === 'signup' ? 'Creating account…' : 'Signing in…');
 
       try {
         if (currentAuthMode === 'signup') {
-          const cred = await createUserWithEmailAndPassword(auth, email, password);
-          await updateProfile(cred.user, { displayName: defaultName });
-          await setDoc(doc(db, 'publicProfiles', cred.user.uid), {
-            displayName: defaultName, displayNameLower: defaultName.toLowerCase(), memoji,
-            grade: '', division: '', school: '', bio: '', updatedAt: serverTimestamp()
-          }, { merge: true });
+          const created = await awAccount.create(ID.unique(), email, password, defaultName);
+          await awAccount.createEmailPasswordSession(email, password);
+          await upsertDoc(DB_ID, 'publicProfiles', created.$id, {
+            uid: created.$id,
+            name: defaultName,
+            email,
+            avatar
+          });
           setStatus('auth-status', 'Account created successfully.');
         } else {
-          await signInWithEmailAndPassword(auth, email, password);
+          await awAccount.createEmailPasswordSession(email, password);
           setStatus('auth-status', 'Welcome back.');
         }
+        const sessionUser = await awAccount.get();
+        await signedIn(sessionUser);
       } catch (error) {
-        const message = error?.code === 'auth/email-already-in-use' ? 'An account with this email already exists.'
-          : error?.code === 'auth/invalid-email' ? 'Please enter a valid email address.'
-          : error?.code === 'auth/user-not-found' || error?.code === 'auth/wrong-password' || error?.code === 'auth/invalid-credential' ? 'Incorrect email or password.'
-          : 'Could not complete that request.';
+        const message = error?.code === 409 ? 'An account with this email already exists.'
+          : error?.code === 401 ? 'Incorrect email or password.'
+          : error?.message || 'Could not complete that request.';
         setStatus('auth-status', message, true);
       }
+    }
+
+    function startRealtimeSubscription() {
+      if (unsubRealtime) { unsubRealtime(); unsubRealtime = null; }
+      unsubRealtime = awClient.subscribe([
+        `databases.${DB_ID}.collections.messages.documents`,
+        `databases.${DB_ID}.collections.conversations.documents`,
+        `databases.${DB_ID}.collections.calls.documents`
+      ], (response) => {
+        const payload = response.payload;
+        if (!payload) return;
+
+        if (payload.$collectionId === 'messages') {
+          if (payload.convId === active) {
+            if (document.hidden && !mutedThreads.includes(active) && payload.sender !== user.$id) {
+              unreadBgCount++;
+              document.title = `(${unreadBgCount}) Messages | ChatByKarnav`;
+              playChime();
+            }
+            fetchMessages();
+          }
+          loadThreads();
+        }
+
+        if (payload.$collectionId === 'conversations') {
+          loadThreads();
+        }
+
+        if (payload.$collectionId === 'calls' && window.handleRealtimeCall) {
+          window.handleRealtimeCall(payload);
+        }
+      });
     }
 
     async function signedIn(userSession) {
       user = userSession;
       if (user && window.OneSignalDeferred) {
-        OneSignalDeferred.push((OneSignal) => OneSignal.login(user.uid));
+        OneSignalDeferred.push((OneSignal) => OneSignal.login(user.$id));
       }
       if (!user) {
         $('welcome-screen').classList.remove('hidden');
         $('login').classList.add('hidden');
         $('app').classList.add('hidden');
-        if (stopMessages) { stopMessages(); stopMessages = null; }
-        if (stopPresence) { stopPresence(); stopPresence = null; }
-        if (stopTyping) { stopTyping(); stopTyping = null; }
-        if (stopPin) { stopPin(); stopPin = null; }
+        if (unsubRealtime) { unsubRealtime(); unsubRealtime = null; }
         return;
       }
 
@@ -1722,30 +1642,34 @@
       $('login').classList.add('hidden');
       $('app').classList.remove('hidden');
 
-      const [profileDoc, prefsDoc] = await Promise.all([
-        getDoc(doc(db, 'publicProfiles', user.uid)),
-        getDoc(doc(db, 'users', user.uid))
-      ]);
-      const saved = profileDoc.exists() ? profileDoc.data() : {};
-      const prefs = prefsDoc.exists() ? prefsDoc.data() : {};
-      blockedUsers = Array.isArray(prefs.blocked) ? prefs.blocked : [];
-      mutedThreads = Array.isArray(prefs.muted) ? prefs.muted : [];
-      starredMessages = Array.isArray(prefs.starred) ? prefs.starred : [];
-      archivedThreads = Array.isArray(prefs.archived) ? prefs.archived : [];
+      loadLocalPrefs();
 
-      const fallbackName = user.displayName || (user.email ? user.email.split('@')[0] : 'You');
+      let saved = {};
+      try {
+        saved = await awDb.getDocument(DB_ID, 'publicProfiles', user.$id);
+      } catch (_) {
+        const fallbackName = user.name || (user.email ? user.email.split('@')[0] : 'Member');
+        saved = await upsertDoc(DB_ID, 'publicProfiles', user.$id, {
+          uid: user.$id,
+          name: fallbackName,
+          email: user.email || '',
+          avatar: '🙂'
+        }).catch(() => ({ name: fallbackName, avatar: '🙂' }));
+      }
+
+      const fallbackName = user.name || (user.email ? user.email.split('@')[0] : 'You');
       profile = {
-        displayName: saved.displayName || fallbackName, displayNameLower: saved.displayNameLower || fallbackName.toLowerCase(),
-        memoji: saved.memoji || '🙂', grade: saved.grade || '', division: saved.division || '', school: saved.school || '', bio: saved.bio || ''
+        name: saved.name || saved.displayName || fallbackName,
+        avatar: saved.avatar || saved.memoji || '🙂'
       };
 
-      $('display-name').value = profile.displayName; $('profile-memoji').value = profile.memoji;
-      $('grade').value = profile.grade; $('division').value = profile.division;
-      $('school').value = profile.school; $('bio').value = profile.bio;
-      $('self-name').textContent = profile.displayName; $('self-avatar').textContent = profile.memoji;
-      renderMemojiPicker(profile.memoji);
+      $('display-name').value = profile.name;
+      $('profile-memoji').value = profile.avatar;
+      $('self-name').textContent = profile.name;
+      $('self-avatar').textContent = profile.avatar;
+      renderMemojiPicker(profile.avatar);
 
-      setPresence(true);
+      startRealtimeSubscription();
       loadStatuses();
       loadThreads();
       changeView('home');
@@ -1759,80 +1683,32 @@
 
     const INSTALL_GUIDES = {
       android: {
-        options: [
-          { id: 'chrome', name: 'Chrome (Android 10+)' },
-          { id: 'samsung', name: 'Samsung Internet' },
-          { id: 'edge', name: 'Microsoft Edge' }
-        ],
+        options: [{ id: 'chrome', name: 'Chrome (Android 10+)' }, { id: 'samsung', name: 'Samsung Internet' }, { id: 'edge', name: 'Microsoft Edge' }],
         steps: {
-          chrome: [
-            'Tap the <b>More (⋮)</b> menu at the top right.',
-            'Tap <b>Add to Home screen</b> (or <b>Install app</b>).',
-            'Tap <b>Install</b> to confirm.'
-          ],
-          samsung: [
-            'Tap the <b>Menu (≡)</b> button at the bottom right.',
-            'Tap <b>Add page to</b> → <b>Home screen</b>.',
-            'Tap <b>Add</b>.'
-          ],
-          edge: [
-            'Tap the <b>More (⋯)</b> menu at the bottom.',
-            'Tap <b>Add to phone</b> → <b>Install</b>.'
-          ]
+          chrome: ['Tap the <b>More (⋮)</b> menu at the top right.', 'Tap <b>Add to Home screen</b> (or <b>Install app</b>).', 'Tap <b>Install</b> to confirm.'],
+          samsung: ['Tap the <b>Menu (≡)</b> button at the bottom right.', 'Tap <b>Add page to</b> → <b>Home screen</b>.', 'Tap <b>Add</b>.'],
+          edge: ['Tap the <b>More (⋯)</b> menu at the bottom.', 'Tap <b>Add to phone</b> → <b>Install</b>.']
         }
       },
       ios: {
-        options: [
-          { id: 'safari', name: 'Safari (iOS 16+)' },
-          { id: 'chrome', name: 'Chrome (iOS 16.4+)' }
-        ],
+        options: [{ id: 'safari', name: 'Safari (iOS 16+)' }, { id: 'chrome', name: 'Chrome (iOS 16.4+)' }],
         steps: {
-          safari: [
-            'Tap the <b>Share (↑)</b> button at the bottom.',
-            'Scroll down and tap <b>Add to Home Screen</b>.',
-            'Tap <b>Add</b> at the top right.'
-          ],
-          chrome: [
-            'Tap the <b>Share (↑)</b> icon in the top-right address bar.',
-            'Scroll down and tap <b>Add to Home Screen</b>.',
-            'Tap <b>Add</b>.'
-          ]
+          safari: ['Tap the <b>Share (↑)</b> button at the bottom.', 'Scroll down and tap <b>Add to Home Screen</b>.', 'Tap <b>Add</b> at the top right.'],
+          chrome: ['Tap the <b>Share (↑)</b> icon in the top-right address bar.', 'Scroll down and tap <b>Add to Home Screen</b>.', 'Tap <b>Add</b>.']
         }
       },
       windows: {
-        options: [
-          { id: 'chrome', name: 'Chrome (Win 10/11)' },
-          { id: 'edge', name: 'Edge (Win 10/11)' }
-        ],
+        options: [{ id: 'chrome', name: 'Chrome (Win 10/11)' }, { id: 'edge', name: 'Edge (Win 10/11)' }],
         steps: {
-          chrome: [
-            'Click the <b>More (⋮)</b> menu at the top right.',
-            'Go to <b>Cast, save, and share</b> → <b>Install ChatByKarnav…</b>.',
-            'Click <b>Install</b>.'
-          ],
-          edge: [
-            'Click the <b>Settings and more (⋯)</b> menu at the top right.',
-            'Go to <b>Apps</b> → <b>Install this site as an app</b>.',
-            'Click <b>Install</b>.'
-          ]
+          chrome: ['Click the <b>More (⋮)</b> menu at the top right.', 'Go to <b>Cast, save, and share</b> → <b>Install ChatByKarnav…</b>.', 'Click <b>Install</b>.'],
+          edge: ['Click the <b>Settings and more (⋯)</b> menu at the top right.', 'Go to <b>Apps</b> → <b>Install this site as an app</b>.', 'Click <b>Install</b>.']
         }
       },
       mac: {
-        options: [
-          { id: 'safari', name: 'Safari (macOS Sonoma+)' },
-          { id: 'chrome', name: 'Chrome' }
-        ],
+        options: [{ id: 'safari', name: 'Safari (macOS Sonoma+)' }, { id: 'chrome', name: 'Chrome' }],
         steps: {
-          safari: [
-            'Click <b>File</b> in the top menu bar (or the <b>Share</b> button).',
-            'Click <b>Add to Dock…</b>.',
-            'Click <b>Add</b>.'
-          ],
-          chrome: [
-            'Click the <b>More (⋮)</b> menu at the top right.',
-            'Go to <b>Cast, save, and share</b> → <b>Install ChatByKarnav…</b>.',
-            'Click <b>Install</b>.'
-          ]
+          safari: ['Click <b>File</b> in the top menu bar (or the <b>Share</b> button).', 'Click <b>Add to Dock…</b>.', 'Click <b>Add</b>.'],
+          chrome: ['Click the <b>More (⋮)</b> menu at the top right.', 'Go to <b>Cast, save, and share</b> → <b>Install ChatByKarnav…</b>.', 'Click <b>Install</b>.']
         }
       }
     };
@@ -1866,18 +1742,8 @@
 
     $('install-os').addEventListener('change', updateInstallBrowserOptions);
     $('install-browser').addEventListener('change', renderInstallSteps);
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      $('native-install-btn').classList.remove('hidden');
-    });
-
-    $('install-guide-btn').addEventListener('click', () => {
-      $('install-os').value = detectOS();
-      updateInstallBrowserOptions();
-      $('install-modal').classList.remove('hidden');
-    });
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; $('native-install-btn').classList.remove('hidden'); });
+    $('install-guide-btn').addEventListener('click', () => { $('install-os').value = detectOS(); updateInstallBrowserOptions(); $('install-modal').classList.remove('hidden'); });
     $('close-install-modal').addEventListener('click', () => $('install-modal').classList.add('hidden'));
     $('install-modal').addEventListener('click', (e) => { if (e.target === $('install-modal')) $('install-modal').classList.add('hidden'); });
     $('native-install-btn').addEventListener('click', async () => {
@@ -1885,66 +1751,43 @@
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') { showToast('App installed!'); $('install-modal').classList.add('hidden'); }
-      deferredPrompt = null;
-      $('native-install-btn').classList.add('hidden');
+      deferredPrompt = null; $('native-install-btn').classList.add('hidden');
     });
 
-    $('welcome-continue').addEventListener('click', () => {
-      $('welcome-screen').classList.add('hidden');
-      $('login').classList.remove('hidden');
-      $('auth-email')?.focus();
-    });
-
+    $('welcome-continue').addEventListener('click', () => { $('welcome-screen').classList.add('hidden'); $('login').classList.remove('hidden'); $('auth-email')?.focus(); });
     document.querySelectorAll('.auth-toggle button').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
     $('auth-form').addEventListener('submit', handleAuthSubmit);
 
     $('forgot-password').addEventListener('click', async () => {
       const email = $('auth-email').value.trim();
-      if (!email || !email.includes('@')) { setStatus('auth-status', 'Enter your email address above first.', true); return; }
+      if (!email || !email.includes('@')) return setStatus('auth-status', 'Enter your email address above first.', true);
       setStatus('auth-status', 'Sending reset link…');
-      try { await sendPasswordResetEmail(auth, email); setStatus('auth-status', 'Password reset email sent. Check your inbox.'); }
-      catch (err) { setStatus('auth-status', 'Could not send reset email.', true); }
-    });
-
-    
       try {
-        const result = await signInWithPopup(auth, new GoogleAuthProvider());
-        const u = result.user;
-        const profileRef = doc(db, 'publicProfiles', u.uid);
-        const snap = await getDoc(profileRef);
-        if (!snap.exists()) {
-          const name = u.displayName || (u.email ? u.email.split('@')[0] : 'Member');
-          await setDoc(profileRef, {
-            displayName: name, displayNameLower: name.toLowerCase(),
-            memoji: $('memoji-value').value || '🙂',
-            grade: '', division: '', school: '', bio: '', updatedAt: serverTimestamp()
-          }, { merge: true });
-        }
-      } catch (error) {
-        const msg = error?.code === 'auth/popup-closed-by-user' ? 'Sign-in popup was closed.'
-          : error?.code === 'auth/account-exists-with-different-credential' ? 'An account already exists with this email using a password.'
-          : 'Could not complete Google sign-in.';
-        setStatus('auth-status', msg, true);
-      }
-    );
+        await awAccount.createRecovery(email, window.location.origin + window.location.pathname);
+        setStatus('auth-status', 'Password reset email sent. Check your inbox.');
+      } catch (err) { setStatus('auth-status', 'Could not send reset email.', true); }
+    });
 
     $('profile-form').addEventListener('submit', saveProfile);
 
     $('change-password-btn').addEventListener('click', async () => {
-      if (!user?.email) return;
-      try { await sendPasswordResetEmail(auth, user.email); showToast('Password reset link sent to your email.'); }
-      catch (err) { showToast('Could not send reset email.', true); }
+      const newPass = prompt('Enter new password (min 8 characters):');
+      const oldPass = newPass ? prompt('Enter your current password to confirm:') : null;
+      if (!newPass || !oldPass) return;
+      try {
+        await awAccount.updatePassword(newPass, oldPass);
+        showToast('Password updated!');
+      } catch (err) { showToast('Could not update password.', true); }
     });
 
     $('delete-account-btn').addEventListener('click', async () => {
-      if (!user || !confirm('Are you sure? This will permanently delete your account and profile.')) return;
+      if (!user || !confirm('Are you sure? This will remove your profile and sign you out.')) return;
       try {
-        await deleteDoc(doc(db, 'publicProfiles', user.uid));
-        await deleteUser(auth.currentUser);
-        showToast('Account deleted.');
-      } catch (err) {
-        showToast(err?.code === 'auth/requires-recent-login' ? 'Please sign out and sign back in before deleting your account.' : 'Could not delete account.', true);
-      }
+        await awDb.deleteDocument(DB_ID, 'publicProfiles', user.$id).catch(() => {});
+        await awAccount.deleteSession('current');
+        signedIn(null);
+        showToast('Signed out & profile deleted.');
+      } catch (err) { showToast('Could not delete profile.', true); }
     });
 
     $('people-form').addEventListener('submit', (e) => { e.preventDefault(); searchPeople($('people-search').value.trim()); });
@@ -1952,15 +1795,19 @@
       const term = e.target.value.trim().toLowerCase();
       renderThreads(term ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term)) : allThreads);
     });
-    $('message-search').addEventListener('input', () => { if (lastSnapshot) renderMessages(lastSnapshot); });
+    $('message-search').addEventListener('input', () => renderMessages(lastDocs));
     $('new-chat').addEventListener('click', () => { $('sidebar').classList.remove('open'); changeView('people'); });
     $('fab-new-chat').addEventListener('click', () => { $('sidebar').classList.remove('open'); changeView('people'); });
-    $('logout').addEventListener('click', async () => { try { await setPresence(false); await signOut(auth); } catch (_) {} });
+    $('logout').addEventListener('click', async () => {
+      try { await awAccount.deleteSession('current'); } catch (_) {}
+      signedIn(null);
+    });
     $('send').addEventListener('click', () => sendMessage());
     $('message-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
-    $('message-input').addEventListener('input', () => { setTyping(true); clearTimeout(typingTimer); typingTimer = setTimeout(() => setTyping(false), 1800); });
     $('photo-toggle').addEventListener('click', () => $('photo-input').click());
-    $('photo-input').addEventListener('change', (e) => { if (e.target.files?.[0]) { compressAndSendPhoto(e.target.files[0]); e.target.value = ''; } });
+    $('photo-input').addEventListener('change', (e) => { if (e.target.files?.[0]) { uploadAndSendFile(e.target.files[0]); e.target.value = ''; } });
+    $('file-toggle').addEventListener('click', () => $('file-input').click());
+    $('file-input').addEventListener('change', (e) => { if (e.target.files?.[0]) { uploadAndSendFile(e.target.files[0]); e.target.value = ''; } });
     $('lightbox').addEventListener('click', () => $('lightbox').classList.add('hidden'));
 
     $('help-tour-btn').addEventListener('click', () => $('tour-modal').classList.remove('hidden'));
@@ -1974,10 +1821,8 @@
       });
     });
 
-    $('disappear-toggle').addEventListener('click', async () => {
-      if (active === 'global' || !user) return;
+    $('disappear-toggle').addEventListener('click', () => {
       disappear24h = !disappear24h;
-      await setDoc(doc(db, 'conversations', active), { disappear24h }, { merge: true });
       $('disappear-toggle').style.background = disappear24h ? 'rgba(10, 132, 255, 0.25)' : '';
       showToast(disappear24h ? '24h Disappearing Messages ON ⏳' : 'Disappearing Messages OFF');
     });
@@ -1998,19 +1843,22 @@
     });
     $('close-starred').addEventListener('click', () => $('starred-modal').classList.add('hidden'));
 
-    $('archive-toggle').addEventListener('click', async () => {
+    $('archive-toggle').addEventListener('click', () => {
       if (!user || active === 'global') return;
       archivedThreads = archivedThreads.includes(active) ? archivedThreads.filter((id) => id !== active) : [...archivedThreads, active];
-      await setDoc(doc(db, 'users', user.uid), { archived: archivedThreads }, { merge: true });
+      saveLocalPrefs();
       loadThreads(); changeView('home'); showToast('Chat archived.');
     });
 
     $('cancel-status').addEventListener('click', () => $('status-modal').classList.add('hidden'));
     $('save-status').addEventListener('click', async () => {
-      const text = $('status-input').value.trim();
-      if (!text) return;
-      await setDoc(doc(db, 'statuses', user.uid), {
-        name: profile.displayName || 'Member', memoji: profile.memoji || '🙂', text, updatedAt: serverTimestamp()
+      const caption = $('status-input').value.trim();
+      if (!caption) return;
+      await upsertDoc(DB_ID, 'statuses', user.$id, {
+        uid: user.$id,
+        name: profile.name || 'Member',
+        mediaUrl: '',
+        caption
       });
       $('status-input').value = ''; $('status-modal').classList.add('hidden');
       loadStatuses(); showToast('Status posted for 24h!');
@@ -2025,13 +1873,13 @@
         audioChunks = [];
         mediaRecorder = new MediaRecorder(stream);
         mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
-        mediaRecorder.onstop = () => {
+        mediaRecorder.onstop = async () => {
           stream.getTracks().forEach((t) => t.stop());
-          const mimeType = mediaRecorder.mimeType || 'audio/webm';
-          const blob = new Blob(audioChunks, { type: mimeType });
-          const reader = new FileReader();
-          reader.onloadend = () => sendMessage({ audio: reader.result });
-          reader.readAsDataURL(blob);
+          const blob = new Blob(audioChunks, { type: 'audio/webm' });
+          const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
+          const uploaded = await awStorage.createFile(BUCKET_ID, ID.unique(), file);
+          const audioUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=6af69d7f00178e3e64c2`;
+          sendMessage({ audio: audioUrl });
         };
         mediaRecorder.start();
         $('voice-toggle').classList.add('recording');
@@ -2040,40 +1888,35 @@
       } catch (err) { showToast('Microphone permission denied.', true); }
     });
 
-    $('unpin-btn').addEventListener('click', async () => {
-      const pinDocRef = active === 'global' ? doc(db, 'settings', 'global_pin') : doc(db, 'conversations', active);
-      try { await setDoc(pinDocRef, { pinnedMessage: null }, { merge: true }); } catch (_) {}
-    });
+    $('unpin-btn').addEventListener('click', () => $('pinned-bar').classList.add('hidden'));
 
-    $('mute-toggle').addEventListener('click', async () => {
+    $('mute-toggle').addEventListener('click', () => {
       if (!user || active === 'global') return;
       mutedThreads = mutedThreads.includes(active) ? mutedThreads.filter((id) => id !== active) : [...mutedThreads, active];
-      await setDoc(doc(db, 'users', user.uid), { muted: mutedThreads }, { merge: true });
-      updateMuteBlockIcons(); loadThreads();
+      saveLocalPrefs(); updateMuteBlockIcons(); loadThreads();
       showToast(mutedThreads.includes(active) ? 'Chat muted.' : 'Chat unmuted.');
     });
 
-    $('block-toggle').addEventListener('click', async () => {
+    $('block-toggle').addEventListener('click', () => {
       if (!user || !activePeer?.uid) return;
       const uid = activePeer.uid;
       blockedUsers = blockedUsers.includes(uid) ? blockedUsers.filter((id) => id !== uid) : [...blockedUsers, uid];
-      await setDoc(doc(db, 'users', user.uid), { blocked: blockedUsers }, { merge: true });
-      updateMuteBlockIcons(); loadThreads();
+      saveLocalPrefs(); updateMuteBlockIcons(); loadThreads();
       showToast(blockedUsers.includes(uid) ? 'User blocked.' : 'User unblocked.');
     });
 
     $('new-group-btn').addEventListener('click', async () => {
       $('group-modal').classList.remove('hidden');
       const list = $('group-members-list'); list.innerHTML = 'Loading members...';
-      const snap = await getDocs(query(collection(db, 'publicProfiles'), limit(50)));
+      const snap = await awDb.listDocuments(DB_ID, 'publicProfiles', [Query.limit(50)]);
       list.innerHTML = '';
-      snap.docs.forEach((d) => {
-        if (d.id === user.uid) return;
-        const p = d.data();
+      snap.documents.forEach((p) => {
+        const uid = p.uid || p.$id;
+        if (uid === user.$id) return;
         const label = document.createElement('label');
         label.className = 'member-item';
-        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = d.id;
-        const span = document.createElement('span'); span.textContent = `${p.memoji || '🙂'} ${p.displayName || 'Member'}`;
+        const cb = document.createElement('input'); cb.type = 'checkbox'; cb.value = uid;
+        const span = document.createElement('span'); span.textContent = `${p.avatar || '🙂'} ${p.name || 'Member'}`;
         label.appendChild(cb); label.appendChild(span);
         list.appendChild(label);
       });
@@ -2083,16 +1926,20 @@
       const name = $('group-name').value.trim();
       const selected = [...document.querySelectorAll('#group-members-list input:checked')].map((c) => c.value);
       if (!name || !selected.length) return showToast('Enter a group name and select at least 1 member.', true);
-      const members = [user.uid, ...selected];
-      const ref = await addDoc(collection(db, 'conversations'), {
-        isGroup: true, groupName: name, members, createdAt: serverTimestamp(), updatedAt: serverTimestamp(), lastMessage: 'Group created'
-      });
+      const members = [user.$id, ...selected];
+      const ref = await awDb.createDocument(DB_ID, 'conversations', ID.unique(), {
+        name,
+        members,
+        admins: [user.$id],
+        mutedBy: [],
+        isGroup: true,
+        lastMessage: 'Group created',
+        peerName: name,
+        createdBy: user.$id
+      }, USER_PERMS);
       $('group-modal').classList.add('hidden'); $('group-name').value = '';
       await loadThreads();
-      msgLimit = 50; active = ref.id; activePeer = null;
-      $('title').textContent = name; $('subtitle').textContent = `${members.length} members`; $('chat-avatar').textContent = '👥';
-      $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
-      startChat(); changeView('chat');
+      openConversationByObj({ id: ref.$id, type: 'group', avatar: '👥', name, membersCount: members.length });
     });
 
     $('poll-toggle').addEventListener('click', () => $('poll-modal').classList.remove('hidden'));
@@ -2101,7 +1948,7 @@
       const q = $('poll-question').value.trim();
       const opts = [$('poll-opt-1').value.trim(), $('poll-opt-2').value.trim(), $('poll-opt-3').value.trim()].filter(Boolean);
       if (!q || opts.length < 2) return showToast('Enter a question and at least 2 options.', true);
-      await sendMessage({ poll: { question: q, options: opts.map((text) => ({ text, votes: [] })) } });
+      await sendMessage({ text: `📊 POLL: ${q}\n• ${opts.join('\n• ')}` });
       $('poll-modal').classList.add('hidden');
       $('poll-question').value = ''; $('poll-opt-1').value = ''; $('poll-opt-2').value = ''; $('poll-opt-3').value = '';
     });
@@ -2152,7 +1999,6 @@
       if (document.visibilityState === 'visible') {
         unreadBgCount = 0;
         document.title = 'Messages | ChatByKarnav';
-        if (user) setPresence(true);
       }
     });
 
@@ -2162,7 +2008,9 @@
     renderMemojiPicker('🙂');
     applyTheme();
     setAuthMode('signin');
-    onAuthStateChanged(auth, signedIn);
+
+    // Boot Appwrite Auth Session Check
+    awAccount.get().then(signedIn).catch(() => signedIn(null));
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
@@ -2170,12 +2018,11 @@
       });
     }
 
-    // === GLOBAL 1-ON-1 & GROUP CALLS + SCREEN SHARING ===
+    // === APPWRITE WEBRTC CALLS + CALL HISTORY LOGS ===
     (function () {
       const servers = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
-      const peers = {};
-      let localStream = null, screenStream = null, ringInterval = null;
-      let incomingChatId = null;
+      let pc = null, localStream = null, screenStream = null, ringInterval = null;
+      let activeCallId = null;
 
       const actionsBar = document.querySelector('.main-actions');
       const audioBtn = document.createElement('button');
@@ -2225,128 +2072,135 @@
         document.getElementById('share-screen-btn').classList.toggle('hidden', !withVideo);
       }
 
-      function createPeerConnection(chatId, remoteUid, isInitiator) {
-        if (peers[remoteUid]) return peers[remoteUid];
-        const pc = new RTCPeerConnection(servers);
-        peers[remoteUid] = pc;
+      function buildPC() {
+        pc = new RTCPeerConnection(servers);
         localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
-
-        const stage = document.getElementById('video-stage');
         const remoteStream = new MediaStream();
         pc.ontrack = (e) => {
           e.streams[0].getTracks().forEach((t) => remoteStream.addTrack(t));
-          let vid = document.getElementById('remote-vid-' + remoteUid);
-          if (!vid) {
-            const mainRemote = document.getElementById('remote-video');
-            if (!mainRemote.srcObject) {
-              mainRemote.srcObject = remoteStream;
-              mainRemote.id = 'remote-vid-' + remoteUid;
-            } else {
-              stage.classList.add('group-video-grid');
-              vid = document.createElement('video');
-              vid.id = 'remote-vid-' + remoteUid;
-              vid.className = 'group-video-tile';
-              vid.autoplay = true; vid.playsInline = true;
-              vid.srcObject = remoteStream;
-              stage.appendChild(vid);
-            }
-          }
+          document.getElementById('remote-video').srcObject = remoteStream;
         };
+        return pc;
+      }
 
-        const signalDoc = doc(db, 'conversations', chatId, 'calls', `${[user.uid, remoteUid].sort().join('_')}`);
-        const myCandidates = collection(signalDoc, isInitiator ? 'offerCandidates' : 'answerCandidates');
-        const theirCandidates = collection(signalDoc, isInitiator ? 'answerCandidates' : 'offerCandidates');
-
-        pc.onicecandidate = (e) => e.candidate && addDoc(myCandidates, e.candidate.toJSON());
-
-        onSnapshot(theirCandidates, (snap) => {
-          snap.docChanges().forEach((c) => {
-            if (c.type === 'added') pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(() => {});
-          });
+      function waitIceComplete(peerConn) {
+        return new Promise((resolve) => {
+          if (peerConn.iceGatheringState === 'complete') return resolve();
+          const check = () => {
+            if (peerConn.iceGatheringState === 'complete') {
+              peerConn.removeEventListener('icegatheringstatechange', check);
+              resolve();
+            }
+          };
+          peerConn.addEventListener('icegatheringstatechange', check);
+          setTimeout(resolve, 2500);
         });
-
-        return { pc, signalDoc };
       }
 
       async function startCall(withVideo) {
-        if (!active || active === 'global') return;
-        incomingChatId = active;
+        if (!active || active === 'global' || !activePeer?.uid) return showToast('Calls are available in 1-on-1 chats.');
         document.getElementById('call-modal').classList.remove('hidden');
-        document.getElementById('call-title').textContent = `Calling ${document.getElementById('title').textContent}…`;
+        document.getElementById('call-title').textContent = `Calling ${activePeer.name}…`;
         document.getElementById('call-status').textContent = withVideo ? 'Video Call' : 'Audio Call';
         document.getElementById('accept-call-btn').classList.add('hidden');
 
         await setupMedia(withVideo);
-        const convSnap = await getDoc(doc(db, 'conversations', active));
-        const members = (convSnap.data()?.members || []).filter((id) => id !== user.uid);
+        buildPC();
 
-        const callDoc = doc(db, 'conversations', active, 'calls', 'active_call');
-        await setDoc(callDoc, {
-          caller: user.uid, callerName: profile.displayName || 'Member',
-          withVideo, status: 'ringing', participants: [user.uid]
-        });
-        if (activePeer?.uid) sendBackgroundPush(activePeer.uid, 'Incoming Call 📞', `${profile.displayName || 'Someone'} is calling you`);
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        await waitIceComplete(pc);
 
-        for (const peerUid of members) {
-          const { pc, signalDoc } = createPeerConnection(active, peerUid, true);
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          await setDoc(signalDoc, { offer: { sdp: offer.sdp, type: offer.type } });
+        const callDoc = await awDb.createDocument(DB_ID, 'calls', ID.unique(), {
+          caller: user.$id,
+          receiver: activePeer.uid,
+          offer: JSON.stringify({ sdp: pc.localDescription.sdp, type: pc.localDescription.type, withVideo, callerName: profile.name || 'Member' }),
+          answer: '',
+          status: 'ringing'
+        }, USER_PERMS);
+        activeCallId = callDoc.$id;
 
-          onSnapshot(signalDoc, (snap) => {
-            const d = snap.data();
-            if (d?.answer && !pc.currentRemoteDescription) {
-              pc.setRemoteDescription(new RTCSessionDescription(d.answer));
-              document.getElementById('call-status').textContent = 'Connected';
-            }
-          });
-        }
+        sendBackgroundPush(activePeer.uid, 'Incoming Call 📞', `${profile.name || 'Someone'} is calling you`);
+
+        const logDoc = await awDb.createDocument(DB_ID, 'call_logs', ID.unique(), {
+          caller: user.$id,
+          callerName: profile.name || 'User',
+          receiver: activePeer.uid,
+          receiverName: activePeer.name || 'Peer',
+          participants: [user.$id, activePeer.uid],
+          type: withVideo ? 'video' : 'voice',
+          status: 'missed',
+          chatId: active
+        }, USER_PERMS).catch(() => null);
+
+        window._activeLogId = logDoc?.$id || null;
       }
 
-      async function answerCall(chatId, data) {
+      async function answerCall(callDoc) {
         stopRingtone();
-        incomingChatId = chatId;
+        activeCallId = callDoc.$id;
+        const parsedOffer = JSON.parse(callDoc.offer);
         document.getElementById('accept-call-btn').classList.add('hidden');
         document.getElementById('call-status').textContent = 'Connected';
-        await setupMedia(data.withVideo);
 
-        const { pc, signalDoc } = createPeerConnection(chatId, data.caller, false);
-        const sigSnap = await getDoc(signalDoc);
-        if (sigSnap.exists() && sigSnap.data().offer) {
-          await pc.setRemoteDescription(new RTCSessionDescription(sigSnap.data().offer));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          await updateDoc(signalDoc, { answer: { type: answer.type, sdp: answer.sdp } });
-        }
-        await updateDoc(doc(db, 'conversations', chatId, 'calls', 'active_call'), { status: 'connected' });
+        await setupMedia(!!parsedOffer.withVideo);
+        buildPC();
+
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: parsedOffer.type, sdp: parsedOffer.sdp }));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        await waitIceComplete(pc);
+
+        await awDb.updateDocument(DB_ID, 'calls', activeCallId, {
+          answer: JSON.stringify({ type: pc.localDescription.type, sdp: pc.localDescription.sdp }),
+          status: 'connected'
+        });
       }
 
       async function hangUp(notify = true) {
         stopRingtone();
-        const targetChat = incomingChatId || active;
-        if (notify && targetChat && targetChat !== 'global') {
-          updateDoc(doc(db, 'conversations', targetChat, 'calls', 'active_call'), { status: 'ended' }).catch(() => {});
+        if (notify && activeCallId) {
+          awDb.updateDocument(DB_ID, 'calls', activeCallId, { status: 'ended' }).catch(() => {});
         }
-        Object.values(peers).forEach((p) => p.close());
-        for (const k in peers) delete peers[k];
+        if (pc) { pc.close(); pc = null; }
         if (localStream) { localStream.getTracks().forEach((t) => t.stop()); localStream = null; }
         if (screenStream) { screenStream.getTracks().forEach((t) => t.stop()); screenStream = null; }
-        document.querySelectorAll('.group-video-tile').forEach((el) => el.remove());
-        const mainVid = document.querySelector('#video-stage video');
-        if (mainVid) { mainVid.id = 'remote-video'; mainVid.srcObject = null; }
-        incomingChatId = null;
+        document.getElementById('remote-video').srcObject = null;
+        activeCallId = null;
         document.getElementById('call-modal').classList.add('hidden');
       }
+
+      window.handleRealtimeCall = async (data) => {
+        if (!user) return;
+        if (data.status === 'ringing' && data.receiver === user.$id && !pc) {
+          const parsed = JSON.parse(data.offer || '{}');
+          activeCallId = data.$id;
+          document.getElementById('call-modal').classList.remove('hidden');
+          document.getElementById('call-title').textContent = `${parsed.callerName || 'Someone'} is calling…`;
+          document.getElementById('call-status').textContent = parsed.withVideo ? 'Incoming Video Call' : 'Incoming Audio Call';
+          const ansBtn = document.getElementById('accept-call-btn');
+          ansBtn.classList.remove('hidden');
+          ansBtn.onclick = () => answerCall(data);
+          startRingtone();
+        } else if (data.$id === activeCallId && data.status === 'connected' && data.answer && pc && !pc.currentRemoteDescription) {
+          const ans = JSON.parse(data.answer);
+          await pc.setRemoteDescription(new RTCSessionDescription(ans));
+          document.getElementById('call-status').textContent = 'Connected';
+          if (window._activeLogId) {
+            awDb.updateDocument(DB_ID, 'call_logs', window._activeLogId, { status: 'answered' }).catch(() => {});
+          }
+        } else if (data.$id === activeCallId && data.status === 'ended') {
+          hangUp(false);
+        }
+      };
 
       document.getElementById('share-screen-btn').addEventListener('click', async (e) => {
         if (!screenStream) {
           try {
             screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
             const screenTrack = screenStream.getVideoTracks()[0];
-            Object.values(peers).forEach((pc) => {
-              const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-              if (sender) sender.replaceTrack(screenTrack);
-            });
+            const sender = pc?.getSenders().find((s) => s.track?.kind === 'video');
+            if (sender) sender.replaceTrack(screenTrack);
             document.getElementById('local-video').srcObject = screenStream;
             e.target.textContent = '🛑 Stop Share';
             screenTrack.onended = () => document.getElementById('share-screen-btn').click();
@@ -2355,40 +2209,11 @@
           screenStream.getTracks().forEach((t) => t.stop());
           screenStream = null;
           const camTrack = localStream?.getVideoTracks()[0];
-          if (camTrack) {
-            Object.values(peers).forEach((pc) => {
-              const sender = pc.getSenders().find((s) => s.track?.kind === 'video');
-              if (sender) sender.replaceTrack(camTrack);
-            });
-            document.getElementById('local-video').srcObject = localStream;
-          }
+          const sender = pc?.getSenders().find((s) => s.track?.kind === 'video');
+          if (sender && camTrack) sender.replaceTrack(camTrack);
+          document.getElementById('local-video').srcObject = localStream;
           e.target.textContent = '🖥️ Share';
         }
-      });
-
-      onAuthStateChanged(auth, (u) => {
-        if (!u) return;
-        const q = query(collection(db, 'conversations'), where('members', 'array-contains', u.uid));
-        onSnapshot(q, (snap) => {
-          snap.docs.forEach((convDoc) => {
-            const callDoc = doc(db, 'conversations', convDoc.id, 'calls', 'active_call');
-            onSnapshot(callDoc, (cSnap) => {
-              const data = cSnap.data();
-              if (data?.status === 'ringing' && data.caller !== u.uid && !Object.keys(peers).length) {
-                incomingChatId = convDoc.id;
-                document.getElementById('call-modal').classList.remove('hidden');
-                document.getElementById('call-title').textContent = `${data.callerName} is calling…`;
-                document.getElementById('call-status').textContent = data.withVideo ? 'Incoming Video Call' : 'Incoming Audio Call';
-                const ansBtn = document.getElementById('accept-call-btn');
-                ansBtn.classList.remove('hidden');
-                ansBtn.onclick = () => answerCall(convDoc.id, data);
-                startRingtone();
-              } else if (data?.status === 'ended' && (Object.keys(peers).length || !document.getElementById('call-modal').classList.contains('hidden'))) {
-                hangUp(false);
-              }
-            });
-          });
-        });
       });
 
       audioBtn.addEventListener('click', () => startCall(false));
@@ -2405,901 +2230,264 @@
       });
     })();
 
-    // === PRIVACY & STEALTH + SCROLL PILL ===
+    // === PRIVACY, FORWARDING, GROUP ADMINS, & CALL LOGS ===
     (function () {
       let idleTimer = null;
       const lockOverlay = document.getElementById('idle-lock-overlay');
       const appShell = document.getElementById('app');
-
-      function triggerIdleBlur() {
-        if (appShell.classList.contains('hidden')) return;
-        document.body.classList.add('idle-blur-active');
-        lockOverlay.classList.remove('hidden');
-      }
-
-      function resetIdleTimer() {
-        clearTimeout(idleTimer);
-        if (!document.body.classList.contains('idle-blur-active')) {
-          idleTimer = setTimeout(triggerIdleBlur, 60000);
-        }
-      }
-
-      document.getElementById('idle-unlock-btn').addEventListener('click', () => {
-        document.body.classList.remove('idle-blur-active');
-        lockOverlay.classList.add('hidden');
-        resetIdleTimer();
-      });
-
-      ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach((evt) =>
-        document.addEventListener(evt, resetIdleTimer, { passive: true })
-      );
-      document.addEventListener('visibilitychange', () => {
-        if (document.hidden) triggerIdleBlur();
-      });
+      function triggerIdleBlur() { if (!appShell.classList.contains('hidden')) { document.body.classList.add('idle-blur-active'); lockOverlay.classList.remove('hidden'); } }
+      function resetIdleTimer() { clearTimeout(idleTimer); if (!document.body.classList.contains('idle-blur-active')) idleTimer = setTimeout(triggerIdleBlur, 60000); }
+      document.getElementById('idle-unlock-btn').addEventListener('click', () => { document.body.classList.remove('idle-blur-active'); lockOverlay.classList.add('hidden'); resetIdleTimer(); });
+      ['mousemove', 'keydown', 'touchstart', 'scroll'].forEach((evt) => document.addEventListener(evt, resetIdleTimer, { passive: true }));
+      document.addEventListener('visibilitychange', () => { if (document.hidden) triggerIdleBlur(); });
       resetIdleTimer();
 
-      const msgBox = document.getElementById('messages');
-      const pill = document.getElementById('scroll-bottom-pill');
-      const badge = document.getElementById('scroll-pill-badge');
-      let unreadScrollCount = 0;
-
-      function isNearBottom() {
-        return msgBox.scrollHeight - msgBox.scrollTop - msgBox.clientHeight < 120;
-      }
-
-      msgBox?.addEventListener('scroll', () => {
-        if (isNearBottom()) {
-          pill.classList.add('hidden');
-          unreadScrollCount = 0;
-          badge.classList.add('hidden');
-        } else {
-          pill.classList.remove('hidden');
-        }
-      });
-
-      pill.addEventListener('click', () => {
-        msgBox.scrollTo({ top: msgBox.scrollHeight, behavior: 'smooth' });
-        unreadScrollCount = 0;
-        badge.classList.add('hidden');
-        pill.classList.add('hidden');
-      });
-
-      const msgObserver = new MutationObserver(() => {
-        if (!isNearBottom() && !pill.classList.contains('hidden')) {
-          unreadScrollCount++;
-          badge.textContent = unreadScrollCount;
-          badge.classList.remove('hidden');
-        }
-      });
-      if (msgBox) msgObserver.observe(msgBox, { childList: true });
-
-      let lockedChats = JSON.parse(localStorage.getItem('cbk_locked_chats') || '[]');
-      let folderUnlocked = false;
-
-      const actionsBar = document.querySelector('.main-actions');
-      const lockChatBtn = document.createElement('button');
-      lockChatBtn.id = 'lock-chat-btn';
-      lockChatBtn.className = 'icon-btn hidden';
-      lockChatBtn.title = 'Lock / Hide Chat';
-      lockChatBtn.textContent = '🔒';
-      actionsBar?.prepend(lockChatBtn);
-
-      const titleObs = new MutationObserver(() => {
-        const isPrivateOrGroup = typeof active !== 'undefined' && active !== 'global';
-        lockChatBtn.classList.toggle('hidden', !isPrivateOrGroup);
-        lockChatBtn.textContent = lockedChats.includes(active) ? '🔓' : '🔒';
-      });
-      titleObs.observe(document.getElementById('title'), { childList: true });
-
-      const threadsEl = document.getElementById('threads');
-      const folderBtn = document.createElement('button');
-      folderBtn.type = 'button';
-      folderBtn.className = 'locked-folder-btn hidden';
-      folderBtn.innerHTML = '<span>🔒 Locked Chats</span><span id="locked-count" class="badge">0</span>';
-      threadsEl?.parentNode.insertBefore(folderBtn, threadsEl);
-
-      function syncLockedUI() {
-        folderBtn.classList.toggle('hidden', lockedChats.length === 0);
-        const countEl = document.getElementById('locked-count');
-        if (countEl) countEl.textContent = lockedChats.length;
-
-        document.querySelectorAll('#threads .thread').forEach((el) => {
-          const isLocked = lockedChats.includes(el.dataset.threadId);
-          el.classList.toggle('hidden', isLocked && !folderUnlocked);
-        });
-      }
-
-      const threadObs = new MutationObserver(syncLockedUI);
-      if (threadsEl) threadObs.observe(threadsEl, { childList: true });
-
-      function openPinModal(mode, onSuccess) {
-        const modal = document.getElementById('pin-modal');
-        const input = document.getElementById('pin-input');
-        const savedPin = localStorage.getItem('cbk_chat_pin');
-        document.getElementById('pin-modal-title').textContent = savedPin ? 'Enter PIN' : 'Set a 4-Digit PIN';
-        document.getElementById('pin-modal-desc').textContent = savedPin ? 'Enter your 4-digit PIN to continue' : 'Create a 4-digit PIN for Locked Chats';
-        input.value = '';
-        modal.classList.remove('hidden');
-        input.focus();
-
-        document.getElementById('pin-submit-btn').onclick = () => {
-          const val = input.value.trim();
-          if (!/^\d{4}$/.test(val)) return alert('Please enter a 4-digit number.');
-          if (!savedPin) {
-            localStorage.setItem('cbk_chat_pin', val);
-            modal.classList.add('hidden');
-            onSuccess();
-          } else if (val === savedPin) {
-            modal.classList.add('hidden');
-            onSuccess();
-          } else {
-            alert('Incorrect PIN.');
-            input.value = '';
-          }
-        };
-      }
-
-      document.getElementById('pin-cancel-btn').addEventListener('click', () => {
-        document.getElementById('pin-modal').classList.add('hidden');
-      });
-
-      folderBtn.addEventListener('click', () => {
-        if (folderUnlocked) {
-          folderUnlocked = false;
-          folderBtn.querySelector('span').textContent = '🔒 Locked Chats';
-          syncLockedUI();
-        } else {
-          openPinModal('unlock', () => {
-            folderUnlocked = true;
-            folderBtn.querySelector('span').textContent = '🔓 Hide Locked Chats';
-            syncLockedUI();
-          });
-        }
-      });
-
-      lockChatBtn.addEventListener('click', () => {
-        if (!active || active === 'global') return;
-        const toggleLock = () => {
-          if (lockedChats.includes(active)) {
-            lockedChats = lockedChats.filter((id) => id !== active);
-            showToast('Chat removed from Locked Chats.');
-          } else {
-            lockedChats.push(active);
-            showToast('Chat moved to Locked Chats 🔒');
-            changeView('home');
-          }
-          localStorage.setItem('cbk_locked_chats', JSON.stringify(lockedChats));
-          lockChatBtn.textContent = lockedChats.includes(active) ? '🔓' : '🔒';
-          syncLockedUI();
-        };
-        openPinModal('toggle', toggleLock);
-      });
-    })();
-
-    // === UNARCHIVE UI, GROUP MANAGEMENT & CUSTOM APPEARANCE ===
-    (function () {
-      const actionsBar = document.querySelector('.main-actions');
-
-      // 1. ARCHIVED CHATS DRAWER
-      const sideFooter = document.querySelector('.side-footer > div:last-child, #logout')?.parentNode;
-      const archDrawerBtn = document.createElement('button');
-      archDrawerBtn.className = 'icon-btn';
-      archDrawerBtn.title = 'Archived Chats';
-      archDrawerBtn.textContent = '📥';
-      sideFooter?.insertBefore(archDrawerBtn, document.getElementById('logout'));
-
-      archDrawerBtn.addEventListener('click', async () => {
-        const list = document.getElementById('archived-list');
-        list.innerHTML = '';
-        if (!archivedThreads.length) {
-          list.innerHTML = '<div class="muted" style="text-align:center; padding:16px;">No archived chats.</div>';
-        } else {
-          for (const cid of archivedThreads) {
-            const snap = await getDoc(doc(db, 'conversations', cid));
-            const name = snap.exists() ? (snap.data().groupName || 'Private Chat') : cid;
-            const row = document.createElement('div');
-            row.className = 'starred-item';
-            row.style.cssText = 'display:flex; justify-content:space-between; align-items:center;';
-            row.innerHTML = `<span>${name}</span>`;
-            const unarch = document.createElement('button');
-            unarch.className = 'btn secondary';
-            unarch.style.padding = '4px 10px';
-            unarch.textContent = 'Unarchive';
-            unarch.onclick = async () => {
-              archivedThreads = archivedThreads.filter((id) => id !== cid);
-              await setDoc(doc(db, 'users', user.uid), { archived: archivedThreads }, { merge: true });
-              row.remove();
-              loadThreads();
-              showToast('Chat unarchived.');
-            };
-            row.appendChild(unarch);
-            list.appendChild(row);
-          }
-        }
-        document.getElementById('archived-modal').classList.remove('hidden');
-      });
-      document.getElementById('close-archived').addEventListener('click', () => {
-        document.getElementById('archived-modal').classList.add('hidden');
-      });
-
-      // 2. GROUP MANAGEMENT (Rename, Add/Remove Members, Leave)
-      const grpManageBtn = document.createElement('button');
-      grpManageBtn.id = 'grp-manage-btn';
-      grpManageBtn.className = 'icon-btn hidden';
-      grpManageBtn.title = 'Group Settings';
-      grpManageBtn.textContent = '⚙️';
-      actionsBar?.prepend(grpManageBtn);
-
-      const titleObs = new MutationObserver(async () => {
-        if (typeof active === 'undefined' || active === 'global') return grpManageBtn.classList.add('hidden');
-        const snap = await getDoc(doc(db, 'conversations', active));
-        grpManageBtn.classList.toggle('hidden', !snap.data()?.isGroup);
-      });
-      titleObs.observe(document.getElementById('title'), { childList: true });
-
-      async function openGroupManage() {
-        const convSnap = await getDoc(doc(db, 'conversations', active));
-        const data = convSnap.data();
-        if (!data?.isGroup) return;
-        document.getElementById('rename-group-input').value = data.groupName || '';
-        const list = document.getElementById('manage-members-list');
-        list.innerHTML = '';
-
-        const members = data.members || [];
-        for (const uid of members) {
-          const pSnap = await getDoc(doc(db, 'publicProfiles', uid));
-          const p = pSnap.exists() ? pSnap.data() : { displayName: 'Member', memoji: '🙂' };
-          const item = document.createElement('div');
-          item.className = 'member-item';
-          item.style.justifyContent = 'space-between';
-          item.innerHTML = `<span>${p.memoji || '🙂'} ${p.displayName || 'Member'}</span>`;
-          if (uid !== user.uid) {
-            const rm = document.createElement('button');
-            rm.className = 'msg-action-btn'; rm.textContent = '✕';
-            rm.onclick = async () => {
-              const updated = members.filter((id) => id !== uid);
-              await updateDoc(doc(db, 'conversations', active), { members: updated });
-              openGroupManage();
-            };
-            item.appendChild(rm);
-          }
-          list.appendChild(item);
-        }
-
-        const sel = document.getElementById('add-member-select');
-        sel.innerHTML = '';
-        const allPeople = await getDocs(query(collection(db, 'publicProfiles'), limit(50)));
-        allPeople.docs.forEach((d) => {
-          if (!members.includes(d.id)) {
-            const opt = document.createElement('option');
-            opt.value = d.id;
-            opt.textContent = `${d.data().memoji || '🙂'} ${d.data().displayName || 'Member'}`;
-            sel.appendChild(opt);
-          }
-        });
-        document.getElementById('group-manage-modal').classList.remove('hidden');
-      }
-
-      grpManageBtn.addEventListener('click', openGroupManage);
-      document.getElementById('close-group-manage').addEventListener('click', () => document.getElementById('group-manage-modal').classList.add('hidden'));
-
-      document.getElementById('rename-group-btn').addEventListener('click', async () => {
-        const name = document.getElementById('rename-group-input').value.trim();
-        if (!name) return;
-        await updateDoc(doc(db, 'conversations', active), { groupName: name });
-        document.getElementById('title').textContent = name;
-        loadThreads();
-        showToast('Group renamed.');
-      });
-
-      document.getElementById('add-member-btn').addEventListener('click', async () => {
-        const uid = document.getElementById('add-member-select').value;
-        if (!uid) return;
-        const snap = await getDoc(doc(db, 'conversations', active));
-        const members = [...(snap.data()?.members || []), uid];
-        await updateDoc(doc(db, 'conversations', active), { members });
-        openGroupManage();
-      });
-
-      document.getElementById('leave-group-btn').addEventListener('click', async () => {
-        if (!confirm('Leave this group?')) return;
-        const snap = await getDoc(doc(db, 'conversations', active));
-        const members = (snap.data()?.members || []).filter((id) => id !== user.uid);
-        await updateDoc(doc(db, 'conversations', active), { members });
-        document.getElementById('group-manage-modal').classList.add('hidden');
-        loadThreads();
-        changeView('home');
-        showToast('You left the group.');
-      });
-
-      // 3. CUSTOM WALLPAPERS & BUBBLE COLOURS
-      const WALLPAPERS = [
-        { name: 'Default', val: '' },
-        { name: 'Aurora', val: 'linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d)' },
-        { name: 'Mint', val: 'linear-gradient(135deg, #d4fc79, #96e6a1)' },
-        { name: 'Midnight', val: 'linear-gradient(135deg, #0f2027, #203a43, #2c5364)' },
-        { name: 'Sunset', val: 'linear-gradient(135deg, #ff7e5f, #feb47b)' }
-      ];
-      const BUBBLES = [
-        { name: 'Blue', val: 'linear-gradient(135deg, rgba(10, 132, 255, 0.88), rgba(0, 102, 235, 0.92))' },
-        { name: 'Emerald', val: 'linear-gradient(135deg, #10b981, #059669)' },
-        { name: 'Violet', val: 'linear-gradient(135deg, #8b5cf6, #6d28d9)' },
-        { name: 'Rose', val: 'linear-gradient(135deg, #f43f5e, #e11d48)' }
-      ];
-
-      const appBtn = document.createElement('button');
-      appBtn.className = 'icon-btn'; appBtn.title = 'Wallpaper & Colours'; appBtn.textContent = '🎨';
-      actionsBar?.appendChild(appBtn);
-
-      function applyAppearance() {
-        const wp = localStorage.getItem('cbk_wallpaper');
-        const bb = localStorage.getItem('cbk_bubble');
-        if (wp) document.body.style.background = wp;
-        else document.body.style.background = '';
-        if (bb) document.documentElement.style.setProperty('--blue-glass', bb);
-      }
-
-      appBtn.addEventListener('click', () => {
-        const wpRow = document.getElementById('wallpaper-swatches'); wpRow.innerHTML = '';
-        WALLPAPERS.forEach((w) => {
-          const s = document.createElement('div');
-          s.className = 'swatch';
-          s.style.background = w.val || '#eef2f9';
-          s.title = w.name;
-          s.onclick = () => { localStorage.setItem('cbk_wallpaper', w.val); applyAppearance(); };
-          wpRow.appendChild(s);
-        });
-        const bbRow = document.getElementById('bubble-swatches'); bbRow.innerHTML = '';
-        BUBBLES.forEach((b) => {
-          const s = document.createElement('div');
-          s.className = 'swatch';
-          s.style.background = b.val;
-          s.title = b.name;
-          s.onclick = () => { localStorage.setItem('cbk_bubble', b.val); applyAppearance(); };
-          bbRow.appendChild(s);
-        });
-        document.getElementById('appearance-modal').classList.remove('hidden');
-      });
-
-      document.getElementById('close-appearance').addEventListener('click', () => document.getElementById('appearance-modal').classList.add('hidden'));
-      applyAppearance();
-    })();
- // === APPWRITE CLOUD STORAGE (HD PHOTOS, VIDEOS, PDFs & FILES) ===
-(function () {
-  const { Client, Storage, ID } = Appwrite;
-  const awClient = new Client()
-    .setEndpoint('https://nyc.cloud.appwrite.io/v1')
-    .setProject('6af69d7f00178e3e64c2');
-  const awStorage = new Storage(awClient);
-  const BUCKET_ID = '6af69e6400039d8f5222';
-
-  const fileToggle = document.getElementById('file-toggle');
-  const fileInput = document.getElementById('file-input');
-
-  fileToggle?.addEventListener('click', () => fileInput.click());
-
-  fileInput?.addEventListener('change', async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-
-    if (file.size > 30 * 1024 * 1024) {
-      return showToast('File must be under 30 MB.', true);
-    }
-
-    showToast(`Uploading ${file.name}…`);
-    try {
-      const uploaded = await awStorage.createFile(BUCKET_ID, ID.unique(), file);
-      const fileUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=6af69d7f00178e3e64c2`;
-
-      if (file.type.startsWith('image/')) {
-        await sendMessage({ image: fileUrl });
-      } else if (file.type.startsWith('video/')) {
-        await sendMessage({ video: fileUrl, fileName: file.name });
-      } else {
-        await sendMessage({ fileUrl, fileName: file.name, fileSize: (file.size / 1024).toFixed(0) + ' KB' });
-      }
-      showToast('Sent!');
-    } catch (err) {
-      console.error('Upload error:', err);
-      showToast('Upload failed. Check Appwrite bucket permissions.', true);
-    }
-  });
-
-  const msgBox = document.getElementById('messages');
-  if (msgBox) {
-    const renderMediaObs = new MutationObserver(() => {
-      if (!lastSnapshot) return;
-      lastSnapshot.docs.forEach((docSnap, idx) => {
-        const m = docSnap.data();
-        const bubbles = msgBox.querySelectorAll('.bubble');
-        const bubble = bubbles[idx];
-        if (!bubble || bubble.dataset.awEnhanced) return;
-        bubble.dataset.awEnhanced = '1';
-
-        if (m.video) {
-          const vid = document.createElement('video');
-          vid.src = m.video;
-          vid.controls = true;
-          vid.playsInline = true;
-          vid.style.cssText = 'max-width: 260px; max-height: 260px; border-radius: 14px; display: block; margin-bottom: 4px;';
-          bubble.prepend(vid);
-        }
-        if (m.fileUrl) {
-          const card = document.createElement('a');
-          card.href = m.fileUrl;
-          card.target = '_blank';
-          card.rel = 'noopener noreferrer';
-          card.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: rgba(0,0,0,0.12); text-decoration: none; color: inherit; font-weight: 600; font-size: 13px; margin-bottom: 4px;';
-          card.innerHTML = `<span style="font-size:20px;">📄</span><div><div>${m.fileName || 'Document'}</div><div style="font-size:11px; opacity:0.8;">${m.fileSize || 'Tap to open'}</div></div>`;
-          bubble.prepend(card);
-        }
-      });
-    });
-    renderMediaObs.observe(msgBox, { childList: true });
-  }
-})();
-  // === PHASE 2: GROUP PUSH, DELETE FOR ME/EVERYONE, & FORWARDING ===
-(function () {
-  // 1. Group & Multi-Member Background Push Notifications
-  const origSendMessage = window.sendMessage;
-  if (typeof origSendMessage === 'function') {
-    window.sendMessage = async function (extra = {}) {
-      await origSendMessage(extra);
-      if (typeof active !== 'undefined' && active && active !== 'global' && active !== 'community') {
-        try {
-          const convSnap = await getDoc(doc(db, 'conversations', active));
-          if (convSnap.exists()) {
-            const conv = convSnap.data();
-            const members = conv.members || [];
-            const mutedBy = conv.mutedBy || [];
-            const senderName = user?.displayName || user?.email?.split('@')[0] || 'Someone';
-            const title = conv.isGroup ? `${conv.name || 'Group'}: ${senderName}` : senderName;
-            const body = extra.image ? '📷 Photo' : extra.video ? '🎥 Video' : extra.fileUrl ? `📄 ${extra.fileName || 'File'}` : extra.audio ? '🎤 Voice note' : 'New message';
-
-            members.forEach((uid) => {
-              if (uid !== user.uid && !mutedBy.includes(uid)) {
-                window.sendBackgroundPush?.(uid, title, body);
-              }
-            });
-          }
-        } catch (e) {
-          console.warn('Group push skipped:', e);
-        }
-      }
-    };
-  }
-
-  // Helper to get active message collection path
-  function getMsgColPath() {
-    return (active === 'global' || active === 'community')
-      ? ['messages']
-      : ['conversations', active, 'messages'];
-  }
-
-  // 2. Forward Modal UI
-  const fwdModal = document.createElement('div');
-  fwdModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
-  fwdModal.innerHTML = `
-    <div style="background:var(--panel, #1e2428);color:var(--text, #fff);width:100%;max-width:360px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.4);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <strong style="font-size:16px;">Forward message to…</strong>
-        <button id="close-fwd-modal" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
-      </div>
-      <div id="fwd-chat-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
-    </div>
-  `;
-  document.body.appendChild(fwdModal);
-  document.getElementById('close-fwd-modal').onclick = () => (fwdModal.style.display = 'none');
-
-  async function openForwardModal(msgData) {
-    const list = document.getElementById('fwd-chat-list');
-    list.innerHTML = '<div style="opacity:0.7;font-size:13px;">Loading chats…</div>';
-    fwdModal.style.display = 'flex';
-
-    try {
-      const q = query(collection(db, 'conversations'), where('members', 'array-contains', user.uid));
-      const snap = await getDocs(q);
-      list.innerHTML = '';
-
-      snap.forEach((cDoc) => {
-        const c = cDoc.data();
-        const label = c.isGroup ? `👥 ${c.name || 'Group Chat'}` : `💬 ${c.peerName || c.name || 'Direct Chat'}`;
-        const btn = document.createElement('button');
-        btn.textContent = label;
-        btn.style.cssText = 'text-align:left;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:inherit;cursor:pointer;font-size:14px;';
-        btn.onclick = async () => {
-          fwdModal.style.display = 'none';
-          const payload = {
-            text: msgData.text || '',
-            sender: user.uid,
-            senderName: user.displayName || user.email?.split('@')[0] || 'User',
-            createdAt: serverTimestamp(),
-            forwarded: true
-          };
-          if (msgData.image) payload.image = msgData.image;
-          if (msgData.video) { payload.video = msgData.video; payload.fileName = msgData.fileName || 'Video'; }
-          if (msgData.fileUrl) { payload.fileUrl = msgData.fileUrl; payload.fileName = msgData.fileName || 'File'; payload.fileSize = msgData.fileSize || ''; }
-          if (msgData.audio) payload.audio = msgData.audio;
-
-          await addDoc(collection(db, 'conversations', cDoc.id, 'messages'), payload);
-          await updateDoc(doc(db, 'conversations', cDoc.id), {
-            lastMessage: '↪ Forwarded message',
-            updatedAt: serverTimestamp()
-          });
-          showToast('Message forwarded!');
-        };
-        list.appendChild(btn);
-      });
-
-      if (!list.children.length) {
-        list.innerHTML = '<div style="opacity:0.7;font-size:13px;">No active chats found.</div>';
-      }
-    } catch (err) {
-      console.error('Forward error:', err);
-      fwdModal.style.display = 'none';
-      showToast('Could not load chats.', true);
-    }
-  }
-
-  // 3. Enhance Message Bubbles (Forwarded Badge, Forward Button, & Delete for Me vs Everyone)
-  const msgBox = document.getElementById('messages');
-  if (msgBox) {
-    const phase2Obs = new MutationObserver(() => {
-      if (!lastSnapshot) return;
-      const bubbles = msgBox.querySelectorAll('.bubble');
-
-      lastSnapshot.docs.forEach((docSnap, idx) => {
-        const m = docSnap.data();
-        const bubble = bubbles[idx];
-        if (!bubble) return;
-
-        // Hide message if deleted for current user
-        if (Array.isArray(m.deletedFor) && m.deletedFor.includes(user?.uid)) {
-          const row = bubble.closest('.msg, .row, .message-row') || bubble.parentElement;
-          if (row) row.style.display = 'none';
-          return;
-        }
-
-        if (bubble.dataset.p2Enhanced) return;
-        bubble.dataset.p2Enhanced = '1';
-
-        // Show "Forwarded" tag
-        if (m.forwarded) {
-          const tag = document.createElement('div');
-          tag.textContent = '↪ Forwarded';
-          tag.style.cssText = 'font-size:11px;font-style:italic;opacity:0.75;margin-bottom:3px;';
-          bubble.prepend(tag);
-        }
-
-        // Action bar for Forward & Delete options
-        const actions = document.createElement('div');
-        actions.style.cssText = 'display:inline-flex;gap:6px;margin-left:8px;opacity:0.75;font-size:12px;vertical-align:middle;';
-
-        const fwdBtn = document.createElement('button');
-        fwdBtn.type = 'button';
-        fwdBtn.title = 'Forward message';
-        fwdBtn.textContent = '↪';
-        fwdBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;padding:0 2px;';
-        fwdBtn.onclick = (e) => {
-          e.stopPropagation();
-          openForwardModal(m);
-        };
-
-        const delBtn = document.createElement('button');
-        delBtn.type = 'button';
-        delBtn.title = 'Delete options';
-        delBtn.textContent = '🗑';
-        delBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;padding:0 2px;';
-        delBtn.onclick = async (e) => {
-          e.stopPropagation();
-          const isMine = m.sender === user?.uid;
-          const msgRef = doc(db, ...getMsgColPath(), docSnap.id);
-
-          if (isMine) {
-            const choice = prompt('Type 1 to Delete for Everyone, or 2 to Delete for Me:', '1');
-            if (choice === '1') {
-              await deleteDoc(msgRef);
-              showToast('Deleted for everyone.');
-            } else if (choice === '2') {
-              await updateDoc(msgRef, { deletedFor: arrayUnion(user.uid) });
-              showToast('Deleted for you.');
-            }
-          } else {
-            if (confirm('Delete this message for you?')) {
-              await updateDoc(msgRef, { deletedFor: arrayUnion(user.uid) });
-              showToast('Deleted for you.');
-            }
-          }
-        };
-
-        actions.appendChild(fwdBtn);
-        actions.appendChild(delBtn);
-        bubble.appendChild(actions);
-      });
-    });
-
-    phase2Obs.observe(msgBox, { childList: true, subtree: true });
-  }
-})();
- // === PHASE 3: GROUP ADMINS, INVITE LINKS, & CALL HISTORY LOGS ===
-(function () {
-  // 1. Handle ?join=GROUP_ID Invite Links on Page Load
-  async function checkInviteLink() {
-    const params = new URLSearchParams(window.location.search);
-    const joinId = params.get('join');
-    if (!joinId || !user) return;
-
-    // Clean URL immediately so refresh doesn't re-trigger
-    window.history.replaceState({}, document.title, window.location.pathname);
-
-    try {
-      const groupRef = doc(db, 'conversations', joinId);
-      const snap = await getDoc(groupRef);
-      if (!snap.exists() || !snap.data().isGroup) {
-        return showToast('Invalid or expired invite link.', true);
-      }
-      const g = snap.data();
-      if (!g.members?.includes(user.uid)) {
-        await updateDoc(groupRef, {
-          members: arrayUnion(user.uid),
-          updatedAt: serverTimestamp()
-        });
-        await addDoc(collection(db, 'conversations', joinId, 'messages'), {
-          text: `👋 ${user.displayName || user.email?.split('@')[0] || 'Someone'} joined via invite link`,
-          sender: 'system',
-          createdAt: serverTimestamp()
-        });
-        showToast(`Joined "${g.name || 'Group'}"!`);
-      } else {
-        showToast(`Opened "${g.name || 'Group'}"`);
-      }
-      if (typeof openConversation === 'function') openConversation(joinId);
-    } catch (err) {
-      console.error('Invite join error:', err);
-      showToast('Could not join group. Check Firestore rules.', true);
-    }
-  }
-
-  // Run invite check once auth state is ready
-  const waitAuth = setInterval(() => {
-    if (typeof user !== 'undefined' && user) {
-      clearInterval(waitAuth);
-      checkInviteLink();
-    }
-  }, 600);
-
-  // 2. Group Admin & Invite Link Modal
-  const groupModal = document.createElement('div');
-  groupModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
-  groupModal.innerHTML = `
-    <div style="background:var(--panel,#1e2428);color:var(--text,#fff);width:100%;max-width:380px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.45);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <strong id="gm-title" style="font-size:16px;">Group Info & Admins</strong>
-        <button id="gm-close" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
-      </div>
-      <div id="gm-admin-controls" style="display:flex;gap:8px;margin-bottom:12px;">
-        <button id="gm-copy-invite" style="flex:1;padding:8px 10px;border-radius:10px;border:none;background:#00a884;color:#fff;font-weight:600;cursor:pointer;font-size:13px;">🔗 Copy Invite Link</button>
-        <button id="gm-rename" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:inherit;cursor:pointer;font-size:13px;">✏️ Rename</button>
-      </div>
-      <div style="font-size:12px;opacity:0.75;margin-bottom:6px;">Members</div>
-      <div id="gm-members" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
-    </div>
-  `;
-  document.body.appendChild(groupModal);
-  document.getElementById('gm-close').onclick = () => (groupModal.style.display = 'none');
-
-  async function openGroupAdminModal() {
-    if (!active || active === 'global' || active === 'community') return;
-    const convRef = doc(db, 'conversations', active);
-    const snap = await getDoc(convRef);
-    if (!snap.exists() || !snap.data().isGroup) {
-      return showToast('Open a group chat first to manage members.', true);
-    }
-
-    const g = snap.data();
-    // Backfill admins array if missing on older groups
-    const admins = Array.isArray(g.admins) && g.admins.length ? g.admins : [g.createdBy || g.members?.[0]];
-    const isAdmin = admins.includes(user.uid);
-
-    document.getElementById('gm-title').textContent = `👥 ${g.name || 'Group'} (${g.members?.length || 0})`;
-    document.getElementById('gm-admin-controls').style.display = isAdmin ? 'flex' : 'none';
-
-    document.getElementById('gm-copy-invite').onclick = async () => {
-      const link = `${window.location.origin}${window.location.pathname}?join=${active}`;
-      await navigator.clipboard.writeText(link);
-      showToast('Invite link copied to clipboard!');
-    };
-
-    document.getElementById('gm-rename').onclick = async () => {
-      const newName = prompt('Enter new group name:', g.name || '');
-      if (newName && newName.trim()) {
-        await updateDoc(convRef, { name: newName.trim() });
-        showToast('Group renamed!');
-        openGroupAdminModal();
-      }
-    };
-
-    const list = document.getElementById('gm-members');
-    list.innerHTML = '';
-    (g.members || []).forEach((mUid) => {
-      const row = document.createElement('div');
-      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.05);font-size:13px;';
-      const isMemberAdmin = admins.includes(mUid);
-      const label = (mUid === user.uid ? 'You' : mUid.slice(0, 10) + '…') + (isMemberAdmin ? ' 👑 Admin' : '');
-      row.innerHTML = `<span>${label}</span>`;
-
-      if (isAdmin && mUid !== user.uid) {
-        const btns = document.createElement('div');
-        btns.style.cssText = 'display:flex;gap:6px;';
-
-        if (!isMemberAdmin) {
-          const prom = document.createElement('button');
-          prom.textContent = 'Make Admin';
-          prom.style.cssText = 'font-size:11px;padding:4px 8px;border-radius:6px;border:none;background:rgba(0,168,132,0.25);color:#53bdeb;cursor:pointer;';
-          prom.onclick = async () => {
-            await updateDoc(convRef, { admins: arrayUnion(mUid) });
-            showToast('Promoted to Admin!');
-            openGroupAdminModal();
-          };
-          btns.appendChild(prom);
-        }
-
-        const kick = document.createElement('button');
-        kick.textContent = 'Remove';
-        kick.style.cssText = 'font-size:11px;padding:4px 8px;border-radius:6px;border:none;background:rgba(239,68,68,0.25);color:#f87171;cursor:pointer;';
-        kick.onclick = async () => {
-          if (confirm('Remove this member from the group?')) {
-            const updatedMembers = g.members.filter((id) => id !== mUid);
-            await updateDoc(convRef, { members: updatedMembers });
-            showToast('Member removed.');
-            openGroupAdminModal();
-          }
-        };
-        btns.appendChild(kick);
-        row.appendChild(btns);
-      }
-      list.appendChild(row);
-    });
-
-    groupModal.style.display = 'flex';
-  }
-
-  // 3. Call History & Missed Call Logger
-  const callModal = document.createElement('div');
-  callModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
-  callModal.innerHTML = `
-    <div style="background:var(--panel,#1e2428);color:var(--text,#fff);width:100%;max-width:380px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.45);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <strong style="font-size:16px;">📞 Call History</strong>
-        <button id="cl-close" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
-      </div>
-      <div id="cl-list" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
-    </div>
-  `;
-  document.body.appendChild(callModal);
-  document.getElementById('cl-close').onclick = () => (callModal.style.display = 'none');
-
-  async function openCallHistory() {
-    const list = document.getElementById('cl-list');
-    list.innerHTML = '<div style="opacity:0.7;font-size:13px;">Loading call logs…</div>';
-    callModal.style.display = 'flex';
-
-    try {
-      const q = query(collection(db, 'call_logs'), where('participants', 'array-contains', user.uid));
-      const snap = await getDocs(q);
-      const logs = snap.docs.map((d) => d.data()).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-
-      list.innerHTML = '';
-      logs.slice(0, 25).forEach((c) => {
-        const isOutgoing = c.caller === user.uid;
-        const icon = c.status === 'missed' ? '📵' : isOutgoing ? '↗️' : '↙️';
-        const mode = c.type === 'video' ? 'Video' : 'Voice';
-        const peer = isOutgoing ? (c.receiverName || 'Peer') : (c.callerName || 'Peer');
-        const timeStr = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now';
-
-        const item = document.createElement('div');
-        item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.05);font-size:13px;';
-        item.innerHTML = `
-          <div>
-            <div style="font-weight:600;color:${c.status === 'missed' ? '#f87171' : 'inherit'};">${icon} ${peer} (${mode})</div>
-            <div style="font-size:11px;opacity:0.7;">${c.status === 'missed' ? 'Missed call' : isOutgoing ? 'Outgoing' : 'Incoming'}</div>
+      const fwdModal = document.createElement('div');
+      fwdModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+      fwdModal.innerHTML = `
+        <div style="background:var(--glass-strong,#1e2428);color:var(--text,#fff);width:100%;max-width:360px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.4);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong style="font-size:16px;">Forward message to…</strong>
+            <button id="close-fwd-modal" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
           </div>
-          <div style="font-size:11px;opacity:0.7;">${timeStr}</div>
-        `;
-        list.appendChild(item);
-      });
+          <div id="fwd-chat-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      `;
+      document.body.appendChild(fwdModal);
+      document.getElementById('close-fwd-modal').onclick = () => (fwdModal.style.display = 'none');
 
-      if (!list.children.length) {
-        list.innerHTML = '<div style="opacity:0.7;font-size:13px;">No calls recorded yet.</div>';
-      }
-    } catch (err) {
-      console.error('Call logs error:', err);
-      list.innerHTML = '<div style="color:#f87171;font-size:13px;">Could not load call history.</div>';
-    }
-  }
-
-  // Wrap startCall to automatically record call logs & missed calls
-  const origStartCall = window.startCall;
-  if (typeof origStartCall === 'function') {
-    window.startCall = async function (video = false) {
-      await origStartCall(video);
-      if (typeof activePeer !== 'undefined' && activePeer?.uid && user) {
+      window.openForwardModal = async function (msgData) {
+        const list = document.getElementById('fwd-chat-list');
+        list.innerHTML = '<div style="opacity:0.7;font-size:13px;">Loading chats…</div>';
+        fwdModal.style.display = 'flex';
         try {
-          const logRef = await addDoc(collection(db, 'call_logs'), {
-            caller: user.uid,
-            callerName: user.displayName || user.email?.split('@')[0] || 'User',
-            receiver: activePeer.uid,
-            receiverName: activePeer.name || activePeer.displayName || 'Peer',
-            participants: [user.uid, activePeer.uid],
-            type: video ? 'video' : 'voice',
-            status: 'missed', // Defaults to missed until answered or completed
-            chatId: active,
-            createdAt: serverTimestamp()
-          });
-
-          // Mark as answered if remote stream connects within 35s, otherwise drop missed call notice
-          setTimeout(async () => {
-            const remoteVid = document.getElementById('remote-video');
-            if (remoteVid && remoteVid.srcObject && remoteVid.srcObject.getTracks().length > 0) {
-              await updateDoc(logRef, { status: 'answered' });
-            } else if (active) {
-              await addDoc(collection(db, 'conversations', active, 'messages'), {
-                text: `📵 Missed ${video ? 'video' : 'voice'} call`,
-                sender: 'system',
-                createdAt: serverTimestamp()
+          const snap = await awDb.listDocuments(DB_ID, 'conversations', [Query.contains('members', [user.$id])]);
+          list.innerHTML = '';
+          snap.documents.forEach((c) => {
+            const label = c.isGroup ? `👥 ${c.name || 'Group Chat'}` : `💬 ${c.peerName || c.name || 'Direct Chat'}`;
+            const btn = document.createElement('button');
+            btn.textContent = label;
+            btn.style.cssText = 'text-align:left;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:inherit;cursor:pointer;font-size:14px;';
+            btn.onclick = async () => {
+              fwdModal.style.display = 'none';
+              await createMessageDoc({
+                convId: c.$id,
+                sender: user.$id,
+                senderName: profile.name || 'User',
+                text: msgData.text || '',
+                image: msgData.image || '',
+                video: msgData.video || '',
+                fileUrl: msgData.fileUrl || '',
+                fileName: msgData.fileName || '',
+                fileSize: msgData.fileSize || '',
+                audio: msgData.audio || '',
+                forwarded: true,
+                deletedFor: []
               });
-            }
-          }, 35000);
-        } catch (e) {
-          console.warn('Call log skipped:', e);
-        }
+              await awDb.updateDocument(DB_ID, 'conversations', c.$id, { lastMessage: '↪ Forwarded message' }).catch(() => {});
+              showToast('Message forwarded!');
+            };
+            list.appendChild(btn);
+          });
+          if (!list.children.length) list.innerHTML = '<div style="opacity:0.7;font-size:13px;">No active chats found.</div>';
+        } catch (err) { fwdModal.style.display = 'none'; showToast('Could not load chats.', true); }
+      };
+
+      async function checkInviteLink() {
+        const params = new URLSearchParams(window.location.search);
+        const joinId = params.get('join');
+        if (!joinId || !user) return;
+        window.history.replaceState({}, document.title, window.location.pathname);
+        try {
+          const g = await awDb.getDocument(DB_ID, 'conversations', joinId);
+          if (!g.isGroup) return showToast('Invalid invite link.', true);
+          if (!g.members?.includes(user.$id)) {
+            await awDb.updateDocument(DB_ID, 'conversations', joinId, { members: [...(g.members || []), user.$id] });
+            await createMessageDoc({
+              convId: joinId,
+              sender: 'system',
+              senderName: 'System',
+              text: `👋 ${profile.name || 'Someone'} joined via invite link`,
+              deletedFor: []
+            });
+            showToast(`Joined "${g.name || 'Group'}"!`);
+          }
+          await loadThreads();
+          openConversationByObj({ id: joinId, type: 'group', avatar: '👥', name: g.name || 'Group', membersCount: (g.members?.length || 1) + 1 });
+        } catch (err) { showToast('Could not join group.', true); }
       }
-    };
-  }
+      const waitAuth = setInterval(() => { if (user) { clearInterval(waitAuth); checkInviteLink(); } }, 600);
 
-  // 4. Inject Header Buttons for Group Info (👑) & Call History (📋)
-  const actionsBar = document.querySelector('.main-actions');
-  if (actionsBar) {
-    const grpBtn = document.createElement('button');
-    grpBtn.type = 'button';
-    grpBtn.title = 'Group Info & Invite Link';
-    grpBtn.textContent = '👑';
-    grpBtn.className = 'icon-btn';
-    grpBtn.onclick = openGroupAdminModal;
+      const groupModal = document.createElement('div');
+      groupModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+      groupModal.innerHTML = `
+        <div style="background:var(--glass-strong,#1e2428);color:var(--text,#fff);width:100%;max-width:380px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.45);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong id="gm-title" style="font-size:16px;">Group Info & Admins</strong>
+            <button id="gm-close" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
+          </div>
+          <div id="gm-admin-controls" style="display:flex;gap:8px;margin-bottom:12px;">
+            <button id="gm-copy-invite" style="flex:1;padding:8px 10px;border-radius:10px;border:none;background:#0a84ff;color:#fff;font-weight:600;cursor:pointer;font-size:13px;">🔗 Copy Invite Link</button>
+            <button id="gm-rename" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:inherit;cursor:pointer;font-size:13px;">✏️ Rename</button>
+          </div>
+          <div style="font-size:12px;opacity:0.75;margin-bottom:6px;">Members</div>
+          <div id="gm-members" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+      `;
+      document.body.appendChild(groupModal);
+      document.getElementById('gm-close').onclick = () => (groupModal.style.display = 'none');
 
-    const logsBtn = document.createElement('button');
-    logsBtn.type = 'button';
-    logsBtn.title = 'Call History';
-    logsBtn.textContent = '📋';
-    logsBtn.className = 'icon-btn';
-    logsBtn.onclick = openCallHistory;
+      async function openGroupAdminModal() {
+        if (!active || active === 'global') return showToast('Open a group chat first.', true);
+        try {
+          const g = await awDb.getDocument(DB_ID, 'conversations', active);
+          if (!g.isGroup) return showToast('Open a group chat first to manage members.', true);
+          const admins = Array.isArray(g.admins) && g.admins.length ? g.admins : [g.createdBy || g.members?.[0]];
+          const isAdmin = admins.includes(user.$id);
 
-    actionsBar.prepend(grpBtn);
-    actionsBar.prepend(logsBtn);
-  }
-})(); 
-(async function handlePasswordRecovery() {
-  const params = new URLSearchParams(window.location.search);
-  const userId = params.get('userId');
-  const secret = params.get('secret');
-  if (!userId || !secret) return;
+          document.getElementById('gm-title').textContent = `👥 ${g.name || 'Group'} (${g.members?.length || 0})`;
+          document.getElementById('gm-admin-controls').style.display = isAdmin ? 'flex' : 'none';
 
-  window.history.replaceState({}, document.title, window.location.pathname);
-  const newPass = prompt('Enter your new password (min 8 characters):');
-  if (!newPass || newPass.length < 8) {
-    return showToast('Password must be at least 8 characters. Click the email link again.', true);
-  }
+          document.getElementById('gm-copy-invite').onclick = async () => {
+            const link = `${window.location.origin}${window.location.pathname}?join=${active}`;
+            await navigator.clipboard.writeText(link);
+            showToast('Invite link copied to clipboard!');
+          };
 
-  try {
-    await awAccount.updateRecovery(userId, secret, newPass);
-    showToast('Password updated! You can now sign in with your new password.');
-  } catch (err) {
-    showToast(err?.message || 'Reset link expired or invalid.', true);
-  }
-})();  
-  
-  
+          document.getElementById('gm-rename').onclick = async () => {
+            const newName = prompt('Enter new group name:', g.name || '');
+            if (newName && newName.trim()) {
+              await awDb.updateDocument(DB_ID, 'conversations', active, { name: newName.trim() });
+              $('title').textContent = newName.trim();
+              loadThreads();
+              showToast('Group renamed!');
+              openGroupAdminModal();
+            }
+          };
+
+          const list = document.getElementById('gm-members');
+          list.innerHTML = '';
+          (g.members || []).forEach((mUid) => {
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.08);font-size:13px;';
+            const isMemberAdmin = admins.includes(mUid);
+            const label = (mUid === user.$id ? 'You' : mUid.slice(0, 10) + '…') + (isMemberAdmin ? ' 👑 Admin' : '');
+            row.innerHTML = `<span>${label}</span>`;
+
+            if (isAdmin && mUid !== user.$id) {
+              const btns = document.createElement('div');
+              btns.style.cssText = 'display:flex;gap:6px;';
+              if (!isMemberAdmin) {
+                const prom = document.createElement('button');
+                prom.textContent = 'Make Admin';
+                prom.style.cssText = 'font-size:11px;padding:4px 8px;border-radius:6px;border:none;background:rgba(10,132,255,0.25);color:#53bdeb;cursor:pointer;';
+                prom.onclick = async () => {
+                  await awDb.updateDocument(DB_ID, 'conversations', active, { admins: [...admins, mUid] });
+                  showToast('Promoted to Admin!');
+                  openGroupAdminModal();
+                };
+                btns.appendChild(prom);
+              }
+              const kick = document.createElement('button');
+              kick.textContent = 'Remove';
+              kick.style.cssText = 'font-size:11px;padding:4px 8px;border-radius:6px;border:none;background:rgba(239,68,68,0.25);color:#f87171;cursor:pointer;';
+              kick.onclick = async () => {
+                if (confirm('Remove this member from the group?')) {
+                  await awDb.updateDocument(DB_ID, 'conversations', active, { members: g.members.filter((id) => id !== mUid) });
+                  showToast('Member removed.');
+                  openGroupAdminModal();
+                }
+              };
+              btns.appendChild(kick);
+              row.appendChild(btns);
+            }
+            list.appendChild(row);
+          });
+          groupModal.style.display = 'flex';
+        } catch (_) { showToast('Could not load group info.', true); }
+      }
+
+      const callModal = document.createElement('div');
+      callModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+      callModal.innerHTML = `
+        <div style="background:var(--glass-strong,#1e2428);color:var(--text,#fff);width:100%;max-width:380px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.45);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <strong style="font-size:16px;">📞 Call History</strong>
+            <button id="cl-close" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
+          </div>
+          <div id="cl-list" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      `;
+      document.body.appendChild(callModal);
+      document.getElementById('cl-close').onclick = () => (callModal.style.display = 'none');
+
+      async function openCallHistory() {
+        const list = document.getElementById('cl-list');
+        list.innerHTML = '<div style="opacity:0.7;font-size:13px;">Loading call logs…</div>';
+        callModal.style.display = 'flex';
+        try {
+          const snap = await awDb.listDocuments(DB_ID, 'call_logs', [
+            Query.contains('participants', [user.$id]),
+            Query.orderDesc('$createdAt'),
+            Query.limit(25)
+          ]);
+          list.innerHTML = '';
+          snap.documents.forEach((c) => {
+            const isOutgoing = c.caller === user.$id;
+            const icon = c.status === 'missed' ? '📵' : isOutgoing ? '↗️' : '↙️';
+            const mode = c.type === 'video' ? 'Video' : 'Voice';
+            const peer = isOutgoing ? (c.receiverName || 'Peer') : (c.callerName || 'Peer');
+            const timeStr = c.$createdAt ? new Date(c.$createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now';
+            const item = document.createElement('div');
+            item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.08);font-size:13px;';
+            item.innerHTML = `
+              <div>
+                <div style="font-weight:600;color:${c.status === 'missed' ? '#f87171' : 'inherit'};">${icon} ${peer} (${mode})</div>
+                <div style="font-size:11px;opacity:0.7;">${c.status === 'missed' ? 'Missed call' : isOutgoing ? 'Outgoing' : 'Incoming'}</div>
+              </div>
+              <div style="font-size:11px;opacity:0.7;">${timeStr}</div>
+            `;
+            list.appendChild(item);
+          });
+          if (!list.children.length) list.innerHTML = '<div style="opacity:0.7;font-size:13px;">No calls recorded yet.</div>';
+        } catch (err) { list.innerHTML = '<div style="color:#f87171;font-size:13px;">Could not load call history.</div>'; }
+      }
+
+      const actionsBar = document.querySelector('.main-actions');
+      if (actionsBar) {
+        const grpBtn = document.createElement('button');
+        grpBtn.type = 'button'; grpBtn.title = 'Group Info & Invite Link'; grpBtn.textContent = '👑'; grpBtn.className = 'icon-btn';
+        grpBtn.onclick = openGroupAdminModal;
+
+        const logsBtn = document.createElement('button');
+        logsBtn.type = 'button'; logsBtn.title = 'Call History'; logsBtn.textContent = '📋'; logsBtn.className = 'icon-btn';
+        logsBtn.onclick = openCallHistory;
+
+        actionsBar.prepend(grpBtn);
+        actionsBar.prepend(logsBtn);
+      }
+    })();
+
+    // === COMPLETE APPWRITE PASSWORD RECOVERY FROM EMAIL LINK ===
+    (async function handlePasswordRecovery() {
+      const params = new URLSearchParams(window.location.search);
+      const userId = params.get('userId');
+      const secret = params.get('secret');
+      if (!userId || !secret) return;
+
+      window.history.replaceState({}, document.title, window.location.pathname);
+      const newPass = prompt('Enter your new password (min 8 characters):');
+      if (!newPass || newPass.length < 8) {
+        return showToast('Password must be at least 8 characters. Click the email link again.', true);
+      }
+
+      try {
+        await awAccount.updateRecovery(userId, secret, newPass);
+        showToast('Password updated! You can now sign in with your new password.');
+      } catch (err) {
+        showToast(err?.message || 'Reset link expired or invalid.', true);
+      }
+    })();
   </script>
 </body>
 </html>
