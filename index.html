@@ -3279,6 +3279,27 @@
     actionsBar.prepend(logsBtn);
   }
 })(); 
+(async function handlePasswordRecovery() {
+  const params = new URLSearchParams(window.location.search);
+  const userId = params.get('userId');
+  const secret = params.get('secret');
+  if (!userId || !secret) return;
+
+  window.history.replaceState({}, document.title, window.location.pathname);
+  const newPass = prompt('Enter your new password (min 8 characters):');
+  if (!newPass || newPass.length < 8) {
+    return showToast('Password must be at least 8 characters. Click the email link again.', true);
+  }
+
+  try {
+    await awAccount.updateRecovery(userId, secret, newPass);
+    showToast('Password updated! You can now sign in with your new password.');
+  } catch (err) {
+    showToast(err?.message || 'Reset link expired or invalid.', true);
+  }
+})();  
+  
+  
   </script>
 </body>
 </html>
