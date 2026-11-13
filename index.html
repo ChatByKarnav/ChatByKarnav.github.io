@@ -31,6 +31,7 @@
   <title>Messages | ChatByKarnav</title>
   <link rel="icon" type="image/png" href="lgo.png">
   <link rel="apple-touch-icon" href="lgo.png">
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@16.0.2"></script>
   <style>
     :root {
       color-scheme: light;
@@ -595,6 +596,8 @@
           <div class="composer">
             <button class="emoji-toggle" id="emoji-toggle" type="button" title="Add emoji">😊</button>
             <button class="emoji-toggle" id="photo-toggle" type="button" title="Send photo">📷</button>
+           <button class="emoji-toggle" id="file-toggle" type="button" title="Send video, PDF, or file">📎</button>
+<input id="file-input" type="file" accept="video/*,application/pdf,.doc,.docx,.zip,.txt,image/*" class="hidden">
             <button class="emoji-toggle" id="voice-toggle" type="button" title="Record voice note (max 15s)">🎤</button>
             <button class="emoji-toggle" id="poll-toggle" type="button" title="Create poll">📊</button>
             <button class="emoji-toggle" id="fx-toggle" type="button" title="Message Effects">✨</button>
@@ -2762,6 +2765,83 @@
       document.getElementById('close-appearance').addEventListener('click', () => document.getElementById('appearance-modal').classList.add('hidden'));
       applyAppearance();
     })();
+ // === APPWRITE CLOUD STORAGE (HD PHOTOS, VIDEOS, PDFs & FILES) ===
+(function () {
+  const { Client, Storage, ID } = Appwrite;
+  const awClient = new Client()
+    .setEndpoint('https://nyc.cloud.appwrite.io/v1')
+    .setProject('6af69d7f00178e3e64c2');
+  const awStorage = new Storage(awClient);
+  const BUCKET_ID = '6af69e6400039d8f5222';
+
+  const fileToggle = document.getElementById('file-toggle');
+  const fileInput = document.getElementById('file-input');
+
+  fileToggle?.addEventListener('click', () => fileInput.click());
+
+  fileInput?.addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    if (file.size > 30 * 1024 * 1024) {
+      return showToast('File must be under 30 MB.', true);
+    }
+
+    showToast(`Uploading ${file.name}…`);
+    try {
+      const uploaded = await awStorage.createFile(BUCKET_ID, ID.unique(), file);
+      const fileUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=6af69d7f00178e3e64c2`;
+
+      if (file.type.startsWith('image/')) {
+        await sendMessage({ image: fileUrl });
+      } else if (file.type.startsWith('video/')) {
+        await sendMessage({ video: fileUrl, fileName: file.name });
+      } else {
+        await sendMessage({ fileUrl, fileName: file.name, fileSize: (file.size / 1024).toFixed(0) + ' KB' });
+      }
+      showToast('Sent!');
+    } catch (err) {
+      console.error('Upload error:', err);
+      showToast('Upload failed. Check Appwrite bucket permissions.', true);
+    }
+  });
+
+  const msgBox = document.getElementById('messages');
+  if (msgBox) {
+    const renderMediaObs = new MutationObserver(() => {
+      if (!lastSnapshot) return;
+      lastSnapshot.docs.forEach((docSnap, idx) => {
+        const m = docSnap.data();
+        const bubbles = msgBox.querySelectorAll('.bubble');
+        const bubble = bubbles[idx];
+        if (!bubble || bubble.dataset.awEnhanced) return;
+        bubble.dataset.awEnhanced = '1';
+
+        if (m.video) {
+          const vid = document.createElement('video');
+          vid.src = m.video;
+          vid.controls = true;
+          vid.playsInline = true;
+          vid.style.cssText = 'max-width: 260px; max-height: 260px; border-radius: 14px; display: block; margin-bottom: 4px;';
+          bubble.prepend(vid);
+        }
+        if (m.fileUrl) {
+          const card = document.createElement('a');
+          card.href = m.fileUrl;
+          card.target = '_blank';
+          card.rel = 'noopener noreferrer';
+          card.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: rgba(0,0,0,0.12); text-decoration: none; color: inherit; font-weight: 600; font-size: 13px; margin-bottom: 4px;';
+          card.innerHTML = `<span style="font-size:20px;">📄</span><div><div>${m.fileName || 'Document'}</div><div style="font-size:11px; opacity:0.8;">${m.fileSize || 'Tap to open'}</div></div>`;
+          bubble.prepend(card);
+        }
+      });
+    });
+    renderMediaObs.observe(msgBox, { childList: true });
+  }
+})();
+  
+  
   </script>
 </body>
 </html>
