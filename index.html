@@ -27,6 +27,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0a84ff">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="description" content="Friendly community messaging with custom memoji and email sign in.">
   <title>Messages | ChatByKarnav</title>
   <link rel="icon" type="image/png" href="lgo.png">
@@ -897,19 +898,20 @@
       clearTimeout(showToast.timer); showToast.timer = setTimeout(() => el.classList.add('hidden'), 2600);
     }
     function setStatus(id, text, bad = false) { const el = $(id); if (el) { el.textContent = text; el.classList.toggle('danger', bad); } }
-
-    async function upsertDoc(colId, docId, data) {
-      try {
-        return await awDb.updateDocument(DB_ID, colId, docId, data);
-      } catch (e) {
-        if (e.code === 404) {
-          return await awDb.createDocument(DB_ID, colId, docId, data, USER_PERMS);
-        }
-        throw e;
-      }
+async function upsertDoc(a, b, c, d) {
+  const colId = d !== undefined ? b : a;
+  const docId = d !== undefined ? c : b;
+  const data = d !== undefined ? d : c;
+  try {
+    return await awDb.updateDocument(DB_ID, colId, docId, data);
+  } catch (e) {
+    if (e.code === 404) {
+      return await awDb.createDocument(DB_ID, colId, docId, data, USER_PERMS);
     }
-
-    async function createMessageDoc(data) {
+    throw e;
+  }
+}
+     async function createMessageDoc(data) {
       const payload = {
         convId: data.convId,
         sender: data.sender,
