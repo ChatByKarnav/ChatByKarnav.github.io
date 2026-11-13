@@ -3023,7 +3023,263 @@
     phase2Obs.observe(msgBox, { childList: true, subtree: true });
   }
 })();
-  
+ // === PHASE 3: GROUP ADMINS, INVITE LINKS, & CALL HISTORY LOGS ===
+(function () {
+  // 1. Handle ?join=GROUP_ID Invite Links on Page Load
+  async function checkInviteLink() {
+    const params = new URLSearchParams(window.location.search);
+    const joinId = params.get('join');
+    if (!joinId || !user) return;
+
+    // Clean URL immediately so refresh doesn't re-trigger
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    try {
+      const groupRef = doc(db, 'conversations', joinId);
+      const snap = await getDoc(groupRef);
+      if (!snap.exists() || !snap.data().isGroup) {
+        return showToast('Invalid or expired invite link.', true);
+      }
+      const g = snap.data();
+      if (!g.members?.includes(user.uid)) {
+        await updateDoc(groupRef, {
+          members: arrayUnion(user.uid),
+          updatedAt: serverTimestamp()
+        });
+        await addDoc(collection(db, 'conversations', joinId, 'messages'), {
+          text: `👋 ${user.displayName || user.email?.split('@')[0] || 'Someone'} joined via invite link`,
+          sender: 'system',
+          createdAt: serverTimestamp()
+        });
+        showToast(`Joined "${g.name || 'Group'}"!`);
+      } else {
+        showToast(`Opened "${g.name || 'Group'}"`);
+      }
+      if (typeof openConversation === 'function') openConversation(joinId);
+    } catch (err) {
+      console.error('Invite join error:', err);
+      showToast('Could not join group. Check Firestore rules.', true);
+    }
+  }
+
+  // Run invite check once auth state is ready
+  const waitAuth = setInterval(() => {
+    if (typeof user !== 'undefined' && user) {
+      clearInterval(waitAuth);
+      checkInviteLink();
+    }
+  }, 600);
+
+  // 2. Group Admin & Invite Link Modal
+  const groupModal = document.createElement('div');
+  groupModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+  groupModal.innerHTML = `
+    <div style="background:var(--panel,#1e2428);color:var(--text,#fff);width:100%;max-width:380px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.45);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <strong id="gm-title" style="font-size:16px;">Group Info & Admins</strong>
+        <button id="gm-close" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
+      </div>
+      <div id="gm-admin-controls" style="display:flex;gap:8px;margin-bottom:12px;">
+        <button id="gm-copy-invite" style="flex:1;padding:8px 10px;border-radius:10px;border:none;background:#00a884;color:#fff;font-weight:600;cursor:pointer;font-size:13px;">🔗 Copy Invite Link</button>
+        <button id="gm-rename" style="padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:inherit;cursor:pointer;font-size:13px;">✏️ Rename</button>
+      </div>
+      <div style="font-size:12px;opacity:0.75;margin-bottom:6px;">Members</div>
+      <div id="gm-members" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+  `;
+  document.body.appendChild(groupModal);
+  document.getElementById('gm-close').onclick = () => (groupModal.style.display = 'none');
+
+  async function openGroupAdminModal() {
+    if (!active || active === 'global' || active === 'community') return;
+    const convRef = doc(db, 'conversations', active);
+    const snap = await getDoc(convRef);
+    if (!snap.exists() || !snap.data().isGroup) {
+      return showToast('Open a group chat first to manage members.', true);
+    }
+
+    const g = snap.data();
+    // Backfill admins array if missing on older groups
+    const admins = Array.isArray(g.admins) && g.admins.length ? g.admins : [g.createdBy || g.members?.[0]];
+    const isAdmin = admins.includes(user.uid);
+
+    document.getElementById('gm-title').textContent = `👥 ${g.name || 'Group'} (${g.members?.length || 0})`;
+    document.getElementById('gm-admin-controls').style.display = isAdmin ? 'flex' : 'none';
+
+    document.getElementById('gm-copy-invite').onclick = async () => {
+      const link = `${window.location.origin}${window.location.pathname}?join=${active}`;
+      await navigator.clipboard.writeText(link);
+      showToast('Invite link copied to clipboard!');
+    };
+
+    document.getElementById('gm-rename').onclick = async () => {
+      const newName = prompt('Enter new group name:', g.name || '');
+      if (newName && newName.trim()) {
+        await updateDoc(convRef, { name: newName.trim() });
+        showToast('Group renamed!');
+        openGroupAdminModal();
+      }
+    };
+
+    const list = document.getElementById('gm-members');
+    list.innerHTML = '';
+    (g.members || []).forEach((mUid) => {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.05);font-size:13px;';
+      const isMemberAdmin = admins.includes(mUid);
+      const label = (mUid === user.uid ? 'You' : mUid.slice(0, 10) + '…') + (isMemberAdmin ? ' 👑 Admin' : '');
+      row.innerHTML = `<span>${label}</span>`;
+
+      if (isAdmin && mUid !== user.uid) {
+        const btns = document.createElement('div');
+        btns.style.cssText = 'display:flex;gap:6px;';
+
+        if (!isMemberAdmin) {
+          const prom = document.createElement('button');
+          prom.textContent = 'Make Admin';
+          prom.style.cssText = 'font-size:11px;padding:4px 8px;border-radius:6px;border:none;background:rgba(0,168,132,0.25);color:#53bdeb;cursor:pointer;';
+          prom.onclick = async () => {
+            await updateDoc(convRef, { admins: arrayUnion(mUid) });
+            showToast('Promoted to Admin!');
+            openGroupAdminModal();
+          };
+          btns.appendChild(prom);
+        }
+
+        const kick = document.createElement('button');
+        kick.textContent = 'Remove';
+        kick.style.cssText = 'font-size:11px;padding:4px 8px;border-radius:6px;border:none;background:rgba(239,68,68,0.25);color:#f87171;cursor:pointer;';
+        kick.onclick = async () => {
+          if (confirm('Remove this member from the group?')) {
+            const updatedMembers = g.members.filter((id) => id !== mUid);
+            await updateDoc(convRef, { members: updatedMembers });
+            showToast('Member removed.');
+            openGroupAdminModal();
+          }
+        };
+        btns.appendChild(kick);
+        row.appendChild(btns);
+      }
+      list.appendChild(row);
+    });
+
+    groupModal.style.display = 'flex';
+  }
+
+  // 3. Call History & Missed Call Logger
+  const callModal = document.createElement('div');
+  callModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+  callModal.innerHTML = `
+    <div style="background:var(--panel,#1e2428);color:var(--text,#fff);width:100%;max-width:380px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.45);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <strong style="font-size:16px;">📞 Call History</strong>
+        <button id="cl-close" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
+      </div>
+      <div id="cl-list" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  `;
+  document.body.appendChild(callModal);
+  document.getElementById('cl-close').onclick = () => (callModal.style.display = 'none');
+
+  async function openCallHistory() {
+    const list = document.getElementById('cl-list');
+    list.innerHTML = '<div style="opacity:0.7;font-size:13px;">Loading call logs…</div>';
+    callModal.style.display = 'flex';
+
+    try {
+      const q = query(collection(db, 'call_logs'), where('participants', 'array-contains', user.uid));
+      const snap = await getDocs(q);
+      const logs = snap.docs.map((d) => d.data()).sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+
+      list.innerHTML = '';
+      logs.slice(0, 25).forEach((c) => {
+        const isOutgoing = c.caller === user.uid;
+        const icon = c.status === 'missed' ? '📵' : isOutgoing ? '↗️' : '↙️';
+        const mode = c.type === 'video' ? 'Video' : 'Voice';
+        const peer = isOutgoing ? (c.receiverName || 'Peer') : (c.callerName || 'Peer');
+        const timeStr = c.createdAt?.toDate ? c.createdAt.toDate().toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now';
+
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.05);font-size:13px;';
+        item.innerHTML = `
+          <div>
+            <div style="font-weight:600;color:${c.status === 'missed' ? '#f87171' : 'inherit'};">${icon} ${peer} (${mode})</div>
+            <div style="font-size:11px;opacity:0.7;">${c.status === 'missed' ? 'Missed call' : isOutgoing ? 'Outgoing' : 'Incoming'}</div>
+          </div>
+          <div style="font-size:11px;opacity:0.7;">${timeStr}</div>
+        `;
+        list.appendChild(item);
+      });
+
+      if (!list.children.length) {
+        list.innerHTML = '<div style="opacity:0.7;font-size:13px;">No calls recorded yet.</div>';
+      }
+    } catch (err) {
+      console.error('Call logs error:', err);
+      list.innerHTML = '<div style="color:#f87171;font-size:13px;">Could not load call history.</div>';
+    }
+  }
+
+  // Wrap startCall to automatically record call logs & missed calls
+  const origStartCall = window.startCall;
+  if (typeof origStartCall === 'function') {
+    window.startCall = async function (video = false) {
+      await origStartCall(video);
+      if (typeof activePeer !== 'undefined' && activePeer?.uid && user) {
+        try {
+          const logRef = await addDoc(collection(db, 'call_logs'), {
+            caller: user.uid,
+            callerName: user.displayName || user.email?.split('@')[0] || 'User',
+            receiver: activePeer.uid,
+            receiverName: activePeer.name || activePeer.displayName || 'Peer',
+            participants: [user.uid, activePeer.uid],
+            type: video ? 'video' : 'voice',
+            status: 'missed', // Defaults to missed until answered or completed
+            chatId: active,
+            createdAt: serverTimestamp()
+          });
+
+          // Mark as answered if remote stream connects within 35s, otherwise drop missed call notice
+          setTimeout(async () => {
+            const remoteVid = document.getElementById('remote-video');
+            if (remoteVid && remoteVid.srcObject && remoteVid.srcObject.getTracks().length > 0) {
+              await updateDoc(logRef, { status: 'answered' });
+            } else if (active) {
+              await addDoc(collection(db, 'conversations', active, 'messages'), {
+                text: `📵 Missed ${video ? 'video' : 'voice'} call`,
+                sender: 'system',
+                createdAt: serverTimestamp()
+              });
+            }
+          }, 35000);
+        } catch (e) {
+          console.warn('Call log skipped:', e);
+        }
+      }
+    };
+  }
+
+  // 4. Inject Header Buttons for Group Info (👑) & Call History (📋)
+  const actionsBar = document.querySelector('.main-actions');
+  if (actionsBar) {
+    const grpBtn = document.createElement('button');
+    grpBtn.type = 'button';
+    grpBtn.title = 'Group Info & Invite Link';
+    grpBtn.textContent = '👑';
+    grpBtn.className = 'icon-btn';
+    grpBtn.onclick = openGroupAdminModal;
+
+    const logsBtn = document.createElement('button');
+    logsBtn.type = 'button';
+    logsBtn.title = 'Call History';
+    logsBtn.textContent = '📋';
+    logsBtn.className = 'icon-btn';
+    logsBtn.onclick = openCallHistory;
+
+    actionsBar.prepend(grpBtn);
+    actionsBar.prepend(logsBtn);
+  }
+})(); 
   </script>
 </body>
 </html>
