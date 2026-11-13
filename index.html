@@ -2840,7 +2840,189 @@
     renderMediaObs.observe(msgBox, { childList: true });
   }
 })();
-  
+  // === PHASE 2: GROUP PUSH, DELETE FOR ME/EVERYONE, & FORWARDING ===
+(function () {
+  // 1. Group & Multi-Member Background Push Notifications
+  const origSendMessage = window.sendMessage;
+  if (typeof origSendMessage === 'function') {
+    window.sendMessage = async function (extra = {}) {
+      await origSendMessage(extra);
+      if (typeof active !== 'undefined' && active && active !== 'global' && active !== 'community') {
+        try {
+          const convSnap = await getDoc(doc(db, 'conversations', active));
+          if (convSnap.exists()) {
+            const conv = convSnap.data();
+            const members = conv.members || [];
+            const mutedBy = conv.mutedBy || [];
+            const senderName = user?.displayName || user?.email?.split('@')[0] || 'Someone';
+            const title = conv.isGroup ? `${conv.name || 'Group'}: ${senderName}` : senderName;
+            const body = extra.image ? '📷 Photo' : extra.video ? '🎥 Video' : extra.fileUrl ? `📄 ${extra.fileName || 'File'}` : extra.audio ? '🎤 Voice note' : 'New message';
+
+            members.forEach((uid) => {
+              if (uid !== user.uid && !mutedBy.includes(uid)) {
+                window.sendBackgroundPush?.(uid, title, body);
+              }
+            });
+          }
+        } catch (e) {
+          console.warn('Group push skipped:', e);
+        }
+      }
+    };
+  }
+
+  // Helper to get active message collection path
+  function getMsgColPath() {
+    return (active === 'global' || active === 'community')
+      ? ['messages']
+      : ['conversations', active, 'messages'];
+  }
+
+  // 2. Forward Modal UI
+  const fwdModal = document.createElement('div');
+  fwdModal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center;z-index:9999;padding:16px;';
+  fwdModal.innerHTML = `
+    <div style="background:var(--panel, #1e2428);color:var(--text, #fff);width:100%;max-width:360px;border-radius:16px;padding:16px;box-shadow:0 12px 32px rgba(0,0,0,0.4);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <strong style="font-size:16px;">Forward message to…</strong>
+        <button id="close-fwd-modal" style="background:none;border:none;color:inherit;font-size:18px;cursor:pointer;">✕</button>
+      </div>
+      <div id="fwd-chat-list" style="max-height:280px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  `;
+  document.body.appendChild(fwdModal);
+  document.getElementById('close-fwd-modal').onclick = () => (fwdModal.style.display = 'none');
+
+  async function openForwardModal(msgData) {
+    const list = document.getElementById('fwd-chat-list');
+    list.innerHTML = '<div style="opacity:0.7;font-size:13px;">Loading chats…</div>';
+    fwdModal.style.display = 'flex';
+
+    try {
+      const q = query(collection(db, 'conversations'), where('members', 'array-contains', user.uid));
+      const snap = await getDocs(q);
+      list.innerHTML = '';
+
+      snap.forEach((cDoc) => {
+        const c = cDoc.data();
+        const label = c.isGroup ? `👥 ${c.name || 'Group Chat'}` : `💬 ${c.peerName || c.name || 'Direct Chat'}`;
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.style.cssText = 'text-align:left;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.05);color:inherit;cursor:pointer;font-size:14px;';
+        btn.onclick = async () => {
+          fwdModal.style.display = 'none';
+          const payload = {
+            text: msgData.text || '',
+            sender: user.uid,
+            senderName: user.displayName || user.email?.split('@')[0] || 'User',
+            createdAt: serverTimestamp(),
+            forwarded: true
+          };
+          if (msgData.image) payload.image = msgData.image;
+          if (msgData.video) { payload.video = msgData.video; payload.fileName = msgData.fileName || 'Video'; }
+          if (msgData.fileUrl) { payload.fileUrl = msgData.fileUrl; payload.fileName = msgData.fileName || 'File'; payload.fileSize = msgData.fileSize || ''; }
+          if (msgData.audio) payload.audio = msgData.audio;
+
+          await addDoc(collection(db, 'conversations', cDoc.id, 'messages'), payload);
+          await updateDoc(doc(db, 'conversations', cDoc.id), {
+            lastMessage: '↪ Forwarded message',
+            updatedAt: serverTimestamp()
+          });
+          showToast('Message forwarded!');
+        };
+        list.appendChild(btn);
+      });
+
+      if (!list.children.length) {
+        list.innerHTML = '<div style="opacity:0.7;font-size:13px;">No active chats found.</div>';
+      }
+    } catch (err) {
+      console.error('Forward error:', err);
+      fwdModal.style.display = 'none';
+      showToast('Could not load chats.', true);
+    }
+  }
+
+  // 3. Enhance Message Bubbles (Forwarded Badge, Forward Button, & Delete for Me vs Everyone)
+  const msgBox = document.getElementById('messages');
+  if (msgBox) {
+    const phase2Obs = new MutationObserver(() => {
+      if (!lastSnapshot) return;
+      const bubbles = msgBox.querySelectorAll('.bubble');
+
+      lastSnapshot.docs.forEach((docSnap, idx) => {
+        const m = docSnap.data();
+        const bubble = bubbles[idx];
+        if (!bubble) return;
+
+        // Hide message if deleted for current user
+        if (Array.isArray(m.deletedFor) && m.deletedFor.includes(user?.uid)) {
+          const row = bubble.closest('.msg, .row, .message-row') || bubble.parentElement;
+          if (row) row.style.display = 'none';
+          return;
+        }
+
+        if (bubble.dataset.p2Enhanced) return;
+        bubble.dataset.p2Enhanced = '1';
+
+        // Show "Forwarded" tag
+        if (m.forwarded) {
+          const tag = document.createElement('div');
+          tag.textContent = '↪ Forwarded';
+          tag.style.cssText = 'font-size:11px;font-style:italic;opacity:0.75;margin-bottom:3px;';
+          bubble.prepend(tag);
+        }
+
+        // Action bar for Forward & Delete options
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:inline-flex;gap:6px;margin-left:8px;opacity:0.75;font-size:12px;vertical-align:middle;';
+
+        const fwdBtn = document.createElement('button');
+        fwdBtn.type = 'button';
+        fwdBtn.title = 'Forward message';
+        fwdBtn.textContent = '↪';
+        fwdBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;padding:0 2px;';
+        fwdBtn.onclick = (e) => {
+          e.stopPropagation();
+          openForwardModal(m);
+        };
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.title = 'Delete options';
+        delBtn.textContent = '🗑';
+        delBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;padding:0 2px;';
+        delBtn.onclick = async (e) => {
+          e.stopPropagation();
+          const isMine = m.sender === user?.uid;
+          const msgRef = doc(db, ...getMsgColPath(), docSnap.id);
+
+          if (isMine) {
+            const choice = prompt('Type 1 to Delete for Everyone, or 2 to Delete for Me:', '1');
+            if (choice === '1') {
+              await deleteDoc(msgRef);
+              showToast('Deleted for everyone.');
+            } else if (choice === '2') {
+              await updateDoc(msgRef, { deletedFor: arrayUnion(user.uid) });
+              showToast('Deleted for you.');
+            }
+          } else {
+            if (confirm('Delete this message for you?')) {
+              await updateDoc(msgRef, { deletedFor: arrayUnion(user.uid) });
+              showToast('Deleted for you.');
+            }
+          }
+        };
+
+        actions.appendChild(fwdBtn);
+        actions.appendChild(delBtn);
+        bubble.appendChild(actions);
+      });
+    });
+
+    phase2Obs.observe(msgBox, { childList: true, subtree: true });
+  }
+})();
   
   </script>
 </body>
