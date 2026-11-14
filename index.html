@@ -192,16 +192,6 @@
     .btn.danger-btn { background: rgba(255, 69, 58, 0.16); color: #ff453a; border-color: rgba(255, 69, 58, 0.4); }
 
     .auth-status { min-height: 20px; margin-top: 12px; font-size: 14px; color: var(--muted); }
-    .oauth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; color: var(--muted); font-size: 12px; }
-    .oauth-divider::before, .oauth-divider::after { content: ""; height: 1px; flex: 1; background: var(--line); }
-    .oauth-buttons { display: grid; grid-template-columns: 1fr; gap: 9px; }
-    .oauth-btn { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid var(--glass-border); border-radius: 14px; background: var(--glass-subtle); color: var(--text); font-weight: 650; box-shadow: var(--glass-highlight); }
-    .oauth-btn:hover:not(:disabled) { background: var(--glass-strong); transform: translateY(-1px); }
-    .oauth-btn:disabled { opacity: .6; cursor: wait; }
-    .oauth-mark { width: 22px; height: 22px; display: inline-grid; place-items: center; font-weight: 800; font-size: 17px; }
-    .oauth-mark.google { color: #4285f4; }
-    .oauth-mark.apple { color: var(--text); font-size: 20px; }
-    .ms-mark { width: 17px; height: 17px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; }
     .ms-mark i:nth-child(1) { background: #f25022; } .ms-mark i:nth-child(2) { background: #7fba00; }
     .ms-mark i:nth-child(3) { background: #00a4ef; } .ms-mark i:nth-child(4) { background: #ffb900; }
 
@@ -272,6 +262,9 @@
     .chat-view, .page { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .message-tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 18px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 12px; }
     .message-tools input { border: 1px solid var(--glass-border); border-radius: 12px; padding: 6px 12px; background: var(--glass-subtle); color: var(--text); font-size: 13px; }
+    .typing-indicator { color: var(--blue); font-size: 12px; font-weight: 650; white-space: nowrap; }
+    .typing-indicator::after { content: "•••"; display: inline-block; margin-left: 5px; letter-spacing: 2px; animation: typingPulse 1s infinite ease-in-out; }
+    @keyframes typingPulse { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
 
     .pinned-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 18px; background: rgba(10, 132, 255, 0.12); border-bottom: 1px solid var(--glass-border); font-size: 13px; }
     .pinned-bar strong { color: var(--blue); }
@@ -505,18 +498,6 @@
       <div class="auth-actions"><button id="auth-submit" class="btn primary" type="submit">Sign in</button></div>
       <div id="auth-status" class="auth-status" role="status" aria-live="polite"></div>
     </form>
-    <div class="oauth-divider" aria-hidden="true">or continue with</div>
-    <div class="oauth-buttons" aria-label="Single-click sign-in providers">
-      <button type="button" class="oauth-btn" data-oauth-provider="google">
-        <span class="oauth-mark google" aria-hidden="true">G</span> Continue with Google
-      </button>
-      <button type="button" class="oauth-btn" data-oauth-provider="apple">
-        <span class="oauth-mark apple" aria-hidden="true">●</span> Continue with Apple
-      </button>
-      <button type="button" class="oauth-btn" data-oauth-provider="microsoft">
-        <span class="ms-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span> Continue with Microsoft
-      </button>
-    </div>
   </div>
 
   <!-- Main App Shell -->
@@ -586,6 +567,7 @@
       <section class="chat-view hidden" id="view-chat">
         <div class="message-tools">
           <span id="chat-status">Messages are live</span>
+          <span id="typing-indicator" class="typing-indicator hidden" role="status" aria-live="polite"></span>
           <input id="message-search" placeholder="Find in conversation" aria-label="Find in conversation">
         </div>
         <div id="pinned-bar" class="pinned-bar hidden">
@@ -934,6 +916,9 @@
     let deferredPrompt = null;
     let selectedEffect = '';
     let disappear24h = false;
+    let typingTimer = null;
+    let typingWriteQueue = Promise.resolve();
+    let typingConversation = null;
 
     function safeText(v) { return String(v ?? '').trim(); }
     function initials(name) { const t = safeText(name); return t ? t.split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toUpperCase() : '?'; }
@@ -1085,20 +1070,24 @@ async function upsertDoc(a, b, c, d) {
 
     function openConversationByObj(thread) {
       msgLimit = 50;
+      if (typingConversation && typingConversation !== thread.id) stopTyping();
       if (thread.type === 'global') {
         active = 'global'; activePeer = null;
+        showTypingUsers([]);
         $('title').textContent = 'Community chat'; $('subtitle').textContent = 'Everyone in the community';
         $('subtitle').classList.remove('online'); $('chat-avatar').textContent = '🌐';
         $('mute-toggle').classList.add('hidden'); $('block-toggle').classList.add('hidden');
         $('archive-toggle').classList.add('hidden'); $('disappear-toggle').classList.add('hidden');
       } else if (thread.type === 'group') {
         active = thread.id; activePeer = null;
+        showTypingUsers(thread.typingUsers || []);
         $('title').textContent = thread.name; $('subtitle').textContent = `${thread.membersCount || 2} members`;
         $('subtitle').classList.remove('online'); $('chat-avatar').textContent = '👥';
         $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.add('hidden');
         $('archive-toggle').classList.remove('hidden'); $('disappear-toggle').classList.remove('hidden');
       } else {
         active = thread.id; activePeer = thread.peer;
+        showTypingUsers(thread.typingUsers || []);
         $('title').textContent = thread.name; $('subtitle').textContent = 'Private conversation';
         $('chat-avatar').textContent = thread.avatar;
         $('mute-toggle').classList.remove('hidden'); $('block-toggle').classList.remove('hidden');
@@ -1154,6 +1143,59 @@ async function upsertDoc(a, b, c, d) {
       allThreads = threads;
       const term = $('thread-search')?.value.trim().toLowerCase() || '';
       renderThreads(term ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term)) : allThreads);
+    }
+
+    function showTypingUsers(typingUsers = []) {
+      const indicator = $('typing-indicator');
+      if (!indicator) return;
+      const others = (Array.isArray(typingUsers) ? typingUsers : []).filter((uid) => uid && uid !== user?.$id);
+      if (!others.length) {
+        indicator.textContent = '';
+        indicator.classList.add('hidden');
+        return;
+      }
+      indicator.textContent = others.length > 1 ? (others.length + ' people are typing') : 'Someone is typing';
+      indicator.classList.remove('hidden');
+    }
+
+    function publishTyping(isTyping, convId = active) {
+      if (!user || !convId || convId === 'global') return;
+      typingWriteQueue = typingWriteQueue.then(async () => {
+        if (!user || (isTyping && convId !== active)) return;
+        try {
+          const conv = await awDb.getDocument(DB_ID, 'conversations', convId);
+          const current = Array.isArray(conv.typingUsers) ? conv.typingUsers : [];
+          const next = isTyping
+            ? [...new Set([...current, user.$id])]
+            : current.filter((uid) => uid !== user.$id);
+          if (next.length !== current.length || next.some((uid, i) => uid !== current[i])) {
+            await awDb.updateDocument(DB_ID, 'conversations', convId, { typingUsers: next });
+          }
+          if (convId === active) showTypingUsers(next);
+        } catch (err) { console.debug('Typing status update skipped:', err?.message || err); }
+      }).catch(() => {});
+      return typingWriteQueue;
+    }
+
+    function stopTyping() {
+      clearTimeout(typingTimer);
+      if (!typingConversation) return;
+      const previous = typingConversation;
+      typingConversation = null;
+      publishTyping(false, previous);
+    }
+
+    function scheduleTyping() {
+      if (!user || active === 'global') return;
+      if (typingConversation && typingConversation !== active) stopTyping();
+      if (typingConversation !== active) {
+        typingConversation = active;
+        publishTyping(true, active);
+      }
+      clearTimeout(typingTimer);
+      typingTimer = setTimeout(() => {
+        if (typingConversation === active) stopTyping();
+      }, 2200);
     }
 
     async function fetchMessages() {
@@ -1387,6 +1429,7 @@ async function upsertDoc(a, b, c, d) {
 
       sendLock = true;
       $('send').disabled = true;
+      if (typingConversation === active) stopTyping();
 
       try {
         const senderName = profile.name || user.name || 'User';
@@ -1639,33 +1682,6 @@ async function upsertDoc(a, b, c, d) {
       }
     }
 
-    async function signInWithProvider(provider) {
-      const supported = {
-        google: 'Google',
-        apple: 'Apple',
-        microsoft: 'Microsoft'
-      };
-      const label = supported[provider];
-      if (!label) return;
-
-      const buttons = [...document.querySelectorAll('[data-oauth-provider]')];
-      buttons.forEach((button) => { button.disabled = true; });
-      setStatus('auth-status', `Connecting to ${label}…`);
-
-      const returnUrl = window.location.origin + window.location.pathname;
-      try {
-        await awAccount.createOAuth2Session({
-          provider,
-          success: returnUrl,
-          failure: returnUrl + '?oauth=failed'
-        });
-      } catch (error) {
-        console.error(`${label} sign-in failed:`, error);
-        setStatus('auth-status', error?.message || `${label} sign-in is not configured yet.`, true);
-        buttons.forEach((button) => { button.disabled = false; });
-      }
-    }
-
     function startRealtimeSubscription() {
       if (unsubRealtime) { unsubRealtime(); unsubRealtime = null; }
       const subscription = awClient.subscribe([
@@ -1689,6 +1705,7 @@ async function upsertDoc(a, b, c, d) {
         }
 
         if (payload.$tableId === 'conversations') {
+          if (payload.$id === active) showTypingUsers(payload.typingUsers || []);
           loadThreads();
         }
 
@@ -1883,6 +1900,8 @@ async function upsertDoc(a, b, c, d) {
       signedIn(null);
     });
     $('send').addEventListener('click', () => sendMessage());
+    $('message-input').addEventListener('input', scheduleTyping);
+    $('message-input').addEventListener('blur', () => { if (typingConversation === active) stopTyping(); });
     $('message-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
     $('photo-toggle').addEventListener('click', () => $('photo-input').click());
     $('photo-input').addEventListener('change', (e) => { if (e.target.files?.[0]) { uploadAndSendFile(e.target.files[0]); e.target.value = ''; } });
