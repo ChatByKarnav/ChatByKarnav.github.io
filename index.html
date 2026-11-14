@@ -192,6 +192,18 @@
     .btn.danger-btn { background: rgba(255, 69, 58, 0.16); color: #ff453a; border-color: rgba(255, 69, 58, 0.4); }
 
     .auth-status { min-height: 20px; margin-top: 12px; font-size: 14px; color: var(--muted); }
+    .oauth-divider { display: flex; align-items: center; gap: 12px; margin: 18px 0 14px; color: var(--muted); font-size: 12px; }
+    .oauth-divider::before, .oauth-divider::after { content: ""; height: 1px; flex: 1; background: var(--line); }
+    .oauth-buttons { display: grid; grid-template-columns: 1fr; gap: 9px; }
+    .oauth-btn { width: 100%; min-height: 46px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid var(--glass-border); border-radius: 14px; background: var(--glass-subtle); color: var(--text); font-weight: 650; box-shadow: var(--glass-highlight); }
+    .oauth-btn:hover:not(:disabled) { background: var(--glass-strong); transform: translateY(-1px); }
+    .oauth-btn:disabled { opacity: .6; cursor: wait; }
+    .oauth-mark { width: 22px; height: 22px; display: inline-grid; place-items: center; font-weight: 800; font-size: 17px; }
+    .oauth-mark.google { color: #4285f4; }
+    .oauth-mark.apple { color: var(--text); font-size: 20px; }
+    .ms-mark { width: 17px; height: 17px; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; }
+    .ms-mark i:nth-child(1) { background: #f25022; } .ms-mark i:nth-child(2) { background: #7fba00; }
+    .ms-mark i:nth-child(3) { background: #00a4ef; } .ms-mark i:nth-child(4) { background: #ffb900; }
 
     .shell { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 16px; max-width: 1500px; margin: 0 auto; padding: 16px; min-height: 100vh; }
     .sidebar, .main { background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border: 1px solid var(--glass-border); border-radius: 26px; box-shadow: var(--shadow), var(--glass-highlight); min-height: calc(100vh - 32px); overflow: hidden; }
@@ -493,6 +505,18 @@
       <div class="auth-actions"><button id="auth-submit" class="btn primary" type="submit">Sign in</button></div>
       <div id="auth-status" class="auth-status" role="status" aria-live="polite"></div>
     </form>
+    <div class="oauth-divider" aria-hidden="true">or continue with</div>
+    <div class="oauth-buttons" aria-label="Single-click sign-in providers">
+      <button type="button" class="oauth-btn" data-oauth-provider="google">
+        <span class="oauth-mark google" aria-hidden="true">G</span> Continue with Google
+      </button>
+      <button type="button" class="oauth-btn" data-oauth-provider="apple">
+        <span class="oauth-mark apple" aria-hidden="true">●</span> Continue with Apple
+      </button>
+      <button type="button" class="oauth-btn" data-oauth-provider="microsoft">
+        <span class="ms-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span> Continue with Microsoft
+      </button>
+    </div>
   </div>
 
   <!-- Main App Shell -->
@@ -1615,6 +1639,33 @@ async function upsertDoc(a, b, c, d) {
       }
     }
 
+    async function signInWithProvider(provider) {
+      const supported = {
+        google: 'Google',
+        apple: 'Apple',
+        microsoft: 'Microsoft'
+      };
+      const label = supported[provider];
+      if (!label) return;
+
+      const buttons = [...document.querySelectorAll('[data-oauth-provider]')];
+      buttons.forEach((button) => { button.disabled = true; });
+      setStatus('auth-status', `Connecting to ${label}…`);
+
+      const returnUrl = window.location.origin + window.location.pathname;
+      try {
+        await awAccount.createOAuth2Session({
+          provider,
+          success: returnUrl,
+          failure: returnUrl + '?oauth=failed'
+        });
+      } catch (error) {
+        console.error(`${label} sign-in failed:`, error);
+        setStatus('auth-status', error?.message || `${label} sign-in is not configured yet.`, true);
+        buttons.forEach((button) => { button.disabled = false; });
+      }
+    }
+
     function startRealtimeSubscription() {
       if (unsubRealtime) { unsubRealtime(); unsubRealtime = null; }
       const subscription = awClient.subscribe([
@@ -1783,6 +1834,9 @@ async function upsertDoc(a, b, c, d) {
     $('welcome-continue').addEventListener('click', () => { $('welcome-screen').classList.add('hidden'); $('login').classList.remove('hidden'); $('auth-email')?.focus(); });
     document.querySelectorAll('.auth-toggle button').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
     $('auth-form').addEventListener('submit', handleAuthSubmit);
+    document.querySelectorAll('[data-oauth-provider]').forEach((button) => {
+      button.addEventListener('click', () => signInWithProvider(button.dataset.oauthProvider));
+    });
 
     $('forgot-password').addEventListener('click', async () => {
       const email = $('auth-email').value.trim();
@@ -2034,6 +2088,14 @@ async function upsertDoc(a, b, c, d) {
     renderMemojiPicker('🙂');
     applyTheme();
     setAuthMode('signin');
+
+    // Show the login panel again if Appwrite returns from a failed OAuth attempt.
+    if (new URLSearchParams(window.location.search).get('oauth') === 'failed') {
+      $('welcome-screen').classList.add('hidden');
+      $('login').classList.remove('hidden');
+      setStatus('auth-status', 'Sign-in was cancelled or could not be completed. Please try again.', true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
     // Boot Appwrite Auth Session Check
     awAccount.get().then(signedIn).catch(() => signedIn(null));
