@@ -32,7 +32,7 @@
   <title>Messages | ChatByKarnav</title>
   <link rel="icon" type="image/png" href="lgo.png">
   <link rel="apple-touch-icon" href="lgo.png">
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@16.0.2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/appwrite@29.2.0"></script>
   <style>
     :root {
       color-scheme: light;
@@ -839,15 +839,36 @@
 
   <script>
     // === 100% APPWRITE CLOUD BACKEND ===
-    const { Client, Account, Databases, Storage, ID, Query, Permission, Role } = Appwrite;
+    const { Client, Account, TablesDB, Storage, ID, Query, Permission, Role } = Appwrite;
 
     const awClient = new Client()
       .setEndpoint('https://nyc.cloud.appwrite.io/v1')
       .setProject('6af69d7f00178e3e64c2');
 
     const awAccount = new Account(awClient);
-    const awDb = new Databases(awClient);
+    const awTables = new TablesDB(awClient);
     const awStorage = new Storage(awClient);
+
+    // Compatibility adapter: keep the app's existing call sites readable while
+    // sending every database operation through the TablesDB rows API.
+    const awDb = {
+      async createDocument(databaseId, tableId, rowId, data, permissions) {
+        return awTables.createRow({ databaseId, tableId, rowId, data, permissions });
+      },
+      async updateDocument(databaseId, tableId, rowId, data) {
+        return awTables.updateRow({ databaseId, tableId, rowId, data });
+      },
+      async getDocument(databaseId, tableId, rowId) {
+        return awTables.getRow({ databaseId, tableId, rowId });
+      },
+      async deleteDocument(databaseId, tableId, rowId) {
+        return awTables.deleteRow({ databaseId, tableId, rowId });
+      },
+      async listDocuments(databaseId, tableId, queries = []) {
+        const result = await awTables.listRows({ databaseId, tableId, queries });
+        return { ...result, documents: result.rows || result.documents || [] };
+      }
+    };
 
     const DB_ID = 'default';
     const BUCKET_ID = '6af69e6400039d8f5222';
@@ -1398,7 +1419,7 @@ async function upsertDoc(a, b, c, d) {
       if (file.size > 30 * 1024 * 1024) return showToast('File must be under 30 MB.', true);
       showToast(`Uploading ${file.name}…`);
       try {
-        const uploaded = await awStorage.createFile(BUCKET_ID, ID.unique(), file);
+        const uploaded = await awStorage.createFile({ bucketId: BUCKET_ID, fileId: ID.unique(), file });
         const fileUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=6af69d7f00178e3e64c2`;
         if (file.type.startsWith('image/')) {
           await sendMessage({ image: fileUrl });
@@ -1544,7 +1565,7 @@ async function upsertDoc(a, b, c, d) {
 
       const avatar = $('profile-memoji').value.trim() || '🙂';
       try {
-        await awAccount.updateName(name);
+        await awAccount.updateName({ name });
         await upsertDoc(DB_ID, 'publicProfiles', user.$id, {
           uid: user.$id,
           name,
@@ -1571,8 +1592,8 @@ async function upsertDoc(a, b, c, d) {
 
       try {
         if (currentAuthMode === 'signup') {
-          const created = await awAccount.create(ID.unique(), email, password, defaultName);
-          await awAccount.createEmailPasswordSession(email, password);
+          const created = await awAccount.create({ userId: ID.unique(), email, password, name: defaultName });
+          await awAccount.createEmailPasswordSession({ email, password });
           await upsertDoc(DB_ID, 'publicProfiles', created.$id, {
             uid: created.$id,
             name: defaultName,
@@ -1581,7 +1602,7 @@ async function upsertDoc(a, b, c, d) {
           });
           setStatus('auth-status', 'Account created successfully.');
         } else {
-          await awAccount.createEmailPasswordSession(email, password);
+          await awAccount.createEmailPasswordSession({ email, password });
           setStatus('auth-status', 'Welcome back.');
         }
         const sessionUser = await awAccount.get();
@@ -1596,15 +1617,15 @@ async function upsertDoc(a, b, c, d) {
 
     function startRealtimeSubscription() {
       if (unsubRealtime) { unsubRealtime(); unsubRealtime = null; }
-      unsubRealtime = awClient.subscribe([
-        `databases.${DB_ID}.collections.messages.documents`,
-        `databases.${DB_ID}.collections.conversations.documents`,
-        `databases.${DB_ID}.collections.calls.documents`
+      const subscription = awClient.subscribe([
+        `tablesdb.${DB_ID}.tables.messages.rows`,
+        `tablesdb.${DB_ID}.tables.conversations.rows`,
+        `tablesdb.${DB_ID}.tables.calls.rows`
       ], (response) => {
         const payload = response.payload;
         if (!payload) return;
 
-        if (payload.$collectionId === 'messages') {
+        if (payload.$tableId === 'messages') {
           if (payload.convId === active) {
             if (document.hidden && !mutedThreads.includes(active) && payload.sender !== user.$id) {
               unreadBgCount++;
@@ -1616,14 +1637,18 @@ async function upsertDoc(a, b, c, d) {
           loadThreads();
         }
 
-        if (payload.$collectionId === 'conversations') {
+        if (payload.$tableId === 'conversations') {
           loadThreads();
         }
 
-        if (payload.$collectionId === 'calls' && window.handleRealtimeCall) {
+        if (payload.$tableId === 'calls' && window.handleRealtimeCall) {
           window.handleRealtimeCall(payload);
         }
       });
+      unsubRealtime = () => {
+        if (typeof subscription === 'function') subscription();
+        else if (subscription && typeof subscription.close === 'function') subscription.close();
+      };
     }
 
     async function signedIn(userSession) {
@@ -1764,7 +1789,7 @@ async function upsertDoc(a, b, c, d) {
       if (!email || !email.includes('@')) return setStatus('auth-status', 'Enter your email address above first.', true);
       setStatus('auth-status', 'Sending reset link…');
       try {
-        await awAccount.createRecovery(email, window.location.origin + window.location.pathname);
+        await awAccount.createRecovery({ email, url: window.location.origin + window.location.pathname });
         setStatus('auth-status', 'Password reset email sent. Check your inbox.');
       } catch (err) { setStatus('auth-status', 'Could not send reset email.', true); }
     });
@@ -1776,7 +1801,7 @@ async function upsertDoc(a, b, c, d) {
       const oldPass = newPass ? prompt('Enter your current password to confirm:') : null;
       if (!newPass || !oldPass) return;
       try {
-        await awAccount.updatePassword(newPass, oldPass);
+        await awAccount.updatePassword({ password: newPass, oldPassword: oldPass });
         showToast('Password updated!');
       } catch (err) { showToast('Could not update password.', true); }
     });
@@ -1785,7 +1810,7 @@ async function upsertDoc(a, b, c, d) {
       if (!user || !confirm('Are you sure? This will remove your profile and sign you out.')) return;
       try {
         await awDb.deleteDocument(DB_ID, 'publicProfiles', user.$id).catch(() => {});
-        await awAccount.deleteSession('current');
+        await awAccount.deleteSession({ sessionId: 'current' });
         signedIn(null);
         showToast('Signed out & profile deleted.');
       } catch (err) { showToast('Could not delete profile.', true); }
@@ -1800,7 +1825,7 @@ async function upsertDoc(a, b, c, d) {
     $('new-chat').addEventListener('click', () => { $('sidebar').classList.remove('open'); changeView('people'); });
     $('fab-new-chat').addEventListener('click', () => { $('sidebar').classList.remove('open'); changeView('people'); });
     $('logout').addEventListener('click', async () => {
-      try { await awAccount.deleteSession('current'); } catch (_) {}
+      try { await awAccount.deleteSession({ sessionId: 'current' }); } catch (_) {}
       signedIn(null);
     });
     $('send').addEventListener('click', () => sendMessage());
@@ -1878,7 +1903,7 @@ async function upsertDoc(a, b, c, d) {
           stream.getTracks().forEach((t) => t.stop());
           const blob = new Blob(audioChunks, { type: 'audio/webm' });
           const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
-          const uploaded = await awStorage.createFile(BUCKET_ID, ID.unique(), file);
+          const uploaded = await awStorage.createFile({ bucketId: BUCKET_ID, fileId: ID.unique(), file });
           const audioUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=6af69d7f00178e3e64c2`;
           sendMessage({ audio: audioUrl });
         };
@@ -2483,7 +2508,7 @@ async function upsertDoc(a, b, c, d) {
       }
 
       try {
-        await awAccount.updateRecovery(userId, secret, newPass);
+        await awAccount.updateRecovery({ userId, secret, password: newPass });
         showToast('Password updated! You can now sign in with your new password.');
       } catch (err) {
         showToast(err?.message || 'Reset link expired or invalid.', true);
