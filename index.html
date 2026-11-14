@@ -1122,7 +1122,8 @@ async function upsertDoc(a, b, c, d) {
               id: docSnap.$id, type: 'group', avatar: '👥',
               name: docSnap.name || docSnap.groupName || 'Group Chat',
               preview: docSnap.lastMessage || 'Group created',
-              membersCount: members.length
+              membersCount: members.length,
+              typingUsers: docSnap.typingUsers || []
             });
           } else {
             const otherUid = members.find((id) => id !== user.$id);
@@ -1134,7 +1135,8 @@ async function upsertDoc(a, b, c, d) {
             } catch (_) {}
             threads.push({
               id: docSnap.$id, type: 'private', avatar: peer.avatar,
-              name: peer.name, preview: docSnap.lastMessage || 'New conversation', peer
+              name: peer.name, preview: docSnap.lastMessage || 'New conversation', peer,
+              typingUsers: docSnap.typingUsers || []
             });
           }
         }
@@ -1851,9 +1853,6 @@ async function upsertDoc(a, b, c, d) {
     $('welcome-continue').addEventListener('click', () => { $('welcome-screen').classList.add('hidden'); $('login').classList.remove('hidden'); $('auth-email')?.focus(); });
     document.querySelectorAll('.auth-toggle button').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
     $('auth-form').addEventListener('submit', handleAuthSubmit);
-    document.querySelectorAll('[data-oauth-provider]').forEach((button) => {
-      button.addEventListener('click', () => signInWithProvider(button.dataset.oauthProvider));
-    });
 
     $('forgot-password').addEventListener('click', async () => {
       const email = $('auth-email').value.trim();
@@ -2107,14 +2106,6 @@ async function upsertDoc(a, b, c, d) {
     renderMemojiPicker('🙂');
     applyTheme();
     setAuthMode('signin');
-
-    // Show the login panel again if Appwrite returns from a failed OAuth attempt.
-    if (new URLSearchParams(window.location.search).get('oauth') === 'failed') {
-      $('welcome-screen').classList.add('hidden');
-      $('login').classList.remove('hidden');
-      setStatus('auth-status', 'Sign-in was cancelled or could not be completed. Please try again.', true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
 
     // Boot Appwrite Auth Session Check
     awAccount.get().then(signedIn).catch(() => signedIn(null));
