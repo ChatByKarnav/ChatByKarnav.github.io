@@ -884,11 +884,12 @@
 
     const DB_ID = 'default';
     const BUCKET_ID = '6af69e6400039d8f5222';
-    const USER_PERMS = [
-      Permission.read(Role.users()),
-      Permission.update(Role.users()),
-      Permission.delete(Role.users())
-    ];
+    const profilePermissions = (uid) => [Permission.read(Role.users()), Permission.update(Role.user(uid)), Permission.delete(Role.user(uid))];
+    const memberPermissions = (members = [], ownerId = '') => { const ids=[...new Set([...(Array.isArray(members)?members:[]),ownerId].filter(Boolean))]; return [...ids.map(uid=>Permission.read(Role.user(uid))),...ids.map(uid=>Permission.update(Role.user(uid))),...(ownerId?[Permission.delete(Role.user(ownerId))]:[])]; };
+    const conversationPermissions = (members, admins=[]) => { const ids=[...new Set((members||[]).filter(Boolean))]; return [...ids.map(uid=>Permission.read(Role.user(uid))),...ids.map(uid=>Permission.update(Role.user(uid))),...[...new Set(admins.length?admins:ids)].map(uid=>Permission.delete(Role.user(uid)))]; };
+    const callPermissions=(caller,receiver)=>memberPermissions([caller,receiver],caller);
+    const logPermissions=(participants,owner)=>memberPermissions(participants,owner);
+    function permissionsForTableRow(tableId,data={}) { if(tableId==='publicProfiles'||tableId==='statuses') return profilePermissions(data.uid||user?.$id); if(tableId==='conversations') return conversationPermissions(data.members||[user?.$id],data.admins||[user?.$id]); if(tableId==='calls') return callPermissions(data.caller,data.receiver); if(tableId==='call_logs') return logPermissions(data.participants||[data.caller,data.receiver],data.caller||user?.$id); return []; }
 
     const $ = (id) => document.getElementById(id);
 
@@ -923,8 +924,10 @@
     let selectedEffect = '';
     let disappear24h = false;
     let typingTimer = null;
+    let typingExpiryTimer = null;
     let typingWriteQueue = Promise.resolve();
     let typingConversation = null;
+    let typingLastSeen = new Map();
 
     function safeText(v) { return String(v ?? '').trim(); }
     function initials(name) { const t = safeText(name); return t ? t.split(/\s+/).slice(0, 2).map((p) => p[0] || '').join('').toUpperCase() : '?'; }
@@ -945,19 +948,7 @@
       if (code >= 500) return 'The chat service is temporarily unavailable. Please try again soon.';
       return fallback;
     }
-async function upsertDoc(a, b, c, d) {
-  const colId = d !== undefined ? b : a;
-  const docId = d !== undefined ? c : b;
-  const data = d !== undefined ? d : c;
-  try {
-    return await awDb.updateDocument(DB_ID, colId, docId, data);
-  } catch (e) {
-    if (e.code === 404) {
-      return await awDb.createDocument(DB_ID, colId, docId, data, USER_PERMS);
-    }
-    throw e;
-  }
-}
+async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docId=d!==undefined?c:b; const data=d!==undefined?d:c; try { return await awDb.updateDocument(DB_ID,colId,docId,data); } catch(e) { if(e.code===404) return await awDb.createDocument(DB_ID,colId,docId,data,permissionsForTableRow(colId,data)); throw e; } }
      async function createMessageDoc(data) {
       const payload = {
         convId: data.convId,
@@ -971,10 +962,12 @@ async function upsertDoc(a, b, c, d) {
         fileSize: data.fileSize || '',
         audio: data.audio || '',
         forwarded: !!data.forwarded,
-        deletedFor: data.deletedFor || [],
+        deletedFor: data.deletedFor || [], reactions: data.reactions || '{}', deliveredTo: data.deliveredTo || [data.sender], readBy: data.readBy || [data.sender],
         effect: ['slam', 'confetti', 'ink'].includes(data.effect) ? data.effect : ''
       };
-      return await awDb.createDocument(DB_ID, 'messages', ID.unique(), payload, USER_PERMS);
+      let members=[]; if(data.convId!=='global'){try{const conv=await awDb.getDocument(DB_ID,'conversations',data.convId);members=conv.members||[];}catch(_){}}
+      const perms=data.convId==='global'?[Permission.read(Role.users()),Permission.update(Role.users()),Permission.delete(Role.user(data.sender))]:memberPermissions(members,data.sender);
+      return await awDb.createDocument(DB_ID,'messages',ID.unique(),payload,perms);
     }
 
     function playChime() {
@@ -1165,18 +1158,7 @@ async function upsertDoc(a, b, c, d) {
       renderThreads(term ? allThreads.filter((t) => t.name.toLowerCase().includes(term) || (t.preview || '').toLowerCase().includes(term)) : allThreads);
     }
 
-    function showTypingUsers(typingUsers = []) {
-      const indicator = $('typing-indicator');
-      if (!indicator) return;
-      const others = (Array.isArray(typingUsers) ? typingUsers : []).filter((uid) => uid && uid !== user?.$id);
-      if (!others.length) {
-        indicator.textContent = '';
-        indicator.classList.add('hidden');
-        return;
-      }
-      indicator.textContent = others.length > 1 ? (others.length + ' people are typing') : 'Someone is typing';
-      indicator.classList.remove('hidden');
-    }
+    function showTypingUsers(typingUsers=[]) { const el=$('typing-indicator'); if(!el)return; const now=Date.now(); const ids=(Array.isArray(typingUsers)?typingUsers:[]).filter(uid=>uid&&uid!==user?.$id); ids.forEach(uid=>typingLastSeen.set(uid,now)); const paint=()=>{const live=ids.filter(uid=>Date.now()-(typingLastSeen.get(uid)||0)<6500);el.textContent=live.length>1?live.length+' people are typing':live.length?'Someone is typing':'';el.classList.toggle('hidden',!live.length);};clearTimeout(typingExpiryTimer);paint();if(ids.length)typingExpiryTimer=setTimeout(paint,6600);for(const uid of [...typingLastSeen.keys()])if(!ids.includes(uid)||now-typingLastSeen.get(uid)>=6500)typingLastSeen.delete(uid); }
 
     function publishTyping(isTyping, convId = active) {
       if (!user || !convId || convId === 'global') return;
@@ -1218,6 +1200,7 @@ async function upsertDoc(a, b, c, d) {
       }, 2200);
     }
 
+    async function markMessagesDeliveredAndRead(docs) { if(!user||!Array.isArray(docs))return; await Promise.all(docs.filter(m=>m.sender!==user.$id).map(async m=>{const delivered=Array.isArray(m.deliveredTo)?m.deliveredTo:[];const read=Array.isArray(m.readBy)?m.readBy:[];const patch={};if(!delivered.includes(user.$id))patch.deliveredTo=[...delivered,user.$id];if(!read.includes(user.$id))patch.readBy=[...read,user.$id];if(Object.keys(patch).length)try{await awDb.updateDocument(DB_ID,'messages',m.$id,patch);Object.assign(m,patch);}catch(e){console.debug('Receipt update skipped:',e?.message||e);}})); }
     async function fetchMessages() {
       const box = $('messages'); if (!box || !user) return;
       if (isInitialLoad) box.innerHTML = '<div class="empty muted">Loading messages…</div>';
@@ -1228,10 +1211,7 @@ async function upsertDoc(a, b, c, d) {
           Query.orderDesc('$createdAt'),
           Query.limit(msgLimit)
         ]);
-        const docs = res.documents.reverse();
-        lastDocs = docs;
-        isInitialLoad = false;
-        renderMessages(docs);
+        const docs=(res.documents||[]).reverse(); lastDocs=docs; isInitialLoad=false; await markMessagesDeliveredAndRead(docs); renderMessages(docs);
       } catch (error) {
         console.error('Fetch messages error', error);
         setStatus('chat-status', 'Could not load messages', true);
@@ -1262,6 +1242,7 @@ async function upsertDoc(a, b, c, d) {
       } catch (err) { showToast('Could not pin message.', true); }
     }
 
+    async function toggleReaction(message,emoji) { if(!message?.$id||!emoji)return; try{let map={};try{map=typeof message.reactions==='string'?JSON.parse(message.reactions||'{}'):(message.reactions||{});}catch(_){} if(!map||typeof map!=='object'||Array.isArray(map))map={};if(map[user.$id]===emoji)delete map[user.$id];else map[user.$id]=emoji;const value=JSON.stringify(map);await awDb.updateDocument(DB_ID,'messages',message.$id,{reactions:value});message.reactions=value;fetchMessages();}catch(e){showToast(friendlyError(e,'Could not save reaction.'),true);} }
     function toggleStarMessage(id, msg) {
       const exists = starredMessages.some((s) => s.id === id);
       starredMessages = exists
@@ -1318,7 +1299,7 @@ async function upsertDoc(a, b, c, d) {
         const meta = document.createElement('div');
         meta.className = 'msg-meta';
         const timeStr = createdDate ? new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(createdDate) : '';
-        meta.textContent = `${message.senderName || 'Member'} • ${timeStr}`;
+        const readBy=Array.isArray(message.readBy)?message.readBy.filter(uid=>uid!==message.sender):[]; const delivered=Array.isArray(message.deliveredTo)?message.deliveredTo.filter(uid=>uid!==message.sender):[]; const receipt=isMine?(readBy.length?' • Seen':delivered.length?' • Delivered':''):''; meta.textContent=`${message.senderName||'Member'} • ${timeStr}${receipt}`;
 
         const actions = document.createElement('span');
         actions.className = 'msg-actions';
@@ -1342,6 +1323,7 @@ async function upsertDoc(a, b, c, d) {
         starBtn.type = 'button'; starBtn.className = 'msg-action-btn'; starBtn.textContent = '⭐'; starBtn.title = 'Star';
         starBtn.addEventListener('click', () => toggleStarMessage(message.$id, message));
         actions.appendChild(starBtn);
+        const reactBtn=document.createElement('button');reactBtn.type='button';reactBtn.className='msg-action-btn';reactBtn.textContent='😊';reactBtn.title='React to message';reactBtn.setAttribute('aria-label','React to message');reactBtn.addEventListener('click',()=>{const emoji=prompt('Enter one emoji reaction:','❤️');if(emoji&&Array.from(emoji.trim()).length<=4)toggleReaction(message,emoji.trim());});actions.appendChild(reactBtn);
 
         if (isMine && message.text) {
           const editBtn = document.createElement('button');
@@ -1440,7 +1422,7 @@ async function upsertDoc(a, b, c, d) {
           bubble.appendChild(txt);
         }
         wrap.appendChild(bubble);
-
+        let reactions={};try{reactions=typeof message.reactions==='string'?JSON.parse(message.reactions||'{}'):(message.reactions||{});}catch(_){} const counts=Object.entries(reactions).reduce((a,[uid,emoji])=>{if(typeof emoji==='string'&&emoji)a[emoji]=(a[emoji]||0)+1;return a;},{}); const entries=Object.entries(counts); if(entries.length){const rr=document.createElement('div');rr.className='reactions-row';entries.forEach(([emoji,count])=>{const pill=document.createElement('button');pill.type='button';pill.className='reaction-pill'+(reactions[user.$id]===emoji?' mine':'');pill.textContent=`${emoji} ${count}`;pill.setAttribute('aria-label',`${count} ${emoji} reactions`);pill.addEventListener('click',()=>toggleReaction(message,emoji));rr.appendChild(pill);});wrap.appendChild(rr);}
         row.appendChild(avatar); row.appendChild(wrap); box.appendChild(row);
       });
 
@@ -1472,7 +1454,7 @@ async function upsertDoc(a, b, c, d) {
           fileSize: extra.fileSize || '',
           audio: extra.audio || '',
           forwarded: !!extra.forwarded,
-          deletedFor: [],
+          deletedFor: [], reactions: '{}', deliveredTo: [user.$id], readBy: [user.$id],
           effect: selectedEffect
         });
 
@@ -1550,7 +1532,7 @@ async function upsertDoc(a, b, c, d) {
             isGroup: false,
             lastMessage: '',
             createdBy: user.$id
-          }, USER_PERMS);
+          }, conversationPermissions([user.$id, peer.uid], [user.$id]));
         }
 
         openConversationByObj({
@@ -1722,6 +1704,7 @@ async function upsertDoc(a, b, c, d) {
 
         if (payload.$tableId === 'messages') {
           if (payload.convId === active) {
+            if (payload.sender !== user.$id) markMessagesDeliveredAndRead([payload]).catch(() => {});
             if (document.hidden && !mutedThreads.includes(active) && payload.sender !== user.$id) {
               unreadBgCount++;
               document.title = `(${unreadBgCount}) Messages | ChatByKarnav`;
@@ -1927,6 +1910,7 @@ async function upsertDoc(a, b, c, d) {
     $('send').addEventListener('click', () => sendMessage());
     $('message-input').addEventListener('input', scheduleTyping);
     $('message-input').addEventListener('blur', () => { if (typingConversation === active) stopTyping(); });
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)stopTyping();}); window.addEventListener('pagehide',stopTyping);
     $('message-input').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
     $('photo-toggle').addEventListener('click', () => $('photo-input').click());
     $('photo-input').addEventListener('change', (e) => { if (e.target.files?.[0]) { uploadAndSendFile(e.target.files[0]); e.target.value = ''; } });
@@ -2060,7 +2044,7 @@ async function upsertDoc(a, b, c, d) {
         lastMessage: 'Group created',
         peerName: name,
         createdBy: user.$id
-      }, USER_PERMS);
+      }, conversationPermissions(members, [user.$id]));
       $('group-modal').classList.add('hidden'); $('group-name').value = '';
       await loadThreads();
       openConversationByObj({ id: ref.$id, type: 'group', avatar: '👥', name, membersCount: members.length });
@@ -2241,7 +2225,7 @@ async function upsertDoc(a, b, c, d) {
           offer: JSON.stringify({ sdp: pc.localDescription.sdp, type: pc.localDescription.type, withVideo, callerName: profile.name || 'Member' }),
           answer: '',
           status: 'ringing'
-        }, USER_PERMS);
+        }, callPermissions(user.$id, activePeer.uid));
         activeCallId = callDoc.$id;
 
         sendBackgroundPush(activePeer.uid, 'Incoming Call 📞', `${profile.name || 'Someone'} is calling you`);
@@ -2255,7 +2239,7 @@ async function upsertDoc(a, b, c, d) {
           type: withVideo ? 'video' : 'voice',
           status: 'missed',
           chatId: active
-        }, USER_PERMS).catch(() => null);
+        }, logPermissions([user.$id, activePeer.uid], user.$id)).catch(() => null);
 
         window._activeLogId = logDoc?.$id || null;
       }
