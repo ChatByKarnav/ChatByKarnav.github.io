@@ -328,6 +328,12 @@
     .msg-row.mine .reactions-row { justify-content: flex-end; }
     .reaction-pill { border: 1px solid var(--glass-border); background: var(--glass-strong); border-radius: 999px; padding: 2px 7px; font-size: 12px; display: inline-flex; align-items: center; gap: 3px; color: var(--text); }
     .reaction-pill.mine { border-color: var(--blue); background: rgba(10, 132, 255, 0.16); }
+    .bubble.effect-slam { animation: messageSlam .42s cubic-bezier(.2,.9,.2,1); }
+    .bubble.effect-confetti { animation: messageConfetti .9s ease-out; }
+    .bubble.effect-ink > div { filter: blur(5px); transition: filter .25s ease; }
+    .bubble.effect-ink:hover > div, .bubble.effect-ink:focus-within > div { filter: none; }
+    @keyframes messageSlam { 0% { transform: scale(1.28); } 65% { transform: scale(.96); } 100% { transform: scale(1); } }
+    @keyframes messageConfetti { 0% { transform: scale(.92); filter: brightness(1.5); } 100% { transform: scale(1); filter: none; } }
 
     .composer-wrap { border-top: 1px solid var(--line); background: var(--glass-subtle); padding: 12px 18px 16px; }
     .effect-picker { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
@@ -928,6 +934,17 @@
       clearTimeout(showToast.timer); showToast.timer = setTimeout(() => el.classList.add('hidden'), 2600);
     }
     function setStatus(id, text, bad = false) { const el = $(id); if (el) { el.textContent = text; el.classList.toggle('danger', bad); } }
+    function friendlyError(error, fallback = 'Something went wrong. Please try again.') {
+      const code = Number(error?.code);
+      if (code === 400) return 'Some information is missing or invalid. Check your entries and try again.';
+      if (code === 401) return 'Your session or sign-in details are invalid. Please sign in again.';
+      if (code === 403) return 'You do not have permission to do that.';
+      if (code === 404) return 'The requested item could not be found.';
+      if (code === 409) return 'That item already exists. Check your details and try again.';
+      if (code === 429) return 'Too many attempts. Please wait a little and try again.';
+      if (code >= 500) return 'The chat service is temporarily unavailable. Please try again soon.';
+      return fallback;
+    }
 async function upsertDoc(a, b, c, d) {
   const colId = d !== undefined ? b : a;
   const docId = d !== undefined ? c : b;
@@ -954,7 +971,8 @@ async function upsertDoc(a, b, c, d) {
         fileSize: data.fileSize || '',
         audio: data.audio || '',
         forwarded: !!data.forwarded,
-        deletedFor: data.deletedFor || []
+        deletedFor: data.deletedFor || [],
+        effect: ['slam', 'confetti', 'ink'].includes(data.effect) ? data.effect : ''
       };
       return await awDb.createDocument(DB_ID, 'messages', ID.unique(), payload, USER_PERMS);
     }
@@ -1361,6 +1379,7 @@ async function upsertDoc(a, b, c, d) {
 
         const bubble = document.createElement('div');
         bubble.className = 'bubble';
+        if (['slam', 'confetti', 'ink'].includes(message.effect)) bubble.classList.add('effect-' + message.effect);
 
         if (message.forwarded) {
           const tag = document.createElement('div');
@@ -1390,7 +1409,13 @@ async function upsertDoc(a, b, c, d) {
           const card = document.createElement('a');
           card.href = message.fileUrl; card.target = '_blank'; card.rel = 'noopener noreferrer';
           card.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: rgba(0,0,0,0.12); text-decoration: none; color: inherit; font-weight: 600; font-size: 13px; margin-bottom: 4px;';
-          card.innerHTML = `<span style="font-size:20px;">📄</span><div><div>${message.fileName || 'Document'}</div><div style="font-size:11px; opacity:0.8;">${message.fileSize || 'Tap to open'}</div></div>`;
+          const fileIcon = document.createElement('span');
+          fileIcon.style.fontSize = '20px'; fileIcon.textContent = '📄';
+          const fileInfo = document.createElement('div');
+          const fileTitle = document.createElement('div'); fileTitle.textContent = message.fileName || 'Document';
+          const fileSize = document.createElement('div'); fileSize.style.cssText = 'font-size:11px;opacity:0.8;';
+          fileSize.textContent = message.fileSize || 'Tap to open';
+          fileInfo.append(fileTitle, fileSize); card.append(fileIcon, fileInfo);
           bubble.appendChild(card);
         }
 
@@ -1447,7 +1472,8 @@ async function upsertDoc(a, b, c, d) {
           fileSize: extra.fileSize || '',
           audio: extra.audio || '',
           forwarded: !!extra.forwarded,
-          deletedFor: []
+          deletedFor: [],
+          effect: selectedEffect
         });
 
         if (active !== 'global') {
@@ -1475,7 +1501,7 @@ async function upsertDoc(a, b, c, d) {
         fetchMessages();
       } catch (err) {
         console.error(err);
-        showToast('Message failed to send.', true);
+        showToast(friendlyError(err, 'Message could not be sent. Check your connection and try again.'), true);
       } finally {
         sendLock = false;
         $('send').disabled = false;
@@ -1679,7 +1705,7 @@ async function upsertDoc(a, b, c, d) {
       } catch (error) {
         const message = error?.code === 409 ? 'An account with this email already exists.'
           : error?.code === 401 ? 'Incorrect email or password.'
-          : error?.message || 'Could not complete that request.';
+          : friendlyError(error, 'Could not complete sign-in. Check your connection and try again.');
         setStatus('auth-status', message, true);
       }
     }
@@ -2470,7 +2496,7 @@ async function upsertDoc(a, b, c, d) {
             row.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.08);font-size:13px;';
             const isMemberAdmin = admins.includes(mUid);
             const label = (mUid === user.$id ? 'You' : mUid.slice(0, 10) + '…') + (isMemberAdmin ? ' 👑 Admin' : '');
-            row.innerHTML = `<span>${label}</span>`;
+            const memberLabel = document.createElement('span'); memberLabel.textContent = label; row.appendChild(memberLabel);
 
             if (isAdmin && mUid !== user.$id) {
               const btns = document.createElement('div');
