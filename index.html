@@ -852,7 +852,7 @@
 
   <script>
     // === 100% APPWRITE CLOUD BACKEND ===
-    const { Client, Account, TablesDB, Storage, ID, Query, Permission, Role } = Appwrite;
+    const { Client, Account, TablesDB, Storage, Functions, ID, Query, Permission, Role } = Appwrite;
 
     const awClient = new Client()
       .setEndpoint('https://nyc.cloud.appwrite.io/v1')
@@ -861,6 +861,7 @@
     const awAccount = new Account(awClient);
     const awTables = new TablesDB(awClient);
     const awStorage = new Storage(awClient);
+    const awFunctions = new Functions(awClient);
 
     // TablesDB returns row columns inside `data`, while this app's existing
     // features expect document-style fields at the top level. Normalize every
@@ -895,6 +896,25 @@
     };
 
     const DB_ID = 'default';
+
+    async function createConversationOnServer(payload) {
+      const jwt = await awAccount.createJWT();
+      const execution = await awFunctions.createExecution({
+        functionId: 'create-private-chat',
+        body: JSON.stringify(payload),
+        async: false,
+        path: '/',
+        method: 'POST',
+        headers: { 'x-appwrite-user-jwt': jwt.jwt, 'Content-Type': 'application/json' }
+      });
+      let result;
+      try { result = JSON.parse(execution.responseBody || '{}'); }
+      catch (_) { throw new Error('Conversation service returned an invalid response.'); }
+      if (execution.status !== 'completed' || !result.ok || !result.conversation) {
+        throw new Error(result.error || execution.errors || 'Could not create conversation.');
+      }
+      return result.conversation;
+    }
     const BUCKET_ID = '6af69e6400039d8f5222';
     const profilePermissions = (uid) => [Permission.read(Role.users()), Permission.update(Role.user(uid)), Permission.delete(Role.user(uid))];
     const memberPermissions = (members = [], ownerId = '') => { const ids=[...new Set([...(Array.isArray(members)?members:[]),ownerId].filter(Boolean))]; return [...ids.map(uid=>Permission.read(Role.user(uid))),...ids.map(uid=>Permission.update(Role.user(uid))),...(ownerId?[Permission.delete(Role.user(ownerId))]:[])]; };
@@ -1528,24 +1548,11 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       if (!user || !peer?.uid) return;
       msgLimit = 50;
       try {
-        const existing = await awDb.listDocuments(DB_ID, 'conversations', [
-          Query.equal('isGroup', false),
-          Query.contains('members', [user.$id])
-        ]);
-        let conv = existing.documents.find((c) => Array.isArray(c.members) && c.members.includes(peer.uid) && c.members.length === 2);
-
-        if (!conv) {
-          conv = await awDb.createDocument(DB_ID, 'conversations', ID.unique(), {
-            name: peer.name || 'Direct Chat',
-            peerName: peer.name || 'Direct Chat',
-            members: [user.$id, peer.uid],
-            admins: [user.$id],
-            mutedBy: [],
-            isGroup: false,
-            lastMessage: '',
-            createdBy: user.$id
-          }, conversationPermissions([user.$id, peer.uid], [user.$id]));
-        }
+        const conv = await createConversationOnServer({
+          type: 'private',
+          peerUid: peer.uid,
+          peerName: peer.name || 'Direct Chat'
+        });
 
         openConversationByObj({
           id: conv.$id,
@@ -2046,20 +2053,16 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       const name = $('group-name').value.trim();
       const selected = [...document.querySelectorAll('#group-members-list input:checked')].map((c) => c.value);
       if (!name || !selected.length) return showToast('Enter a group name and select at least 1 member.', true);
-      const members = [user.$id, ...selected];
-      const ref = await awDb.createDocument(DB_ID, 'conversations', ID.unique(), {
-        name,
-        members,
-        admins: [user.$id],
-        mutedBy: [],
-        isGroup: true,
-        lastMessage: 'Group created',
-        peerName: name,
-        createdBy: user.$id
-      }, conversationPermissions(members, [user.$id]));
-      $('group-modal').classList.add('hidden'); $('group-name').value = '';
-      await loadThreads();
-      openConversationByObj({ id: ref.$id, type: 'group', avatar: '👥', name, membersCount: members.length });
+      try {
+        const members = [...new Set([user.$id, ...selected])];
+        const ref = await createConversationOnServer({ type: 'group', name, members: selected });
+        $('group-modal').classList.add('hidden'); $('group-name').value = '';
+        await loadThreads();
+        openConversationByObj({ id: ref.$id, type: 'group', avatar: '👥', name, membersCount: members.length });
+      } catch (error) {
+        console.error('Failed to create group chat:', error);
+        showToast(error?.message || 'Could not create group chat.', true);
+      }
     });
 
     $('poll-toggle').addEventListener('click', () => $('poll-modal').classList.remove('hidden'));
