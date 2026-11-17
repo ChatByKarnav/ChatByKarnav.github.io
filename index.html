@@ -910,7 +910,7 @@
       let result;
       try { result = JSON.parse(execution.responseBody || '{}'); }
       catch (_) { throw new Error('Conversation service returned an invalid response.'); }
-      if (execution.status !== 'completed' || !result.ok || !result.conversation) {
+      if (execution.status !== 'completed' || Number(execution.responseStatusCode) >= 400 || !result.conversation) {
         throw new Error(result.error || execution.errors || 'Could not create conversation.');
       }
       return result.conversation;
