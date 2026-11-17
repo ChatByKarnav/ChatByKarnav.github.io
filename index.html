@@ -901,11 +901,11 @@
       const jwt = await awAccount.createJWT();
       const execution = await awFunctions.createExecution({
         functionId: 'create-private-chat',
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...payload, userJwt: jwt.jwt }),
         async: false,
         path: '/',
         method: 'POST',
-        headers: { 'x-appwrite-user-jwt': jwt.jwt, 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' }
       });
       let result;
       try { result = JSON.parse(execution.responseBody || '{}'); }
