@@ -477,7 +477,7 @@
     <h1>Welcome to ChatByKarnav</h1>
     <p>Fast, simple, and private community messaging with your friends and classmates.</p>
     <div class="about-us">
-      <strong>About Us:</strong> ChatByKarnav is made by <strong>Karnav</strong> and is an iMessage copy built for fast, simple, and private messaging.
+      <strong>About Us:</strong> ChatByKarnav is made by <strong>Karnav Gandhi</strong> and is an iMessage copy built for fast, simple, and private messaging.
     </div>
     <button type="button" id="welcome-continue" class="btn primary" style="width: 100%;">
       Agree and continue
@@ -567,7 +567,7 @@
         <h2>ChatByKarnav</h2>
         <p>Select a conversation from the left to start messaging, or tap <strong>＋</strong> to find someone new.</p>
         <div class="about-us" style="max-width: 380px; margin-top: 8px;">
-          <strong>About Us:</strong> ChatByKarnav is made by <strong>Karnav</strong> and is an iMessage copy built for fast, simple, and private messaging.
+          <strong>About Us:</strong> ChatByKarnav is made by <strong>Karnav Gandhi</strong> and is an iMessage copy built for fast, simple, and private messaging.
         </div>
       </section>
 
@@ -862,24 +862,35 @@
     const awTables = new TablesDB(awClient);
     const awStorage = new Storage(awClient);
 
+    // TablesDB returns row columns inside `data`, while this app's existing
+    // features expect document-style fields at the top level. Normalize every
+    // read/write result here so private chats, profiles, messages and groups
+    // all use one consistent shape.
+    const normalizeTableRow = (row) => {
+      if (!row || typeof row !== 'object') return row;
+      const data = row.data && typeof row.data === 'object' ? row.data : {};
+      return { ...row, ...data };
+    };
+
     // Compatibility adapter: keep the app's existing call sites readable while
     // sending every database operation through the TablesDB rows API.
     const awDb = {
       async createDocument(databaseId, tableId, rowId, data, permissions) {
-        return awTables.createRow({ databaseId, tableId, rowId, data, permissions });
+        return normalizeTableRow(await awTables.createRow({ databaseId, tableId, rowId, data, permissions }));
       },
       async updateDocument(databaseId, tableId, rowId, data) {
-        return awTables.updateRow({ databaseId, tableId, rowId, data });
+        return normalizeTableRow(await awTables.updateRow({ databaseId, tableId, rowId, data }));
       },
       async getDocument(databaseId, tableId, rowId) {
-        return awTables.getRow({ databaseId, tableId, rowId });
+        return normalizeTableRow(await awTables.getRow({ databaseId, tableId, rowId }));
       },
       async deleteDocument(databaseId, tableId, rowId) {
         return awTables.deleteRow({ databaseId, tableId, rowId });
       },
       async listDocuments(databaseId, tableId, queries = []) {
         const result = await awTables.listRows({ databaseId, tableId, queries });
-        return { ...result, documents: result.rows || result.documents || [] };
+        const rows = result.rows || result.documents || [];
+        return { ...result, documents: rows.map(normalizeTableRow) };
       }
     };
 
