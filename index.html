@@ -903,7 +903,7 @@
         functionId: 'create-private-chat',
         body: JSON.stringify({ ...payload, userJwt: jwt.jwt }),
         async: false,
-        path: '/',
+        xpath: '/',
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });
@@ -2563,13 +2563,19 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
             const timeStr = c.$createdAt ? new Date(c.$createdAt).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now';
             const item = document.createElement('div');
             item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,0.08);font-size:13px;';
-            item.innerHTML = `
-              <div>
-                <div style="font-weight:600;color:${c.status === 'missed' ? '#f87171' : 'inherit'};">${icon} ${peer} (${mode})</div>
-                <div style="font-size:11px;opacity:0.7;">${c.status === 'missed' ? 'Missed call' : isOutgoing ? 'Outgoing' : 'Incoming'}</div>
-              </div>
-              <div style="font-size:11px;opacity:0.7;">${timeStr}</div>
-            `;
+            const details = document.createElement('div');
+            const heading = document.createElement('div');
+            heading.style.cssText = `font-weight:600;color:${c.status === 'missed' ? '#f87171' : 'inherit'};`;
+            heading.textContent = `${icon} ${peer} (${mode})`;
+            const direction = document.createElement('div');
+            direction.style.cssText = 'font-size:11px;opacity:0.7;';
+            direction.textContent = c.status === 'missed' ? 'Missed call' : isOutgoing ? 'Outgoing' : 'Incoming';
+            details.append(heading, direction);
+
+            const timestamp = document.createElement('div');
+            timestamp.style.cssText = 'font-size:11px;opacity:0.7;';
+            timestamp.textContent = timeStr;
+            item.append(details, timestamp);
             list.appendChild(item);
           });
           if (!list.children.length) list.innerHTML = '<div style="opacity:0.7;font-size:13px;">No calls recorded yet.</div>';
