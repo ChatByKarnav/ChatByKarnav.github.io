@@ -1611,11 +1611,10 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
           uid: d.uid || d.$id,
           name: d.name || d.displayName || 'Member',
           avatar: d.avatar || d.memoji || '🙂',
-          email: d.email || ''
         })).filter((p) => {
           if (p.uid === user.$id) return false;
           if (!text) return true;
-          return [p.name, p.email].join(' ').toLowerCase().includes(text);
+          return p.name.toLowerCase().includes(text);
         }).slice(0, 25);
 
         if (!people.length) { setStatus('people-status', 'No community members found.'); return; }
@@ -1658,6 +1657,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       if (!user) return;
       const name = $('display-name').value.trim();
       if (!name) { setStatus('profile-status', 'Display name is required.', true); return; }
+      if (name.length > 40) { setStatus('profile-status', 'Display name must be 40 characters or fewer.', true); return; }
 
       const avatar = $('profile-memoji').value.trim() || '🙂';
       try {
@@ -1665,7 +1665,6 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         await upsertDoc(DB_ID, 'publicProfiles', user.$id, {
           uid: user.$id,
           name,
-          email: user.email || '',
           avatar
         });
         profile = { ...profile, name, avatar };
@@ -1693,7 +1692,6 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
           await upsertDoc(DB_ID, 'publicProfiles', created.$id, {
             uid: created.$id,
             name: defaultName,
-            email,
             avatar
           });
           setStatus('auth-status', 'Account created successfully.');
@@ -1776,7 +1774,6 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         saved = await upsertDoc(DB_ID, 'publicProfiles', user.$id, {
           uid: user.$id,
           name: fallbackName,
-          email: user.email || '',
           avatar: '🙂'
         }).catch(() => ({ name: fallbackName, avatar: '🙂' }));
       }
