@@ -1461,9 +1461,38 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         }
 
         if (message.text) {
-          const txt = document.createElement('div');
-          renderTextWithLinks(txt, message.text);
-          bubble.appendChild(txt);
+          if (message.text.startsWith('CBK_POLL_V1:')) {
+            try {
+              const poll = JSON.parse(message.text.slice('CBK_POLL_V1:'.length));
+              if (poll && typeof poll.question === 'string' && Array.isArray(poll.options)) {
+                const votes = poll.votes && typeof poll.votes === 'object' ? poll.votes : {};
+                const totalVotes = Object.keys(votes).length;
+                const pollCard = document.createElement('div'); pollCard.className = 'poll-card';
+                const question = document.createElement('div'); question.className = 'poll-q'; question.textContent = '📊 ' + poll.question; pollCard.appendChild(question);
+                poll.options.slice(0, 6).forEach((option, index) => {
+                  const count = Object.values(votes).filter(v => Number(v) === index).length;
+                  const percent = totalVotes ? Math.round(count * 100 / totalVotes) : 0;
+                  const choice = document.createElement('button'); choice.type = 'button'; choice.className = 'poll-opt' + (Number(votes[user.$id]) === index ? ' voted' : '');
+                  choice.textContent = option + ' — ' + count + ' (' + percent + '%)';
+                  choice.addEventListener('click', async () => {
+                    const nextVotes = { ...votes };
+                    if (Number(nextVotes[user.$id]) === index) delete nextVotes[user.$id]; else nextVotes[user.$id] = index;
+                    const nextText = 'CBK_POLL_V1:' + JSON.stringify({ question: poll.question, options: poll.options, votes: nextVotes });
+                    choice.disabled = true;
+                    try { await awDb.updateDocument(DB_ID, 'messages', message.$id, { text: nextText }); fetchMessages(); }
+                    catch (err) { showToast('Could not save your poll vote.', true); choice.disabled = false; }
+                  });
+                  pollCard.appendChild(choice);
+                });
+                const pollMeta = document.createElement('small'); pollMeta.className = 'muted'; pollMeta.textContent = totalVotes + ' vote' + (totalVotes === 1 ? '' : 's'); pollCard.appendChild(pollMeta);
+                bubble.appendChild(pollCard);
+              }
+            } catch (_) { const txt = document.createElement('div'); txt.textContent = 'This poll could not be displayed.'; bubble.appendChild(txt); }
+          } else {
+            const txt = document.createElement('div');
+            renderTextWithLinks(txt, message.text);
+            bubble.appendChild(txt);
+          }
         }
         wrap.appendChild(bubble);
         let reactions={};try{reactions=typeof message.reactions==='string'?JSON.parse(message.reactions||'{}'):(message.reactions||{});}catch(_){} const counts=Object.entries(reactions).reduce((a,[uid,emoji])=>{if(typeof emoji==='string'&&emoji)a[emoji]=(a[emoji]||0)+1;return a;},{}); const entries=Object.entries(counts); if(entries.length){const rr=document.createElement('div');rr.className='reactions-row';entries.forEach(([emoji,count])=>{const pill=document.createElement('button');pill.type='button';pill.className='reaction-pill'+(reactions[user.$id]===emoji?' mine':'');pill.textContent=`${emoji} ${count}`;pill.setAttribute('aria-label',`${count} ${emoji} reactions`);pill.addEventListener('click',()=>toggleReaction(message,emoji));rr.appendChild(pill);});wrap.appendChild(rr);}
@@ -1476,7 +1505,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     async function sendMessage(extra = {}) {
       if (!user || sendLock) return;
       const textarea = $('message-input');
-      const rawText = textarea.value.trim();
+      const rawText = typeof extra.text === 'string' ? extra.text.trim() : textarea.value.trim();
       const text = reply ? `↪ [${reply.sender}: ${reply.text.slice(0, 30)}] ${rawText}` : rawText;
       if (!text && !extra.image && !extra.video && !extra.fileUrl && !extra.audio) return;
 
@@ -1726,7 +1755,8 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       const subscription = awClient.subscribe([
         `tablesdb.${DB_ID}.tables.messages.rows`,
         `tablesdb.${DB_ID}.tables.conversations.rows`,
-        `tablesdb.${DB_ID}.tables.calls.rows`
+        `tablesdb.${DB_ID}.tables.calls.rows`,
+        `tablesdb.${DB_ID}.tables.publicProfiles.rows`
       ], (response) => {
         const payload = response.payload;
         if (!payload) return;
@@ -1749,6 +1779,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
           loadThreads();
         }
 
+        if (payload.$tableId === 'publicProfiles' && payload.$id === activePeer) refreshBetaPeerPresence();
         if (payload.$tableId === 'calls' && window.handleRealtimeCall) {
           window.handleRealtimeCall(payload);
         }
@@ -2249,7 +2280,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       const q = $('poll-question').value.trim();
       const opts = [$('poll-opt-1').value.trim(), $('poll-opt-2').value.trim(), $('poll-opt-3').value.trim()].filter(Boolean);
       if (!q || opts.length < 2) return showToast('Enter a question and at least 2 options.', true);
-      await sendMessage({ text: `📊 POLL: ${q}\n• ${opts.join('\n• ')}` });
+      await sendMessage({ text: 'CBK_POLL_V1:' + JSON.stringify({ question: q, options: opts, votes: {} }) });
       $('poll-modal').classList.add('hidden');
       $('poll-question').value = ''; $('poll-opt-1').value = ''; $('poll-opt-2').value = ''; $('poll-opt-3').value = '';
     });
@@ -2795,6 +2826,94 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         showToast(err?.message || 'Reset link expired or invalid.', true);
       }
     })();
+
+    // === BETA FEATURE PACK: presence, feature voting and What's New ===
+    const betaExtraStyle = document.createElement('style');
+    betaExtraStyle.textContent = '.beta-feature-card{border:1px solid var(--glass-border);background:var(--glass-subtle);border-radius:14px;padding:12px;margin:8px 0}.beta-feature-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.beta-feature-vote{white-space:nowrap}.beta-feature-vote[disabled]{opacity:.55;cursor:wait}.beta-news-list{padding-left:20px;line-height:1.65}.poll-card{min-width:min(260px,70vw)}.poll-card .poll-opt{width:100%;cursor:pointer}.poll-card .poll-opt.voted{border-color:var(--blue);background:rgba(10,132,255,.15)}';
+    document.head.appendChild(betaExtraStyle);
+
+    const betaFeatureModal = document.createElement('div');
+    betaFeatureModal.id = 'beta-feature-vote-modal'; betaFeatureModal.className = 'modal-backdrop hidden'; betaFeatureModal.style.zIndex = '10070';
+    betaFeatureModal.innerHTML = '<div class="modal-card" style="width:min(100%,560px);max-height:88vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h3 style="margin:0">Vote for Beta Features</h3><button type="button" id="beta-feature-vote-close" class="icon-btn" aria-label="Close">✕</button></div><p class="muted" style="font-size:13px">Choose the improvements you want us to prioritise. You can change or remove your vote any time.</p><div id="beta-feature-vote-status" class="auth-status" role="status"></div><div id="beta-feature-vote-list"></div></div>';
+    document.body.appendChild(betaFeatureModal);
+    const betaNewsModal = document.createElement('div');
+    betaNewsModal.id = 'beta-whats-new-modal'; betaNewsModal.className = 'modal-backdrop hidden'; betaNewsModal.style.zIndex = '10070';
+    betaNewsModal.innerHTML = '<div class="modal-card" style="width:min(100%,560px);max-height:88vh;overflow:auto"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h3 style="margin:0">✨ What’s New in Beta</h3><button type="button" id="beta-whats-new-close" class="icon-btn" aria-label="Close">✕</button></div><p class="muted" style="font-size:12px">Beta feature pack · 24 November 2026</p><ul class="beta-news-list"><li>Edit your sent messages and delete messages for yourself or everyone.</li><li>React to messages with emoji and see reaction counts.</li><li>Create interactive polls in chats and vote on options.</li><li>Record and send voice notes up to 15 seconds.</li><li>Search within conversations and find chats quickly.</li><li>See typing indicators and online / last-seen status in private chats.</li><li>Send bug reports and vote for upcoming features.</li></ul><p class="muted" style="font-size:12px">These features are being tested. Please report anything that behaves unexpectedly.</p></div>';
+    document.body.appendChild(betaNewsModal);
+
+    const betaProgrammeCard = document.getElementById('profile-bug-report')?.closest('.form-card');
+    if (betaProgrammeCard && !document.getElementById('beta-extra-actions')) {
+      const extraCard = document.createElement('div'); extraCard.className = 'form-card'; extraCard.id = 'beta-extra-actions';
+      extraCard.innerHTML = '<h3 style="margin-top:0">Beta Lab</h3><p class="muted">Explore the latest beta changes and help choose what we build next.</p><div class="profile-actions"><button type="button" id="beta-whats-new-open" class="btn secondary">✨ What’s New</button><button type="button" id="beta-feature-vote-open" class="btn primary">🗳️ Vote for Features</button></div>';
+      betaProgrammeCard.insertAdjacentElement('afterend', extraCard);
+    }
+
+    async function loadBetaFeatureVotes() {
+      const list = document.getElementById('beta-feature-vote-list');
+      const status = document.getElementById('beta-feature-vote-status');
+      if (!list) return;
+      list.innerHTML = ''; status.textContent = 'Loading feature ideas…';
+      try {
+        const result = await requestBetaApi({ action: 'feature.list' });
+        status.textContent = 'Tap Vote to support an idea. Tap again to remove your vote.';
+        (result.features || []).forEach(feature => {
+          const card = document.createElement('div'); card.className = 'beta-feature-card';
+          const head = document.createElement('div'); head.className = 'beta-feature-head';
+          const title = document.createElement('strong'); title.textContent = feature.title;
+          const count = document.createElement('span'); count.className = 'muted'; count.textContent = (feature.votes || 0) + ' votes';
+          head.append(title, count);
+          const desc = document.createElement('p'); desc.className = 'muted'; desc.style.cssText = 'font-size:12px;margin:6px 0 10px'; desc.textContent = feature.description;
+          const vote = document.createElement('button'); vote.type = 'button'; vote.className = 'btn ' + (feature.votedByMe ? 'secondary' : 'primary') + ' beta-feature-vote'; vote.textContent = feature.votedByMe ? '✓ Voted' : 'Vote';
+          vote.addEventListener('click', async () => {
+            vote.disabled = true;
+            try { await requestBetaApi({ action: 'feature.vote', featureId: feature.id }); await loadBetaFeatureVotes(); }
+            catch (error) { status.textContent = error.message || 'Could not save your vote.'; }
+            finally { vote.disabled = false; }
+          });
+          card.append(head, desc, vote); list.appendChild(card);
+        });
+      } catch (error) { status.textContent = error.message || 'Could not load feature votes.'; }
+    }
+
+    document.getElementById('beta-feature-vote-open')?.addEventListener('click', () => { betaFeatureModal.classList.remove('hidden'); loadBetaFeatureVotes(); });
+    document.getElementById('beta-feature-vote-close')?.addEventListener('click', () => betaFeatureModal.classList.add('hidden'));
+    betaFeatureModal.addEventListener('click', event => { if (event.target === betaFeatureModal) betaFeatureModal.classList.add('hidden'); });
+    document.getElementById('beta-whats-new-open')?.addEventListener('click', () => betaNewsModal.classList.remove('hidden'));
+    document.getElementById('beta-whats-new-close')?.addEventListener('click', () => betaNewsModal.classList.add('hidden'));
+    betaNewsModal.addEventListener('click', event => { if (event.target === betaNewsModal) betaNewsModal.classList.add('hidden'); });
+
+    async function publishBetaPresence() {
+      if (!user) return;
+      const data = { uid: user.$id, name: profile?.name || user.name || 'Member', avatar: profile?.avatar || '🙂', lastSeen: new Date().toISOString() };
+      try { await awDb.updateDocument(DB_ID, 'publicProfiles', user.$id, { lastSeen: data.lastSeen }); }
+      catch (_) { try { await upsertDoc(DB_ID, 'publicProfiles', user.$id, data); } catch (error) { console.debug('Presence update unavailable:', error?.message || error); } }
+    }
+
+    async function refreshBetaPeerPresence() {
+      if (!user || !activePeer) return;
+      try {
+        const peer = await awDb.getDocument(DB_ID, 'publicProfiles', activePeer);
+        const stamp = peer.lastSeen ? Date.parse(peer.lastSeen) : 0;
+        const subtitle = document.getElementById('subtitle');
+        if (!subtitle) return;
+        if (stamp && Date.now() - stamp < 65000) {
+          subtitle.textContent = 'Online now'; subtitle.classList.add('online');
+        } else if (stamp) {
+          const minutes = Math.max(1, Math.floor((Date.now() - stamp) / 60000));
+          subtitle.textContent = minutes < 60 ? 'Last seen ' + minutes + 'm ago' : 'Last seen ' + new Date(stamp).toLocaleString();
+          subtitle.classList.remove('online');
+        } else {
+          subtitle.textContent = 'Private conversation'; subtitle.classList.remove('online');
+        }
+      } catch (_) { /* Presence is optional; chat stays usable if profile visibility is restricted. */ }
+    }
+
+    setInterval(() => { if (user) { publishBetaPresence(); refreshBetaPeerPresence(); } }, 25000);
+    window.addEventListener('focus', () => { publishBetaPresence(); refreshBetaPeerPresence(); });
+    window.addEventListener('pagehide', () => { publishBetaPresence(); });
+    publishBetaPresence();
+    // === END BETA FEATURE PACK ===
+
   </script>
   <script src="/enhancements.js" defer></script>
 </body>
