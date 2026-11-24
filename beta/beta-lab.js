@@ -60,7 +60,7 @@ const tools=[
 ['Experiments','🪄','Emoji mood','Add an emoji for your selected mood.',()=>{let m=(prompt('Mood: happy, excited, calm, thinking, grateful','happy')||'').toLowerCase(),a={happy:'😊',excited:'🤩',calm:'😌',thinking:'🤔',grateful:'🙏'};if(a[m])put(txt()+a[m])}],
 ['Experiments','🔁','Reverse draft','Reverse the characters in your draft.',()=>put([...txt()].reverse().join(''))],
 ['Experiments','🧪','Palindrome check','Check whether the draft is a palindrome.',()=>{let t=txt().toLowerCase().replace(/[^a-z0-9]/g,'');toast(t&&t===[...t].reverse().join('')?'It is a palindrome!':'Not a palindrome.')}],
-['Experiments','🛡️','Local privacy reset','Turn off Beta Lab visual privacy and layout effects.',()=>{['ck-compact','ck-no-avatars','ck-no-times','ck-reading','ck-privacy','ck-high-contrast','ck-calm','ck-ruler','ck-lab-focus'].forEach(c=>document.body.classList.remove(c));toast('Visual effects reset.')}],
+['Experiments','🛡️','Local privacy reset','Turn off Beta Lab visual privacy and layout effects.',()=>{['ck-compact','ck-no-avatars','ck-no-times','ck-reading','ck-privacy','ck-high-contrast','ck-calm','ck-ruler','ck-lab-focus','ck-hide-previews'].forEach(c=>document.body.classList.remove(c));toast('Visual effects reset.')}],
 ['Experiments','🧾','Feature feedback','Prepare a beta feedback template in the composer.',()=>put('Beta feedback:\nWhat I tried:\nWhat happened:\nWhat I expected:\n\n'+txt())]
 ];
 if(tools.length!==50)throw Error('Expected 50 features; got '+tools.length);
