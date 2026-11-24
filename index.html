@@ -482,7 +482,8 @@
     <button type="button" id="welcome-continue" class="btn primary" style="width: 100%;">
       Agree and continue
     </button>
-    <div class="welcome-terms">Tap "Agree and continue" to sign in or create an account.</div>
+    <button type="button" id="welcome-beta-apply" class="btn secondary" style="width: 100%; margin-top: 10px;">Apply for Beta Access</button>
+    <div class="welcome-terms">Tap "Agree and continue" to sign in or create an account, or apply for beta access.</div>
   </div>
 
   <!-- Login / Sign Up Screen -->
@@ -1800,6 +1801,10 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         $('tour-modal').classList.remove('hidden');
         localStorage.setItem('cbk_tour_seen', '1');
       }
+      if (sessionStorage.getItem('cbk_open_beta_application') === '1') {
+        sessionStorage.removeItem('cbk_open_beta_application');
+        openBetaApplication();
+      }
     }
 
     const INSTALL_GUIDES = {
@@ -1876,6 +1881,94 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     });
 
     $('welcome-continue').addEventListener('click', () => { $('welcome-screen').classList.add('hidden'); $('login').classList.remove('hidden'); $('auth-email')?.focus(); });
+
+    // Beta applications use the existing authenticated beta-api; Appwrite Auth remains unchanged.
+    const betaModal = document.createElement('div');
+    betaModal.id = 'beta-application-modal';
+    betaModal.className = 'modal-backdrop hidden';
+    betaModal.style.zIndex = '10050';
+    betaModal.innerHTML = `
+      <div class="modal-card" style="width:min(100%,480px);max-height:90vh;overflow:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <h3 style="margin:0;">Apply for Beta Access</h3>
+          <button type="button" id="beta-application-close" class="icon-btn" aria-label="Close">✕</button>
+        </div>
+        <p class="muted" style="font-size:13px;margin:10px 0 16px;">Tell us why you would like to test ChatByKarnav. Applications are reviewed by an administrator.</p>
+        <form id="beta-application-form">
+          <label class="field">Your name<input id="beta-display-name" maxlength="40" required autocomplete="name"></label>
+          <label class="field">Why do you want beta access?<textarea id="beta-reason" rows="4" maxlength="4000" required placeholder="Please write at least 10 characters…"></textarea></label>
+          <label class="field">What features would you like to test? (optional)<textarea id="beta-features" rows="3" maxlength="2000" placeholder="Tell us which features interest you…"></textarea></label>
+          <div id="beta-application-status" class="auth-status" role="status" aria-live="polite"></div>
+          <div class="auth-actions" style="margin-top:10px;">
+            <button type="button" id="beta-application-cancel" class="btn secondary">Cancel</button>
+            <button type="submit" id="beta-application-submit" class="btn primary">Submit application</button>
+          </div>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(betaModal);
+
+    function openBetaApplication() {
+      if (!user) {
+        sessionStorage.setItem('cbk_open_beta_application', '1');
+        $('welcome-screen').classList.add('hidden');
+        $('login').classList.remove('hidden');
+        $('auth-email')?.focus();
+        setStatus('auth-status', 'Sign in or create an account to continue with your beta application.');
+        return;
+      }
+      $('beta-display-name').value = profile.name || user.name || (user.email || '').split('@')[0] || 'Member';
+      setStatus('beta-application-status', '');
+      betaModal.classList.remove('hidden');
+      $('beta-reason').focus();
+    }
+
+    function closeBetaApplication() { betaModal.classList.add('hidden'); }
+    $('welcome-beta-apply').addEventListener('click', openBetaApplication);
+    $('beta-application-close').addEventListener('click', closeBetaApplication);
+    $('beta-application-cancel').addEventListener('click', closeBetaApplication);
+    betaModal.addEventListener('click', (event) => { if (event.target === betaModal) closeBetaApplication(); });
+    $('beta-application-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!user) return openBetaApplication();
+      const displayName = $('beta-display-name').value.trim();
+      const reason = $('beta-reason').value.trim();
+      const features = $('beta-features').value.trim();
+      if (!displayName) return setStatus('beta-application-status', 'Please enter your name.', true);
+      if (reason.length < 10) return setStatus('beta-application-status', 'Please provide at least 10 characters explaining why you want beta access.', true);
+      const submit = $('beta-application-submit');
+      submit.disabled = true;
+      submit.textContent = 'Submitting…';
+      setStatus('beta-application-status', 'Submitting your application…');
+      try {
+        const sessionJwt = await awAccount.createJWT();
+        const response = await fetch('https://nyc.cloud.appwrite.io/v1/functions/beta-api/executions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': '6af69d7f00178e3e64c2' },
+          body: JSON.stringify({
+            body: JSON.stringify({ action: 'apply', userJwt: sessionJwt.jwt, displayName, reason, features }),
+            async: false, method: 'POST', path: '/',
+            headers: { 'Content-Type': 'application/json' }
+          })
+        });
+        const execution = await response.json();
+        if (!response.ok) throw new Error(execution.message || `Appwrite request failed (${response.status}).`);
+        let result = {};
+        try { result = JSON.parse(execution.responseBody || '{}'); } catch (_) { throw new Error('The beta service returned an unreadable response.'); }
+        if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300 || !result.ok) {
+          throw new Error(result.error || result.message || 'Could not submit your application.');
+        }
+        setStatus('beta-application-status', result.message || 'Application submitted successfully.');
+        $('beta-application-submit').textContent = result.status === 'pending' ? 'Submitted' : 'Done';
+        if (result.status !== 'pending') $('beta-application-submit').disabled = true;
+        else $('beta-application-submit').disabled = true;
+      } catch (error) {
+        console.error('Beta application failed:', error);
+        setStatus('beta-application-status', error.message || 'Could not submit your application. Please try again.', true);
+      } finally {
+        if (!$('beta-application-submit').disabled) $('beta-application-submit').textContent = 'Submit application';
+      }
+    });
     document.querySelectorAll('.auth-toggle button').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
     $('auth-form').addEventListener('submit', handleAuthSubmit);
 
