@@ -1479,8 +1479,8 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
                     if (Number(nextVotes[user.$id]) === index) delete nextVotes[user.$id]; else nextVotes[user.$id] = index;
                     const nextText = 'CBK_POLL_V1:' + JSON.stringify({ question: poll.question, options: poll.options, votes: nextVotes });
                     choice.disabled = true;
-                    try { await awDb.updateDocument(DB_ID, 'messages', message.$id, { text: nextText }); fetchMessages(); }
-                    catch (err) { showToast('Could not save your poll vote.', true); choice.disabled = false; }
+                    try { await requestBetaApi({ action: 'poll.vote', messageId: message.$id, optionIndex: index }); fetchMessages(); }
+                    catch (err) { showToast(err.message || 'Could not save your poll vote.', true); choice.disabled = false; }
                   });
                   pollCard.appendChild(choice);
                 });
