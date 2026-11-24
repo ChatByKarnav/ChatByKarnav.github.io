@@ -640,6 +640,16 @@
         </form>
 
         <div class="form-card">
+          <h3 style="margin-top:0;">Beta programme</h3>
+          <p class="muted">Apply to test upcoming ChatByKarnav features. Your application status will appear here.</p>
+          <div class="profile-actions">
+            <button type="button" id="profile-beta-apply" class="btn primary">Apply for Beta Access</button>
+            <button type="button" id="profile-bug-report" class="btn secondary">Report a Bug</button>
+          </div>
+          <div id="beta-access-status" class="auth-status" role="status" aria-live="polite">Check your beta application status here.</div>
+        </div>
+
+        <div class="form-card">
           <h3 style="margin-top:0;">Account settings</h3>
           <div class="profile-actions">
             <button type="button" id="change-password-btn" class="btn secondary">Change password</button>
@@ -853,6 +863,7 @@
 
   <script>
     // === 100% APPWRITE CLOUD BACKEND ===
+    const IS_BETA_SITE = /^\\/beta(?:\\/|$)/.test(window.location.pathname);
     const { Client, Account, TablesDB, Storage, Functions, ID, Query, Permission, Role } = Appwrite;
 
     const awClient = new Client()
@@ -1750,6 +1761,27 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
 
     async function signedIn(userSession) {
       user = userSession;
+      if (user && IS_BETA_SITE) {
+        $('welcome-screen').classList.add('hidden');
+        $('login').classList.add('hidden');
+        $('app').classList.add('hidden');
+        let betaState = 'not_applied';
+        try { betaState = (await requestBetaApi({ action: 'status' })).status; }
+        catch (error) { betaState = 'error'; }
+        if (betaState !== 'approved') {
+          let gate = $('beta-access-gate');
+          if (!gate) {
+            gate = document.createElement('section'); gate.id = 'beta-access-gate';
+            gate.style.cssText = 'min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#f5f7ff;font-family:system-ui,sans-serif;text-align:center;';
+            document.body.appendChild(gate);
+          }
+          const messages = { pending: 'Your beta application is waiting for administrator approval.', rejected: 'Your beta application was not approved. You can reapply from your main profile.', suspended: 'Your beta access is currently suspended.', not_applied: 'Apply for beta access from your Profile on the main website.', error: 'We could not verify your beta access. Please try again.' };
+          gate.innerHTML = '<div style="max-width:520px"><div style="font-size:42px">🧪</div><h1>ChatByKarnav Beta</h1><p>' + (messages[betaState] || messages.error) + '</p><a href="/" style="display:inline-block;margin-top:12px;padding:12px 18px;border-radius:12px;background:#3478f6;color:white;text-decoration:none;font-weight:700">Go to main website</a></div>';
+          gate.style.display = 'grid';
+          return;
+        }
+        $('beta-access-gate')?.remove();
+      }
       if (user && window.OneSignalDeferred) {
         OneSignalDeferred.push((OneSignal) => OneSignal.login(user.$id));
       }
@@ -1790,6 +1822,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       $('self-name').textContent = profile.name;
       $('self-avatar').textContent = profile.avatar;
       renderMemojiPicker(profile.avatar);
+      refreshBetaStatus();
 
       startRealtimeSubscription();
       loadStatuses();
@@ -1908,6 +1941,77 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     `;
     document.body.appendChild(betaModal);
 
+    const bugModal = document.createElement('div');
+    bugModal.className = 'modal-backdrop hidden';
+    bugModal.style.zIndex = '10060';
+    bugModal.innerHTML = `
+      <div class="modal-card" style="width:min(100%,480px);max-height:90vh;overflow:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;"><h3 style="margin:0;">Report a Bug</h3><button type="button" id="bug-report-close" class="icon-btn" aria-label="Close">✕</button></div>
+        <p class="muted" style="font-size:13px;">Describe what went wrong. Reports are visible to the ChatByKarnav admin team.</p>
+        <form id="bug-report-form">
+          <label class="field">Bug title<input id="bug-report-title" maxlength="160" required placeholder="e.g. Messages are not sending"></label>
+          <label class="field">What happened?<textarea id="bug-report-description" rows="5" maxlength="5000" required placeholder="Steps to reproduce, what you expected, and what happened…"></textarea></label>
+          <label class="field">Severity<select id="bug-report-severity"><option value="low">Low — minor issue</option><option value="normal" selected>Normal</option><option value="high">High — feature is broken</option><option value="critical">Critical — app unusable or data at risk</option></select></label>
+          <div id="bug-report-status" class="auth-status" role="status" aria-live="polite"></div>
+          <div class="auth-actions"><button type="button" id="bug-report-cancel" class="btn secondary">Cancel</button><button type="submit" id="bug-report-submit" class="btn primary">Send report</button></div>
+        </form>
+      </div>`;
+    document.body.appendChild(bugModal);
+    function openBugReport() { if (!user) return showToast('Please sign in first.', true); setStatus('bug-report-status', ''); bugModal.classList.remove('hidden'); $('bug-report-title').focus(); }
+    function closeBugReport() { bugModal.classList.add('hidden'); }
+    $('profile-beta-apply').addEventListener('click', async () => {
+      if ($('profile-beta-apply').dataset.betaStatus === 'approved') { window.location.href = '/beta/'; return; }
+      await refreshBetaStatus();
+      if ($('profile-beta-apply').dataset.betaStatus === 'approved') { window.location.href = '/beta/'; return; }
+      openBetaApplication();
+    });
+    $('profile-bug-report').addEventListener('click', openBugReport);
+    $('bug-report-close').addEventListener('click', closeBugReport);
+    $('bug-report-cancel').addEventListener('click', closeBugReport);
+    bugModal.addEventListener('click', e => { if (e.target === bugModal) closeBugReport(); });
+    $('bug-report-form').addEventListener('submit', async e => {
+      e.preventDefault();
+      const title = $('bug-report-title').value.trim(), description = $('bug-report-description').value.trim(), severity = $('bug-report-severity').value;
+      if (title.length < 4 || description.length < 10) return setStatus('bug-report-status', 'Please add a clear title and at least 10 characters describing the issue.', true);
+      const button = $('bug-report-submit'); button.disabled = true; button.textContent = 'Sending…';
+      try {
+        const result = await requestBetaApi({ action: 'bug.submit', title, description, severity });
+        setStatus('bug-report-status', result.message || 'Report sent.');
+        $('bug-report-form').reset();
+        setTimeout(closeBugReport, 1100);
+      } catch (error) { setStatus('bug-report-status', error.message || 'Could not send your report.', true); }
+      finally { button.disabled = false; button.textContent = 'Send report'; }
+    });
+
+    async function requestBetaApi(payload) {
+      const sessionJwt = await awAccount.createJWT();
+      const response = await fetch('https://nyc.cloud.appwrite.io/v1/functions/beta-api/executions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': '6af69d7f00178e3e64c2' },
+        body: JSON.stringify({ body: JSON.stringify({ ...payload, userJwt: sessionJwt.jwt }), async: false, method: 'POST', path: '/', headers: { 'Content-Type': 'application/json' } })
+      });
+      const execution = await response.json();
+      if (!response.ok) throw new Error(execution.message || `Appwrite request failed (${response.status}).`);
+      let result = {};
+      try { result = JSON.parse(execution.responseBody || '{}'); } catch (_) { throw new Error('The beta service returned an unreadable response.'); }
+      if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300 || !result.ok) throw new Error(result.error || result.message || 'The beta service request failed.');
+      return result;
+    }
+
+    async function refreshBetaStatus() {
+      if (!user) return;
+      try {
+        const result = await requestBetaApi({ action: 'status' });
+        const labels = { approved: 'Approved — beta access is ready!', pending: 'Pending — your application is awaiting review.', rejected: 'Not approved — you may reapply.', suspended: 'Suspended — beta access is currently disabled.', not_applied: 'You have not applied yet.' };
+        $('beta-access-status').textContent = labels[result.status] || 'Status: ' + result.status;
+        if (result.status === 'approved') $('profile-beta-apply').textContent = 'Open Beta Website';
+        else $('profile-beta-apply').textContent = 'Apply for Beta Access';
+        $('profile-beta-apply').dataset.betaStatus = result.status;
+      } catch (error) {
+        $('beta-access-status').textContent = error.message || 'Could not load beta status.';
+      }
+    }
+
     function openBetaApplication() {
       if (!user) {
         sessionStorage.setItem('cbk_open_beta_application', '1');
@@ -1941,23 +2045,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       submit.textContent = 'Submitting…';
       setStatus('beta-application-status', 'Submitting your application…');
       try {
-        const sessionJwt = await awAccount.createJWT();
-        const response = await fetch('https://nyc.cloud.appwrite.io/v1/functions/beta-api/executions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-Appwrite-Project': '6af69d7f00178e3e64c2' },
-          body: JSON.stringify({
-            body: JSON.stringify({ action: 'apply', userJwt: sessionJwt.jwt, displayName, reason, features }),
-            async: false, method: 'POST', path: '/',
-            headers: { 'Content-Type': 'application/json' }
-          })
-        });
-        const execution = await response.json();
-        if (!response.ok) throw new Error(execution.message || `Appwrite request failed (${response.status}).`);
-        let result = {};
-        try { result = JSON.parse(execution.responseBody || '{}'); } catch (_) { throw new Error('The beta service returned an unreadable response.'); }
-        if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300 || !result.ok) {
-          throw new Error(result.error || result.message || 'Could not submit your application.');
-        }
+        const result = await requestBetaApi({ action: 'apply', displayName, reason, features });
         setStatus('beta-application-status', result.message || 'Application submitted successfully.');
         $('beta-application-submit').textContent = result.status === 'pending' ? 'Submitted' : 'Done';
         if (result.status !== 'pending') $('beta-application-submit').disabled = true;
