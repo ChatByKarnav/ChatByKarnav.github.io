@@ -20,9 +20,7 @@ const tools=[
 ['Messaging','⬆️','UPPERCASE','Convert the draft to uppercase.',()=>put(txt().toUpperCase())],
 ['Messaging','⬇️','lowercase','Convert the draft to lowercase.',()=>put(txt().toLowerCase())],
 ['Messaging','📰','Title Case','Capitalize each word.',()=>put(txt().toLowerCase().replace(/\b\w/g,c=>c.toUpperCase()))],
-['Messaging','❝','Quote draft','Wrap each line in quotation marks.',()=>put(txt().split('\n').map(x=>'“'+x+'”').join('\n'))],
 ['Messaging','🕒','Insert time','Append the current local date and time.',()=>put((txt()?txt()+'\n':'')+new Date().toLocaleString())],
-['Messaging','💬','Friendly opener','Add a friendly conversation opener.',()=>put('Hey! How is your day going? '+txt())],
 ['Messaging','🧊','Icebreaker','Insert a random conversation starter.',()=>{let a=['What are you excited about this week?','What skill would you love to learn?','What is your ideal weekend?','What made you smile recently?','Which fictional world would you visit?'];put((txt()?txt()+'\n':'')+a[Math.floor(Math.random()*a.length)])}],
 ['Messaging','🧹','Clear composer','Clear the current unsent message after confirmation.',()=>{if(confirm('Clear the unsent message?'))put('')}],
 ['Messaging','🎯','Focus composer','Jump to the message box.',()=>composer()?.focus()],
@@ -52,7 +50,6 @@ const tools=[
 ['Productivity','☑️','Personal checklist','Save a one-item-per-line checklist locally.',()=>{let v=prompt('Checklist (one item per line):',read('checklist',''));if(v!==null){save('checklist',v);toast('Checklist saved locally.')}}],
 ['Productivity','📚','Draft library','Create and edit reusable message snippets.',()=>{let v=prompt('Snippets (separate with a line containing ---):',read('snippets',[]).join('\n---\n'));if(v!==null){save('snippets',v.split(/\n---\n/).map(x=>x.trim()).filter(Boolean));toast('Snippets saved.')}}],
 ['Productivity','🧩','Insert snippet','Insert one of your saved snippets.',()=>{let a=read('snippets',[]);if(!a.length)return toast('Create snippets first.');let n=Number(prompt(a.map((x,i)=>(i+1)+'. '+x.slice(0,60)).join('\n')+'\nNumber:'))-1;if(a[n])put((txt()?txt()+'\n':'')+a[n])}],
-['Productivity','📆','Date stamp','Append today’s date.',()=>put((txt()?txt()+'\n':'')+new Date().toLocaleDateString())],
 ['Productivity','🧮','Reading estimate','Estimate reading time for loaded messages.',()=>{let n=texts().join(' ').trim().split(/\s+/).filter(Boolean).length;toast('About '+Math.max(1,Math.ceil(n/200))+' min · '+n+' words')}],
 ['Productivity','🗂️','Message count','Count currently loaded messages.',()=>toast(bubbles().length+' loaded messages')],
 ['Productivity','📎','Copy chat summary','Copy a quick summary of the visible conversation.',()=>{let a=texts();copy('ChatByKarnav Beta · '+a.length+' loaded messages\nLatest: '+(a[a.length-1]||'None'))}],
@@ -63,7 +60,6 @@ const tools=[
 ['Experiments','🪄','Emoji mood','Add an emoji for your selected mood.',()=>{let m=(prompt('Mood: happy, excited, calm, thinking, grateful','happy')||'').toLowerCase(),a={happy:'😊',excited:'🤩',calm:'😌',thinking:'🤔',grateful:'🙏'};if(a[m])put(txt()+a[m])}],
 ['Experiments','🔁','Reverse draft','Reverse the characters in your draft.',()=>put([...txt()].reverse().join(''))],
 ['Experiments','🧪','Palindrome check','Check whether the draft is a palindrome.',()=>{let t=txt().toLowerCase().replace(/[^a-z0-9]/g,'');toast(t&&t===[...t].reverse().join('')?'It is a palindrome!':'Not a palindrome.')}],
-['Experiments','🧵','Thread snapshot','Copy all currently loaded message text.',()=>copy(texts().map((x,i)=>(i+1)+'. '+x).join('\n'))],
 ['Experiments','🛡️','Local privacy reset','Turn off Beta Lab visual privacy and layout effects.',()=>{['ck-compact','ck-no-avatars','ck-no-times','ck-reading','ck-privacy','ck-high-contrast','ck-calm','ck-ruler','ck-lab-focus'].forEach(c=>document.body.classList.remove(c));toast('Visual effects reset.')}],
 ['Experiments','🧾','Feature feedback','Prepare a beta feedback template in the composer.',()=>put('Beta feedback:\nWhat I tried:\nWhat happened:\nWhat I expected:\n\n'+txt())]
 ];
