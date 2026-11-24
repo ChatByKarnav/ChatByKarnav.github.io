@@ -7,7 +7,7 @@
     OneSignalDeferred.push(async function(OneSignal) {
       await OneSignal.init({
         appId: "431debda-c8c2-49be-811e-785e9c4e73ad",
-        serviceWorkerPath: "OneSignalSDKWorker.js",
+        serviceWorkerPath: "/OneSignalSDKWorker.js",
         notifyButton: { enable: false }
       });
     });
@@ -2315,7 +2315,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
 
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./OneSignalSDKWorker.js').catch((err) => console.error('SW failed:', err));
+        navigator.serviceWorker.register('/OneSignalSDKWorker.js').catch((err) => console.error('SW failed:', err));
       });
     }
 
