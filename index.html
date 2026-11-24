@@ -863,7 +863,7 @@
 
   <script>
     // === 100% APPWRITE CLOUD BACKEND ===
-    const IS_BETA_SITE = /^\\/beta(?:\\/|$)/.test(window.location.pathname);
+    const IS_BETA_SITE = /^\/beta(?:\/|$)/.test(window.location.pathname);
     const { Client, Account, TablesDB, Storage, Functions, ID, Query, Permission, Role } = Appwrite;
 
     const awClient = new Client()
