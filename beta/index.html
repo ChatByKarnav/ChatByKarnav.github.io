@@ -1779,7 +1779,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
           loadThreads();
         }
 
-        if (payload.$tableId === 'publicProfiles' && payload.$id === activePeer) refreshBetaPeerPresence();
+        if (payload.$tableId === 'publicProfiles' && payload.$id === activePeer?.uid) refreshBetaPeerPresence();
         if (payload.$tableId === 'calls' && window.handleRealtimeCall) {
           window.handleRealtimeCall(payload);
         }
@@ -2890,9 +2890,9 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     }
 
     async function refreshBetaPeerPresence() {
-      if (!user || !activePeer) return;
+      if (!user || !activePeer?.uid) return;
       try {
-        const peer = await awDb.getDocument(DB_ID, 'publicProfiles', activePeer);
+        const peer = await awDb.getDocument(DB_ID, 'publicProfiles', activePeer.uid);
         const stamp = peer.lastSeen ? Date.parse(peer.lastSeen) : 0;
         const subtitle = document.getElementById('subtitle');
         if (!subtitle) return;
