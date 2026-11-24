@@ -1368,6 +1368,17 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         starBtn.addEventListener('click', () => toggleStarMessage(message.$id, message));
         actions.appendChild(starBtn);
         const reactBtn=document.createElement('button');reactBtn.type='button';reactBtn.className='msg-action-btn';reactBtn.textContent='😊';reactBtn.title='React to message';reactBtn.setAttribute('aria-label','React to message');reactBtn.addEventListener('click',()=>{const emoji=prompt('Enter one emoji reaction:','❤️');if(emoji&&Array.from(emoji.trim()).length<=4)toggleReaction(message,emoji.trim());});actions.appendChild(reactBtn);
+        const readAloudBtn = document.createElement('button');
+        readAloudBtn.type = 'button'; readAloudBtn.className = 'msg-action-btn beta-read-aloud'; readAloudBtn.textContent = '🔊'; readAloudBtn.title = 'Read message aloud'; readAloudBtn.setAttribute('aria-label', 'Read message aloud');
+        readAloudBtn.addEventListener('click', () => {
+          if (!('speechSynthesis' in window) || !message.text) return showToast('Read aloud is not supported in this browser.', true);
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(message.text.replace(/^CBK_POLL_V1:[\\s\\S]*$/, 'Poll message'));
+          utterance.rate = 1; utterance.pitch = 1;
+          window.speechSynthesis.speak(utterance);
+          showToast('Reading message aloud…');
+        });
+        actions.appendChild(readAloudBtn);
 
         if (isMine && message.text) {
           const editBtn = document.createElement('button');
@@ -2830,6 +2841,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     // === BETA FEATURE PACK: presence, feature voting and What's New ===
     const betaExtraStyle = document.createElement('style');
     betaExtraStyle.textContent = '.beta-feature-card{border:1px solid var(--glass-border);background:var(--glass-subtle);border-radius:14px;padding:12px;margin:8px 0}.beta-feature-head{display:flex;justify-content:space-between;gap:10px;align-items:center}.beta-feature-vote{white-space:nowrap}.beta-feature-vote[disabled]{opacity:.55;cursor:wait}.beta-news-list{padding-left:20px;line-height:1.65}.poll-card{min-width:min(260px,70vw)}.poll-card .poll-opt{width:100%;cursor:pointer}.poll-card .poll-opt.voted{border-color:var(--blue);background:rgba(10,132,255,.15)}';
+    betaExtraStyle.textContent += '.beta-exclusive-list{display:grid;gap:9px;margin:12px 0}.beta-exclusive-list>div{display:grid;gap:3px;padding:10px 12px;border:1px solid var(--glass-border);border-radius:12px;background:var(--glass-subtle)}.beta-exclusive-list span{font-size:12px;color:var(--muted)}.beta-focus-mode .sidebar{display:none!important}.beta-focus-mode .shell{grid-template-columns:minmax(0,1fr)!important}.beta-focus-mode .main{width:100%!important;max-width:none!important}.beta-focus-exit{position:fixed;right:18px;top:18px;z-index:10080;box-shadow:0 8px 24px rgba(0,0,0,.2)}.beta-read-aloud{font-size:14px}';
     document.head.appendChild(betaExtraStyle);
 
     const betaFeatureModal = document.createElement('div');
@@ -2844,7 +2856,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     const betaProgrammeCard = document.getElementById('profile-bug-report')?.closest('.form-card');
     if (betaProgrammeCard && !document.getElementById('beta-extra-actions')) {
       const extraCard = document.createElement('div'); extraCard.className = 'form-card'; extraCard.id = 'beta-extra-actions';
-      extraCard.innerHTML = '<h3 style="margin-top:0">Beta Lab</h3><p class="muted">Explore the latest beta changes and help choose what we build next.</p><div class="profile-actions"><button type="button" id="beta-whats-new-open" class="btn secondary">✨ What’s New</button><button type="button" id="beta-feature-vote-open" class="btn primary">🗳️ Vote for Features</button></div>';
+      extraCard.innerHTML = '<h3 style="margin-top:0">🧪 Beta Lab — Experimental tools</h3><p class="muted">These tools are exclusive to the beta build and are not enabled on the regular website.</p><div class="beta-exclusive-list"><div><strong>🔊 Read aloud</strong><span>Listen to any text message using your browser voice.</span></div><div><strong>🎯 Focus mode</strong><span>Hide the conversation list and use a distraction-free chat view.</span></div><div><strong>🗳️ Feature voting</strong><span>Vote on what should be tested next.</span></div></div><div class="profile-actions"><button type="button" id="beta-focus-profile" class="btn secondary">🎯 Toggle Focus Mode</button><button type="button" id="beta-whats-new-open" class="btn secondary">✨ What’s New</button><button type="button" id="beta-feature-vote-open" class="btn primary">🗳️ Vote for Features</button></div>';
       betaProgrammeCard.insertAdjacentElement('afterend', extraCard);
     }
 
@@ -2876,6 +2888,23 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     }
 
     document.getElementById('beta-feature-vote-open')?.addEventListener('click', () => { betaFeatureModal.classList.remove('hidden'); loadBetaFeatureVotes(); });
+    function toggleBetaFocusMode() {
+      const enabled = !document.body.classList.contains('beta-focus-mode');
+      document.body.classList.toggle('beta-focus-mode', enabled);
+      let exit = document.getElementById('beta-focus-exit');
+      if (enabled && !exit) {
+        exit = document.createElement('button'); exit.id = 'beta-focus-exit'; exit.type = 'button'; exit.className = 'btn primary beta-focus-exit'; exit.textContent = 'Exit Focus Mode';
+        exit.addEventListener('click', toggleBetaFocusMode); document.body.appendChild(exit);
+      }
+      if (exit) exit.classList.toggle('hidden', !enabled);
+      showToast(enabled ? 'Focus Mode enabled.' : 'Focus Mode disabled.');
+    }
+    document.getElementById('beta-focus-profile')?.addEventListener('click', toggleBetaFocusMode);
+    const messageTools = document.querySelector('#view-chat .message-tools');
+    if (messageTools && !document.getElementById('beta-focus-chat')) {
+      const focusButton = document.createElement('button'); focusButton.id = 'beta-focus-chat'; focusButton.type = 'button'; focusButton.className = 'btn secondary'; focusButton.textContent = '🎯 Focus';
+      focusButton.addEventListener('click', toggleBetaFocusMode); messageTools.appendChild(focusButton);
+    }
     document.getElementById('beta-feature-vote-close')?.addEventListener('click', () => betaFeatureModal.classList.add('hidden'));
     betaFeatureModal.addEventListener('click', event => { if (event.target === betaFeatureModal) betaFeatureModal.classList.add('hidden'); });
     document.getElementById('beta-whats-new-open')?.addEventListener('click', () => betaNewsModal.classList.remove('hidden'));
