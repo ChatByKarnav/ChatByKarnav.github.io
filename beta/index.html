@@ -655,6 +655,11 @@
 
         <div class="form-card">
           <h3 style="margin-top:0;">Account settings</h3>
+          <label class="field" style="display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.45;">
+            <input id="profile-email-updates" type="checkbox" style="width:auto;margin-top:3px;flex:0 0 auto;">
+            <span><strong>Email me ChatByKarnav updates</strong><br><span class="muted">Receive occasional announcements. You can turn this off at any time.</span></span>
+          </label>
+          <div id="profile-email-updates-status" class="auth-status" role="status" aria-live="polite"></div>
           <div class="profile-actions">
             <button type="button" id="change-password-btn" class="btn secondary">Change password</button>
             <button type="button" id="delete-account-btn" class="btn danger-btn">Delete account</button>
@@ -1918,6 +1923,10 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         avatar: saved.avatar || saved.memoji || '🙂'
       };
 
+      try {
+        const emailPrefs = await awAccount.getPrefs();
+        $('profile-email-updates').checked = emailPrefs.emailUpdates === true;
+      } catch (_) { $('profile-email-updates').checked = false; }
       $('display-name').value = profile.name;
       $('profile-memoji').value = profile.avatar;
       $('self-name').textContent = profile.name;
@@ -2169,6 +2178,25 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         await awAccount.createRecovery({ email, url: window.location.origin + window.location.pathname });
         setStatus('auth-status', 'Password reset email sent. Check your inbox.');
       } catch (err) { setStatus('auth-status', 'Could not send reset email.', true); }
+    });
+
+    $('profile-email-updates').addEventListener('change', async () => {
+      const checkbox = $('profile-email-updates');
+      const previous = !checkbox.checked;
+      checkbox.disabled = true;
+      $('profile-email-updates-status').textContent = 'Saving preference…';
+      try {
+        const currentPrefs = await awAccount.getPrefs();
+        await awAccount.updatePrefs({ prefs: {
+          ...(currentPrefs || {}),
+          emailUpdates: checkbox.checked,
+          emailUpdatesConsentAt: checkbox.checked ? new Date().toISOString() : null
+        }});
+        $('profile-email-updates-status').textContent = checkbox.checked ? 'Email update preference saved.' : 'Email updates turned off.';
+      } catch (error) {
+        checkbox.checked = previous;
+        $('profile-email-updates-status').textContent = error.message || 'Could not save your preference.';
+      } finally { checkbox.disabled = false; }
     });
 
     $('profile-form').addEventListener('submit', saveProfile);
