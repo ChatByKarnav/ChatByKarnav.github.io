@@ -1575,12 +1575,22 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     }
     window.sendMessage = sendMessage;
 
+    async function getChatFilePermissions() {
+      if (!user) throw new Error('Sign in before sharing a file.');
+      if (active === 'global') return [Permission.read(Role.users())];
+      const conv = await awDb.getDocument(DB_ID, 'conversations', active);
+      const members = Array.isArray(conv.members) ? [...new Set(conv.members)] : [];
+      if (!members.includes(user.$id)) throw new Error('You are not a member of this conversation.');
+      return members.map((uid) => Permission.read(Role.user(uid)));
+    }
+
     async function uploadAndSendFile(file) {
       if (!file) return;
-      if (file.size > 30 * 1024 * 1024) return showToast('File must be under 30 MB.', true);
+      if (file.size > 50 * 1000 * 1000) return showToast('File must be under 50 MB.', true);
       showToast(`Uploading ${file.name}…`);
       try {
-        const uploaded = await awStorage.createFile({ bucketId: BUCKET_ID, fileId: ID.unique(), file });
+        const permissions = await getChatFilePermissions();
+        const uploaded = await awStorage.createFile({ bucketId: BUCKET_ID, fileId: ID.unique(), file, permissions });
         const fileUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=6af69d7f00178e3e64c2`;
         if (file.type.startsWith('image/')) {
           await sendMessage({ image: fileUrl });
@@ -2260,7 +2270,8 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
           stream.getTracks().forEach((t) => t.stop());
           const blob = new Blob(audioChunks, { type: 'audio/webm' });
           const file = new File([blob], `voice_${Date.now()}.webm`, { type: 'audio/webm' });
-          const uploaded = await awStorage.createFile({ bucketId: BUCKET_ID, fileId: ID.unique(), file });
+          const permissions = await getChatFilePermissions();
+          const uploaded = await awStorage.createFile({ bucketId: BUCKET_ID, fileId: ID.unique(), file, permissions });
           const audioUrl = `https://nyc.cloud.appwrite.io/v1/storage/buckets/${BUCKET_ID}/files/${uploaded.$id}/view?project=6af69d7f00178e3e64c2`;
           sendMessage({ audio: audioUrl });
         };
