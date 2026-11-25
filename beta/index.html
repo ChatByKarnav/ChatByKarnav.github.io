@@ -1746,13 +1746,32 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
             name: defaultName,
             avatar
           });
-          setStatus('auth-status', 'Account created successfully.');
+          await awAccount.createVerification({
+            url: `${window.location.origin}${window.location.pathname}?verify=1`
+          });
+          await awAccount.deleteSession({ sessionId: 'current' });
+          user = null;
+          $('welcome-screen').classList.add('hidden');
+          $('login').classList.remove('hidden');
+          setStatus('auth-status', 'Account created! Check your email and click the verification link before signing in.');
+          return;
         } else {
           await awAccount.createEmailPasswordSession({ email, password });
+          const sessionUser = await awAccount.get();
+          if (!sessionUser.emailVerification) {
+            await awAccount.createVerification({
+              url: `${window.location.origin}${window.location.pathname}?verify=1`
+            });
+            await awAccount.deleteSession({ sessionId: 'current' });
+            user = null;
+            $('welcome-screen').classList.add('hidden');
+            $('login').classList.remove('hidden');
+            setStatus('auth-status', 'Please verify your email first. We have sent you a new verification link.');
+            return;
+          }
           setStatus('auth-status', 'Welcome back.');
+          await signedIn(sessionUser);
         }
-        const sessionUser = await awAccount.get();
-        await signedIn(sessionUser);
       } catch (error) {
         const message = error?.code === 409 ? 'An account with this email already exists.'
           : error?.code === 401 ? 'Incorrect email or password.'
@@ -1803,6 +1822,23 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
 
     async function signedIn(userSession) {
       user = userSession;
+      if (user && !user.emailVerification) {
+        try {
+          await awAccount.createVerification({
+            url: `${window.location.origin}${window.location.pathname}?verify=1`
+          });
+        } catch (verificationError) {
+          console.warn('Could not send email verification link:', verificationError);
+        }
+        try { await awAccount.deleteSession({ sessionId: 'current' }); } catch (_) {}
+        user = null;
+        $('welcome-screen').classList.add('hidden');
+        $('login').classList.remove('hidden');
+        $('app').classList.add('hidden');
+        if (unsubRealtime) { unsubRealtime(); unsubRealtime = null; }
+        setStatus('auth-status', 'Please verify your email address. Check your inbox for the verification link.', true);
+        return;
+      }
       if (user && IS_BETA_SITE) {
         $('welcome-screen').classList.add('hidden');
         $('login').classList.add('hidden');
@@ -2817,12 +2853,34 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       }
     })();
 
+    // === APPWRITE EMAIL VERIFICATION LINK HANDLER ===
+    (async function handleEmailVerification() {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('verify') !== '1') return;
+      const userId = params.get('userId');
+      const secret = params.get('secret');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      $('welcome-screen').classList.add('hidden');
+      $('login').classList.remove('hidden');
+      $('app').classList.add('hidden');
+      if (!userId || !secret) {
+        setStatus('auth-status', 'This verification link is incomplete. Sign in to request a new one.', true);
+        return;
+      }
+      try {
+        await awAccount.updateVerification({ userId, secret });
+        setStatus('auth-status', 'Email verified successfully! You can now sign in.');
+      } catch (error) {
+        setStatus('auth-status', error?.message || 'This verification link is invalid or expired. Sign in to request a new one.', true);
+      }
+    })();
+
     // === COMPLETE APPWRITE PASSWORD RECOVERY FROM EMAIL LINK ===
     (async function handlePasswordRecovery() {
       const params = new URLSearchParams(window.location.search);
       const userId = params.get('userId');
       const secret = params.get('secret');
-      if (!userId || !secret) return;
+      if (!userId || !secret || params.get('verify') === '1') return;
 
       window.history.replaceState({}, document.title, window.location.pathname);
       const newPass = prompt('Enter your new password (min 8 characters):');
