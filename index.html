@@ -523,6 +523,10 @@
         <div class="memoji-picker" id="memoji-picker" aria-label="Choose your memoji"></div>
         <input id="memoji-value" type="hidden" value="🙂">
       </div>
+      <label class="field hidden" id="email-updates-choice" style="display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.45;">
+        <input id="email-updates-optin" type="checkbox" style="width:auto;margin-top:3px;flex:0 0 auto;">
+        <span><strong>Email me ChatByKarnav updates</strong><br><span class="muted">Receive occasional announcements about new features, improvements and important website updates. You can change this preference later.</span></span>
+      </label>
       <div class="auth-actions"><button id="auth-submit" class="btn primary" type="submit">Sign in</button></div>
       <div id="auth-status" class="auth-status" role="status" aria-live="polite"></div>
     </form>
@@ -581,6 +585,13 @@
           <button class="icon-btn" id="theme-toggle" title="Toggle theme">☀️</button>
         </div>
       </header>
+      <section id="beta-promo-banner" aria-label="ChatByKarnav beta access" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 18px;background:linear-gradient(100deg,rgba(10,132,255,.16),rgba(124,58,237,.10));border-bottom:1px solid var(--glass-border);">
+        <div style="min-width:0;flex:1;">
+          <strong style="display:block;font-size:14px;">🧪 Want to try new features?</strong>
+          <span id="beta-promo-copy" class="muted" style="font-size:12px;">Apply for ChatByKarnav Beta and help shape what comes next.</span>
+        </div>
+        <button type="button" id="beta-apply-now" class="btn primary" style="white-space:nowrap;">Apply for Beta Now</button>
+      </section>
 
       <!-- Post-login Home Welcome Screen -->
       <section class="home-welcome" id="home-welcome">
@@ -1060,6 +1071,8 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       document.querySelectorAll('.auth-toggle button').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
       $('auth-submit').textContent = mode === 'signup' ? 'Create account' : 'Sign in';
       $('forgot-password').classList.toggle('hidden', mode === 'signup');
+      $('email-updates-choice').classList.toggle('hidden', mode !== 'signup');
+      if (mode !== 'signup') $('email-updates-optin').checked = false;
       $('auth-email')?.focus();
     }
 
@@ -1731,6 +1744,11 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         if (currentAuthMode === 'signup') {
           const created = await awAccount.create({ userId: ID.unique(), email, password, name: defaultName });
           await awAccount.createEmailPasswordSession({ email, password });
+          const wantsEmailUpdates = $('email-updates-optin').checked;
+          await awAccount.updatePrefs({
+            emailUpdates: wantsEmailUpdates,
+            emailUpdatesConsentAt: wantsEmailUpdates ? new Date().toISOString() : null
+          });
           await upsertDoc(DB_ID, 'publicProfiles', created.$id, {
             uid: created.$id,
             name: defaultName,
@@ -2070,8 +2088,21 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         const result = await requestBetaApi({ action: 'status' });
         const labels = { approved: 'Approved — beta access is ready!', pending: 'Pending — your application is awaiting review.', rejected: 'Not approved — you may reapply.', suspended: 'Suspended — beta access is currently disabled.', not_applied: 'You have not applied yet.' };
         $('beta-access-status').textContent = labels[result.status] || 'Status: ' + result.status;
-        if (result.status === 'approved') $('profile-beta-apply').textContent = 'Open Beta Website';
-        else $('profile-beta-apply').textContent = 'Apply for Beta Access';
+        if (result.status === 'approved') {
+          $('profile-beta-apply').textContent = 'Open Beta Website';
+          $('beta-promo-copy').textContent = 'Your beta access is approved. Open the beta website now.';
+          $('beta-apply-now').textContent = 'Open Beta Website';
+        } else {
+          $('profile-beta-apply').textContent = 'Apply for Beta Access';
+          const promo = {
+            pending: 'Your beta application is awaiting review.',
+            rejected: 'You can submit a new beta application.',
+            suspended: 'Beta access is currently suspended.',
+            not_applied: 'Apply for ChatByKarnav Beta and help shape what comes next.'
+          };
+          $('beta-promo-copy').textContent = promo[result.status] || promo.not_applied;
+          $('beta-apply-now').textContent = result.status === 'pending' ? 'View Application Status' : 'Apply for Beta Now';
+        }
         $('profile-beta-apply').dataset.betaStatus = result.status;
       } catch (error) {
         $('beta-access-status').textContent = error.message || 'Could not load beta status.';
@@ -2094,6 +2125,24 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     }
 
     function closeBetaApplication() { betaModal.classList.add('hidden'); }
+    async function handleBetaPromoClick() {
+      if (!user) {
+        sessionStorage.setItem('cbk_open_beta_application', '1');
+        $('welcome-screen').classList.add('hidden');
+        $('login').classList.remove('hidden');
+        setAuthMode('signin');
+        setStatus('auth-status', 'Sign in or create an account to apply for beta access.');
+        $('auth-email')?.focus();
+        return;
+      }
+      await refreshBetaStatus();
+      if ($('profile-beta-apply').dataset.betaStatus === 'approved') {
+        window.location.href = '/beta/';
+        return;
+      }
+      openBetaApplication();
+    }
+    $('beta-apply-now').addEventListener('click', handleBetaPromoClick);
     $('welcome-beta-apply').addEventListener('click', openBetaApplication);
     $('beta-application-close').addEventListener('click', closeBetaApplication);
     $('beta-application-cancel').addEventListener('click', closeBetaApplication);
