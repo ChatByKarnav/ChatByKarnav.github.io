@@ -1746,8 +1746,10 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
           await awAccount.createEmailPasswordSession({ email, password });
           const wantsEmailUpdates = $('email-updates-optin').checked;
           await awAccount.updatePrefs({
-            emailUpdates: wantsEmailUpdates,
-            emailUpdatesConsentAt: wantsEmailUpdates ? new Date().toISOString() : null
+            prefs: {
+              emailUpdates: wantsEmailUpdates,
+              emailUpdatesConsentAt: wantsEmailUpdates ? new Date().toISOString() : null
+            }
           });
           await upsertDoc(DB_ID, 'publicProfiles', created.$id, {
             uid: created.$id,
@@ -2136,8 +2138,17 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         return;
       }
       await refreshBetaStatus();
-      if ($('profile-beta-apply').dataset.betaStatus === 'approved') {
+      const betaStatus = $('profile-beta-apply').dataset.betaStatus;
+      if (betaStatus === 'approved') {
         window.location.href = '/beta/';
+        return;
+      }
+      if (betaStatus === 'pending') {
+        showToast('Your beta application is already awaiting review.');
+        return;
+      }
+      if (betaStatus === 'suspended') {
+        showToast('Your beta access is currently suspended. Please contact support.', true);
         return;
       }
       openBetaApplication();
