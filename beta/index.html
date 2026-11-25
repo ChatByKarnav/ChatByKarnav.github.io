@@ -2941,6 +2941,147 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     window.addEventListener('focus', () => { publishBetaPresence(); refreshBetaPeerPresence(); });
     window.addEventListener('pagehide', () => { publishBetaPresence(); });
     publishBetaPresence();
+
+    // === BETA-ONLY READ-ONLY APPWRITE INSIGHTS ===
+    // These tools read existing message, conversation and public profile rows.
+    // They deliberately do not create tables, mutate messages, or change permissions.
+    async function betaInsightLoadMessages() {
+      if (!user) throw new Error('Sign in to use live insights.');
+      const convId = active || 'global';
+      const result = await awDb.listDocuments(DB_ID, 'messages', [
+        Query.equal('convId', convId),
+        Query.orderDesc('$createdAt'),
+        Query.limit(100)
+      ]);
+      return (result.documents || []).filter(m =>
+        !(Array.isArray(m.deletedFor) && m.deletedFor.includes(user.$id)) &&
+        !blockedUsers.includes(m.sender)
+      );
+    }
+    async function betaInsightGetProfiles(ids) {
+      const unique = [...new Set((ids || []).filter(Boolean))].slice(0, 30);
+      return Promise.all(unique.map(async uid => {
+        try {
+          const p = await awDb.getDocument(DB_ID, 'publicProfiles', uid);
+          return { uid, name: p.name || 'Member', avatar: p.avatar || '🙂', lastSeen: p.lastSeen || '' };
+        } catch (_) {
+          return { uid, name: uid === user?.$id ? (profile.name || user.name || 'You') : 'Member', avatar: '🙂', lastSeen: '' };
+        }
+      }));
+    }
+    function betaInsightWhen(value) {
+      if (!value) return 'No activity recorded';
+      const stamp = Date.parse(value);
+      if (!Number.isFinite(stamp)) return 'Last active time unavailable';
+      const age = Math.max(0, Date.now() - stamp);
+      if (age < 65000) return 'Online now';
+      const mins = Math.floor(age / 60000);
+      if (mins < 60) return 'Last seen ' + Math.max(1, mins) + ' min ago';
+      if (mins < 1440) return 'Last seen ' + Math.floor(mins / 60) + ' hr ago';
+      return 'Last seen ' + new Date(stamp).toLocaleString();
+    }
+    async function betaInsightConversationContext(messages) {
+      let members = [];
+      let title = active === 'global' ? 'Community chat' : 'Conversation';
+      if (active !== 'global') {
+        try {
+          const conversation = await awDb.getDocument(DB_ID, 'conversations', active);
+          members = Array.isArray(conversation.members) ? conversation.members : [];
+          title = conversation.isGroup ? (conversation.name || 'Group chat') : (activePeer?.name || conversation.peerName || 'Private chat');
+        } catch (_) {}
+      } else {
+        members = [...new Set((messages || []).map(m => m.sender).filter(Boolean))];
+      }
+      if (user?.$id && !members.includes(user.$id)) members.push(user.$id);
+      return { members, title };
+    }
+    window.CBKBetaBackend = Object.freeze({
+      async analytics() {
+        const messages = await betaInsightLoadMessages();
+        const senders = [...new Set(messages.map(m => m.sender).filter(Boolean))];
+        const hours = {};
+        let reactions = 0, polls = 0, images = 0, videos = 0, files = 0, audio = 0;
+        for (const m of messages) {
+          const h = m.$createdAt ? new Date(m.$createdAt).getHours() : null;
+          if (h !== null && Number.isFinite(h)) hours[h] = (hours[h] || 0) + 1;
+          if (m.image) images++;
+          if (m.video) videos++;
+          if (m.fileUrl) files++;
+          if (m.audio) audio++;
+          if (typeof m.text === 'string' && m.text.startsWith('CBK_POLL_V1:')) polls++;
+          try {
+            const map = typeof m.reactions === 'string' ? JSON.parse(m.reactions || '{}') : (m.reactions || {});
+            reactions += Object.keys(map || {}).length;
+          } catch (_) {}
+        }
+        const busiest = Object.entries(hours).sort((a,b) => b[1]-a[1])[0];
+        const context = await betaInsightConversationContext(messages);
+        return {
+          title: context.title, loaded: messages.length,
+          metrics: [
+            ['Messages analysed', messages.length + (messages.length === 100 ? ' (latest 100)' : '')],
+            ['Participants', senders.length],
+            ['Emoji reactions', reactions],
+            ['Polls', polls],
+            ['Photos', images], ['Videos', videos], ['Files', files], ['Voice notes', audio],
+            ['Busiest hour', busiest ? String(busiest[0]).padStart(2,'0') + ':00 (' + busiest[1] + ' messages)' : 'Not enough timestamp data']
+          ]
+        };
+      },
+      async receipts() {
+        const messages = await betaInsightLoadMessages();
+        const context = await betaInsightConversationContext(messages);
+        const profiles = await betaInsightGetProfiles(context.members);
+        const names = Object.fromEntries(profiles.map(p => [p.uid, p.name]));
+        const items = messages.filter(m => m.sender === user.$id).slice(0, 20).map(m => {
+          const recipients = context.members.filter(uid => uid !== user.$id);
+          const delivered = Array.isArray(m.deliveredTo) ? m.deliveredTo : [];
+          const read = Array.isArray(m.readBy) ? m.readBy : [];
+          return {
+            message: (m.text || (m.image ? '📷 Photo' : m.video ? '🎥 Video' : m.audio ? '🎤 Voice note' : m.fileUrl ? '📎 File' : 'Message')).slice(0, 120),
+            when: m.$createdAt ? new Date(m.$createdAt).toLocaleString() : '',
+            delivered: recipients.filter(uid => delivered.includes(uid)).map(uid => names[uid] || 'Member'),
+            read: recipients.filter(uid => read.includes(uid)).map(uid => names[uid] || 'Member'),
+            total: recipients.length
+          };
+        });
+        return { title: context.title, items };
+      },
+      async activity() {
+        const messages = await betaInsightLoadMessages();
+        const context = await betaInsightConversationContext(messages);
+        const profiles = await betaInsightGetProfiles(context.members);
+        return {
+          title: context.title,
+          members: profiles.map(p => ({ name: p.uid === user.$id ? (p.name + ' (you)') : p.name, avatar: p.avatar, status: betaInsightWhen(p.lastSeen), online: !!p.lastSeen && Date.now() - Date.parse(p.lastSeen) < 65000 }))
+            .sort((a,b) => Number(b.online)-Number(a.online) || a.name.localeCompare(b.name))
+        };
+      },
+      async polls() {
+        const messages = await betaInsightLoadMessages();
+        const context = await betaInsightConversationContext(messages);
+        const polls = [];
+        for (const m of messages) {
+          if (typeof m.text !== 'string' || !m.text.startsWith('CBK_POLL_V1:')) continue;
+          try {
+            const poll = JSON.parse(m.text.slice('CBK_POLL_V1:'.length));
+            if (!poll || typeof poll.question !== 'string' || !Array.isArray(poll.options)) continue;
+            const votes = poll.votes && typeof poll.votes === 'object' ? poll.votes : {};
+            const total = Object.keys(votes).length;
+            polls.push({
+              question: poll.question, total,
+              options: poll.options.slice(0,6).map((option,index) => {
+                const count = Object.values(votes).filter(v => Number(v) === index).length;
+                return { option: String(option), count, percent: total ? Math.round(count*100/total) : 0 };
+              })
+            });
+          } catch (_) {}
+        }
+        return { title: context.title, polls: polls.slice(0, 20) };
+      }
+    });
+    // === END BETA-ONLY READ-ONLY APPWRITE INSIGHTS ===
+
     // === END BETA FEATURE PACK ===
 
   </script>
