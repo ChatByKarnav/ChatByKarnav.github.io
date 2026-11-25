@@ -1044,6 +1044,8 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       document.querySelectorAll('.auth-toggle button').forEach((b) => b.classList.toggle('active', b.dataset.mode === mode));
       $('auth-submit').textContent = mode === 'signup' ? 'Create account' : 'Sign in';
       $('forgot-password').classList.toggle('hidden', mode === 'signup');
+      $('email-updates-choice').classList.toggle('hidden', mode !== 'signup');
+      if (mode !== 'signup') $('email-updates-optin').checked = false;
       $('auth-email')?.focus();
     }
 
