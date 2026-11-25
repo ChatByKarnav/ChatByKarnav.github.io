@@ -503,6 +503,10 @@
         <div class="memoji-picker" id="memoji-picker" aria-label="Choose your memoji"></div>
         <input id="memoji-value" type="hidden" value="🙂">
       </div>
+      <label class="field hidden" id="email-updates-choice" style="display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.45;">
+        <input id="email-updates-optin" type="checkbox" style="width:auto;margin-top:3px;flex:0 0 auto;">
+        <span><strong>Email me ChatByKarnav updates</strong><br><span class="muted">Receive occasional announcements about new features, improvements and important website updates. You can change this preference later.</span></span>
+      </label>
       <div class="auth-actions"><button id="auth-submit" class="btn primary" type="submit">Sign in</button></div>
       <div id="auth-status" class="auth-status" role="status" aria-live="polite"></div>
     </form>
@@ -1751,6 +1755,13 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         if (currentAuthMode === 'signup') {
           const created = await awAccount.create({ userId: ID.unique(), email, password, name: defaultName });
           await awAccount.createEmailPasswordSession({ email, password });
+          const wantsEmailUpdates = $('email-updates-optin').checked;
+          await awAccount.updatePrefs({
+            prefs: {
+              emailUpdates: wantsEmailUpdates,
+              emailUpdatesConsentAt: wantsEmailUpdates ? new Date().toISOString() : null
+            }
+          });
           await upsertDoc(DB_ID, 'publicProfiles', created.$id, {
             uid: created.$id,
             name: defaultName,
