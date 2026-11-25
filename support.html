@@ -2,63 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0a84ff">
-  <meta name="description" content="Help and support information for ChatByKarnav.">
-  <title>Support | ChatByKarnav</title>
+  <meta name="description" content="Contact ChatByKarnav support to ask a question, report a bug or share feedback.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://chatbykarnav.github.io/support.html">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="ChatByKarnav">
+  <meta property="og:title" content="ChatByKarnav Support & Contact">
+  <meta property="og:description" content="Send a question, bug report or suggestion to the ChatByKarnav team.">
+  <meta property="og:url" content="https://chatbykarnav.github.io/support.html">
+  <title>Support & Contact | ChatByKarnav</title>
   <style>
-    :root { color-scheme: light dark; --bg:#eef2f9; --surface:rgba(255,255,255,.78); --text:#181920; --muted:#5c6474; --blue:#0a84ff; --border:rgba(100,116,139,.22); }
-    @media (prefers-color-scheme:dark) { :root { --bg:#0d111b; --surface:rgba(30,36,52,.82); --text:#f4f6fb; --muted:#a6afc1; --border:rgba(255,255,255,.14); } }
-    * { box-sizing:border-box; }
-    body { margin:0; min-height:100vh; padding:28px 16px; display:grid; place-items:center; background:radial-gradient(circle at 15% 15%,rgba(10,132,255,.15),transparent 38%),radial-gradient(circle at 85% 85%,rgba(124,58,237,.12),transparent 38%),var(--bg); color:var(--text); font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif; }
-    main { width:min(100%,720px); padding:clamp(24px,5vw,48px); border:1px solid var(--border); border-radius:26px; background:var(--surface); box-shadow:0 20px 60px rgba(20,30,60,.12); }
-    .brand { color:var(--blue); font-weight:800; letter-spacing:-.04em; font-size:1rem; }
-    h1 { margin:12px 0 8px; font-size:clamp(2rem,6vw,2.8rem); line-height:1.1; letter-spacing:-.05em; }
-    .intro { color:var(--muted); margin:0 0 28px; }
-    section { padding:20px 0; border-top:1px solid var(--border); }
-    h2 { font-size:1.12rem; margin:0 0 8px; }
-    p { margin:8px 0; }
-    a { color:var(--blue); text-underline-offset:3px; }
-    .action { display:inline-block; margin-top:10px; padding:11px 17px; border-radius:12px; background:var(--blue); color:white; font-weight:700; text-decoration:none; }
-    .notice { padding:14px 16px; border-radius:14px; background:rgba(245,158,11,.10); border:1px solid rgba(245,158,11,.28); }
-    footer { padding-top:20px; border-top:1px solid var(--border); color:var(--muted); font-size:.9rem; }
+    :root{color-scheme:light dark;--bg:#eef2f9;--surface:rgba(255,255,255,.84);--text:#181920;--muted:#5c6474;--blue:#0a84ff;--line:rgba(100,116,139,.22)}
+    @media(prefers-color-scheme:dark){:root{--bg:#0d111b;--surface:rgba(30,36,52,.88);--text:#f4f6fb;--muted:#a6afc1;--line:rgba(255,255,255,.14)}}
+    *{box-sizing:border-box}body{margin:0;padding:28px 16px;min-height:100vh;background:radial-gradient(circle at 15% 12%,rgba(10,132,255,.16),transparent 35%),radial-gradient(circle at 85% 85%,rgba(124,58,237,.12),transparent 35%),var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+    main{width:min(100%,760px);margin:0 auto}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:22px}.brand{font-weight:850;letter-spacing:-.04em;color:var(--blue)}nav{display:flex;gap:14px;flex-wrap:wrap}a{color:var(--blue);text-underline-offset:4px}
+    .card{padding:clamp(22px,5vw,38px);border:1px solid var(--line);border-radius:24px;background:var(--surface);box-shadow:0 18px 50px rgba(20,30,60,.1);margin-bottom:18px}h1{font-size:clamp(2rem,6vw,3rem);line-height:1.1;letter-spacing:-.05em;margin:0 0 8px}.muted{color:var(--muted)}label{display:block;font-weight:700;margin:16px 0 6px}input,select,textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--text);font:inherit}textarea{min-height:150px;resize:vertical}input:focus,select:focus,textarea:focus{outline:3px solid rgba(10,132,255,.2);border-color:var(--blue)}button{margin-top:18px;padding:13px 18px;border:0;border-radius:12px;background:var(--blue);color:#fff;font:inherit;font-weight:800;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.notice{padding:13px 15px;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.08);border-radius:14px;font-size:.92rem}.status{min-height:24px;margin-top:14px;font-weight:650}.hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}.foot{color:var(--muted);font-size:.9rem;padding:8px 2px}
   </style>
 </head>
 <body>
-  <main>
-    <div class="brand">ChatByKarnav</div>
-    <h1>Support</h1>
-    <p class="intro">Help information for people using ChatByKarnav.</p>
-
-    <section>
-      <h2>How to get help</h2>
-      <p>ChatByKarnav does not currently offer a dedicated support email address or private support-ticket service.</p>
-      <p>For technical problems, bugs, or suggestions, you can use the project's GitHub issue tracker. Please check existing reports before opening a new one and describe the problem clearly, including the steps needed to reproduce it.</p>
-      <a class="action" href="https://github.com/ChatByKarnav/ChatByKarnav.github.io/issues" target="_blank" rel="noopener noreferrer">Open GitHub issue tracker</a>
-    </section>
-
-    <section>
-      <h2>Account and sign-in help</h2>
-      <p>If you cannot sign in, check that you are using the correct email address and password. If password recovery is available for your account, use the password-reset option provided by the app.</p>
-    </section>
-
-    <section>
-      <h2>Safety and unwanted contact</h2>
-      <p>Use the blocking and reporting controls available in the app when dealing with unwanted contact or inappropriate content. If you believe someone is in immediate danger, contact the appropriate local emergency services.</p>
-    </section>
-
-    <section>
-      <h2>Protect your information</h2>
-      <div class="notice">
-        <strong>Important:</strong> GitHub issue reports may be publicly visible. Never include passwords, sign-in codes, private chat messages, personal documents, payment details, or other sensitive information. Remove or mask personal information from screenshots and logs before sharing them.
-      </div>
-    </section>
-
-    <footer>
-      <p>For information about using the service, read the <a href="./terms.html">Terms and Conditions</a> if available.</p>
-      <p><a href="./">Back to ChatByKarnav</a></p>
-      <p>ChatByKarnav · Support information</p>
-    </footer>
-  </main>
+<main>
+  <header class="top"><a class="brand" href="./">ChatByKarnav</a><nav aria-label="Main navigation"><a href="./">Home</a><a href="./about.html">About</a><a href="./beta/">Beta access</a></nav></header>
+  <section class="card">
+    <h1>Support &amp; Contact</h1>
+    <p class="muted">Send a question, report a problem or share an idea. Your message will be sent to the ChatByKarnav support inbox.</p>
+    <div class="notice"><strong>Privacy reminder:</strong> Never include your password, one-time codes, private chat messages, payment information or sensitive documents. Only include information needed to understand your issue.</div>
+    <form id="support-form" action="https://formsubmit.co/ajax/karnavgandhi21@gmail.com" method="POST">
+      <input type="hidden" name="_subject" value="New ChatByKarnav support message">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="true">
+      <input type="hidden" name="_blacklist" value="crypto,loan,casino">
+      <div class="hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="_honey" tabindex="-1" autocomplete="off"></label></div>
+      <label for="name">Your name</label><input id="name" name="name" maxlength="100" autocomplete="name" required>
+      <label for="email">Your email address</label><input id="email" name="email" type="email" maxlength="254" autocomplete="email" required>
+      <label for="topic">What is this about?</label>
+      <select id="topic" name="topic" required>
+        <option value="">Choose a topic</option><option>Bug report</option><option>Account or sign-in help</option><option>Beta access</option><option>Suggestion or feedback</option><option>Other question</option>
+      </select>
+      <label for="message">Message</label><textarea id="message" name="message" minlength="10" maxlength="5000" required placeholder="Describe what happened and what you expected…"></textarea>
+      <button id="send" type="submit">Send message</button>
+      <p id="form-status" class="status" role="status" aria-live="polite"></p>
+    </form>
+  </section>
+  <section class="card">
+    <h2>What happens next?</h2>
+    <p class="muted">Your submission is forwarded to the project support inbox. A reply is not automatic; responses depend on availability. Please do not submit the same request repeatedly.</p>
+  </section>
+  <footer class="foot">ChatByKarnav · <a href="./about.html">About</a> · <a href="./">Home</a> · <a href="https://github.com/ChatByKarnav/ChatByKarnav.github.io/issues">Public issue tracker</a></footer>
+</main>
+<script>
+  const form=document.getElementById('support-form');
+  const status=document.getElementById('form-status');
+  const send=document.getElementById('send');
+  form.addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(!form.reportValidity()) return;
+    send.disabled=true;send.textContent='Sending…';status.textContent='Sending your message securely…';
+    try{
+      const response=await fetch(form.action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok || result.success===false) throw new Error(result.message||'The message could not be sent. Please try again.');
+      form.reset();status.textContent='Thanks! Your message was submitted. The support team has been notified.';
+    }catch(error){
+      status.textContent=error.message||'Unable to send right now. Please try again later.';
+    }finally{send.disabled=false;send.textContent='Send message';}
+  });
+</script>
 </body>
 </html>
