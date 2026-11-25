@@ -682,6 +682,11 @@
 
         <div class="form-card">
           <h3 style="margin-top:0;">Account settings</h3>
+          <label class="field" style="display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.45;">
+            <input id="profile-email-updates" type="checkbox" style="width:auto;margin-top:3px;flex:0 0 auto;">
+            <span><strong>Email me ChatByKarnav updates</strong><br><span class="muted">Receive occasional announcements about new features, improvements and important website updates.</span></span>
+          </label>
+          <div id="profile-email-updates-status" class="auth-status" role="status" aria-live="polite"></div>
           <div class="profile-actions">
             <button type="button" id="change-password-btn" class="btn secondary">Change password</button>
             <button type="button" id="delete-account-btn" class="btn danger-btn">Delete account</button>
@@ -1902,6 +1907,12 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         name: saved.name || saved.displayName || fallbackName,
         avatar: saved.avatar || saved.memoji || '🙂'
       };
+      try {
+        const accountPrefs = await awAccount.getPrefs();
+        $('profile-email-updates').checked = accountPrefs.emailUpdates === true;
+      } catch (_) {
+        $('profile-email-updates').checked = false;
+      }
 
       $('display-name').value = profile.name;
       $('profile-memoji').value = profile.avatar;
@@ -2197,6 +2208,27 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
     });
 
     $('profile-form').addEventListener('submit', saveProfile);
+    $('profile-email-updates').addEventListener('change', async () => {
+      const checkbox = $('profile-email-updates');
+      checkbox.disabled = true;
+      setStatus('profile-email-updates-status', 'Saving preference…');
+      try {
+        const currentPrefs = await awAccount.getPrefs();
+        await awAccount.updatePrefs({
+          prefs: {
+            ...(currentPrefs || {}),
+            emailUpdates: checkbox.checked,
+            emailUpdatesConsentAt: checkbox.checked ? new Date().toISOString() : null
+          }
+        });
+        setStatus('profile-email-updates-status', checkbox.checked ? 'Email update preference saved.' : 'Email updates turned off.');
+      } catch (error) {
+        checkbox.checked = !checkbox.checked;
+        setStatus('profile-email-updates-status', error.message || 'Could not save this preference.', true);
+      } finally {
+        checkbox.disabled = false;
+      }
+    });
 
     $('change-password-btn').addEventListener('click', async () => {
       const newPass = prompt('Enter new password (min 8 characters):');
