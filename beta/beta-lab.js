@@ -114,7 +114,8 @@ function render(){
  grid.innerHTML='';const visible=current==='All'?[...tools,...backendTools]:current==='Live Insights'?backendTools:tools.filter(t=>t[0]===current);
  visible.forEach(t=>{let b=document.createElement('button');b.type='button';b.className='lab-tool';let h=document.createElement('strong'),p=document.createElement('span');h.textContent=t[1]+' '+t[2];p.textContent=t[3];b.append(h,p);b.onclick=()=>{if(typeof t[4]==='string'){openBackendReport(t[4],t[2]);return}try{t[4]()}catch(e){console.error('Beta Lab:',e);toast('This tool could not run.')}};grid.appendChild(b)});
 }
-render();launch.onclick=()=>{panel.classList.add('open');render()};panel.querySelector('.lab-close').onclick=()=>panel.classList.remove('open');panel.onclick=e=>{if(e.target===panel)panel.classList.remove('open')};document.addEventListener('keydown',e=>{if(e.key==='Escape')panel.classList.remove('open')});
+render();launch.onclick=()=>{panel.classList.add('open');render()};
+document.getElementById('beta-lab-open-profile')?.addEventListener('click',()=>launch.click());panel.querySelector('.lab-close').onclick=()=>panel.classList.remove('open');panel.onclick=e=>{if(e.target===panel)panel.classList.remove('open')};document.addEventListener('keydown',e=>{if(e.key==='Escape')panel.classList.remove('open')});
 let accent=read('accent',null);if(accent)document.documentElement.style.setProperty('--blue',accent);
 let fs=read('fontSize',16);bubbles().forEach(x=>x.style.fontSize=fs+'px');
 console.info('ChatByKarnav Beta Lab ready:',tools.length,'tools');
