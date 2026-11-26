@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://chatbykarnav.github.io/</loc><lastmod>2026-11-25</lastmod><priority>1.0</priority></url>
-  <url><loc>https://chatbykarnav.github.io/about.html</loc><lastmod>2026-11-25</lastmod><priority>0.8</priority></url>
-  <url><loc>https://chatbykarnav.github.io/support.html</loc><lastmod>2026-11-25</lastmod><priority>0.5</priority></url>
+  <url><loc>https://chatbykarnav.github.io/</loc><lastmod>2026-11-26</lastmod><priority>1.0</priority></url>
+  <url><loc>https://chatbykarnav.github.io/about.html</loc><lastmod>2026-11-26</lastmod><priority>0.8</priority></url>
+  <url><loc>https://chatbykarnav.github.io/support.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
   <url><loc>https://chatbykarnav.github.io/privacy.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
   <url><loc>https://chatbykarnav.github.io/terms.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
+  <url><loc>https://chatbykarnav.github.io/community-guidelines.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
+  <url><loc>https://chatbykarnav.github.io/child-safety.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
+  <url><loc>https://chatbykarnav.github.io/account-deletion.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
+  <url><loc>https://chatbykarnav.github.io/report-abuse.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
+  <url><loc>https://chatbykarnav.github.io/copyright.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
+  <url><loc>https://chatbykarnav.github.io/accessibility.html</loc><lastmod>2026-11-26</lastmod><priority>0.5</priority></url>
 </urlset>
