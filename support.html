@@ -66,7 +66,7 @@
     try{
       await tables.createRow({
         databaseId:'default',tableId:'bugReports',rowId:Appwrite.ID.unique(),
-        data:{uid:'00000000-0000-4000-8000-000000000000',displayName:name.slice(0,40),title:topic,description:'Reply email: '+email+'\\n\\nMessage:\\n'+message,severity:'support',status:'open',createdAt:new Date().toISOString(),adminNote:''},
+        data:{uid:'00000000-0000-4000-8000-000000000000',displayName:name.slice(0,40),title:topic,description:'Reply email: '+email+'\n\nMessage:\n'+message,severity:'support',status:'open',createdAt:new Date().toISOString(),adminNote:''},
         permissions:[]
       });
       form.reset();
