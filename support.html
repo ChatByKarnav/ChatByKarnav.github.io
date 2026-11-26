@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#0a84ff">
-  <meta name="description" content="Contact ChatByKarnav support to ask a question, report a bug or share feedback.">
+  <meta name="description" content="Contact ChatByKarnav support through KNet Core.">
   <meta name="robots" content="index,follow">
   <link rel="canonical" href="https://chatbykarnav.github.io/support.html">
   <meta property="og:type" content="website">
@@ -19,11 +19,11 @@
     *{box-sizing:border-box}body{margin:0;padding:28px 16px;min-height:100vh;background:radial-gradient(circle at 15% 12%,rgba(10,132,255,.16),transparent 35%),radial-gradient(circle at 85% 85%,rgba(124,58,237,.12),transparent 35%),var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
     main{width:min(100%,760px);margin:0 auto}.top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:22px}.brand{font-weight:850;letter-spacing:-.04em;color:var(--blue)}nav{display:flex;gap:14px;flex-wrap:wrap}a{color:var(--blue);text-underline-offset:4px}
     .card{padding:clamp(22px,5vw,38px);border:1px solid var(--line);border-radius:24px;background:var(--surface);box-shadow:0 18px 50px rgba(20,30,60,.1);margin-bottom:18px}h1{font-size:clamp(2rem,6vw,3rem);line-height:1.1;letter-spacing:-.05em;margin:0 0 8px}.muted{color:var(--muted)}label{display:block;font-weight:700;margin:16px 0 6px}input,select,textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--text);font:inherit}textarea{min-height:150px;resize:vertical}input:focus,select:focus,textarea:focus{outline:3px solid rgba(10,132,255,.2);border-color:var(--blue)}button{margin-top:18px;padding:13px 18px;border:0;border-radius:12px;background:var(--blue);color:#fff;font:inherit;font-weight:800;cursor:pointer}button:disabled{opacity:.6;cursor:wait}.notice{padding:13px 15px;border:1px solid rgba(245,158,11,.3);background:rgba(245,158,11,.08);border-radius:14px;font-size:.92rem}.status{min-height:24px;margin-top:14px;font-weight:650}.hp{position:absolute;left:-5000px;width:1px;height:1px;overflow:hidden}.foot{color:var(--muted);font-size:.9rem;padding:8px 2px}
-  </style>
+  .knet-pill{font-size:11px;font-weight:800;letter-spacing:.08em;padding:5px 9px;border:1px solid rgba(10,132,255,.3);border-radius:999px;color:var(--blue);white-space:nowrap}\n  </style>
 </head>
 <body>
 <main>
-  <header class="top"><a class="brand" href="./">ChatByKarnav</a><nav aria-label="Main navigation"><a href="./">Home</a><a href="./about.html">About</a><a href="./beta/">Beta access</a><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a><a href="./community-guidelines.html">Community Guidelines</a><a href="./child-safety.html">Child Safety</a><a href="./account-deletion.html">Account & Data Deletion</a><a href="./report-abuse.html">Report Abuse</a><a href="./copyright.html">Copyright</a><a href="./accessibility.html">Accessibility</a></nav></header>
+  <header class="top"><a class="brand" href="./">ChatByKarnav</a><span class="knet-pill">KNet Core</span><nav aria-label="Main navigation"><a href="./">Home</a><a href="./about.html">About</a><a href="./beta/">Beta access</a><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a><a href="./community-guidelines.html">Community Guidelines</a><a href="./child-safety.html">Child Safety</a><a href="./account-deletion.html">Account & Data Deletion</a><a href="./report-abuse.html">Report Abuse</a><a href="./copyright.html">Copyright</a><a href="./accessibility.html">Accessibility</a></nav></header>
   <section class="card">
     <h1>Support &amp; Contact</h1>
     <p class="muted">Send a question, report a problem or share an idea. Your message will be saved securely and reviewed in the ChatByKarnav Admin Portal.</p>
@@ -60,10 +60,10 @@
       const payload={action:'support.submit',name:document.getElementById('name').value.trim(),email:document.getElementById('email').value.trim(),topic:document.getElementById('topic').value,message:document.getElementById('message').value.trim(),website:document.getElementById('website').value};
       const response=await fetch('https://nyc.cloud.appwrite.io/v1/functions/beta-api/executions',{method:'POST',headers:{'Content-Type':'application/json','X-Appwrite-Project':'6af69d7f00178e3e64c2'},body:JSON.stringify({body:JSON.stringify(payload),async:false,method:'POST',path:'/',headers:{'Content-Type':'application/json'}})});
       const execution=await response.json().catch(()=>null);
-      if(!response.ok||!execution)throw new Error(execution?.message||'The support service could not be reached.');
+      if(!response.ok||!execution)throw new Error(execution?.message||'KNet Core could not be reached. Please try again in a moment.');
       let result={};try{result=JSON.parse(execution.responseBody||'{}')}catch{}
-      if(execution.responseStatusCode<200||execution.responseStatusCode>=300||!result.ok)throw new Error(result.error||'The support request could not be saved.');
-      form.reset();status.textContent='Your support request has been submitted to the ChatByKarnav Admin Portal.';
+      if(execution.responseStatusCode<200||execution.responseStatusCode>=300||!result.ok)throw new Error(result.error||'KNet Core could not save your request. Please try again.');
+      form.reset();status.textContent='Your request has been received by KNet Core and added to the support queue.';
     }catch(error){status.textContent=error.message||'Unable to submit right now. Please try again later.';}
     finally{send.disabled=false;send.textContent='Send message';}
   });
