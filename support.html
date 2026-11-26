@@ -6,7 +6,6 @@
   <meta name="theme-color" content="#0a84ff">
   <meta name="description" content="Contact ChatByKarnav support to ask a question, report a bug or share feedback.">
   <meta name="robots" content="index,follow">
-  <script src="https://cdn.jsdelivr.net/npm/appwrite@29.2.0"></script>
   <link rel="canonical" href="https://chatbykarnav.github.io/support.html">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="ChatByKarnav">
@@ -27,10 +26,14 @@
   <header class="top"><a class="brand" href="./">ChatByKarnav</a><nav aria-label="Main navigation"><a href="./">Home</a><a href="./about.html">About</a><a href="./beta/">Beta access</a><a href="./privacy.html">Privacy</a><a href="./terms.html">Terms</a><a href="./community-guidelines.html">Community Guidelines</a><a href="./child-safety.html">Child Safety</a><a href="./account-deletion.html">Account & Data Deletion</a><a href="./report-abuse.html">Report Abuse</a><a href="./copyright.html">Copyright</a><a href="./accessibility.html">Accessibility</a></nav></header>
   <section class="card">
     <h1>Support &amp; Contact</h1>
-    <p class="muted">Send a question, report a problem or share an idea. Your message will be saved securely for the ChatByKarnav team to review in the Admin Portal.</p>
+    <p class="muted">Send a question, report a problem or share an idea. Your message will be sent to the ChatByKarnav support inbox.</p>
     <div class="notice"><strong>Privacy reminder:</strong> Never include your password, one-time codes, private chat messages, payment information or sensitive documents. Only include information needed to understand your issue.</div>
-    <form id="support-form">
-      <div class="hp" aria-hidden="true"><label>Leave this field empty<input id="website" type="text" tabindex="-1" autocomplete="off"></label></div>
+    <form id="support-form" action="https://formsubmit.co/ajax/karnavgandhi21@gmail.com" method="POST">
+      <input type="hidden" name="_subject" value="New ChatByKarnav support message">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="true">
+      <input type="hidden" name="_blacklist" value="crypto,loan,casino">
+      <div class="hp" aria-hidden="true"><label>Leave this field empty<input type="text" name="_honey" tabindex="-1" autocomplete="off"></label></div>
       <label for="name">Your name</label><input id="name" name="name" maxlength="100" autocomplete="name" required>
       <label for="email">Your email address</label><input id="email" name="email" type="email" maxlength="254" autocomplete="email" required>
       <label for="topic">What is this about?</label>
@@ -44,7 +47,7 @@
   </section>
   <section class="card">
     <h2>What happens next?</h2>
-    <p class="muted">Your request appears in the private Admin Portal. Replies are not automatic; please include a correct email address if you need a response.</p>
+    <p class="muted">Your submission is forwarded to the project support inbox. A reply is not automatic; responses depend on availability. Please do not submit the same request repeatedly.</p>
   </section>
   <footer class="foot">ChatByKarnav · <a href="./about.html">About</a> · <a href="./">Home</a> · <a href="https://github.com/ChatByKarnav/ChatByKarnav.github.io/issues">Public issue tracker</a></footer>
 </main>
@@ -52,27 +55,22 @@
   const form=document.getElementById('support-form');
   const status=document.getElementById('form-status');
   const send=document.getElementById('send');
-  const client=new Appwrite.Client().setEndpoint('https://nyc.cloud.appwrite.io/v1').setProject('6af69d7f00178e3e64c2');
-  const tables=new Appwrite.TablesDB(client);
   form.addEventListener('submit',async event=>{
     event.preventDefault();
     if(!form.reportValidity()) return;
-    if(document.getElementById('website').value.trim()) return;
-    const name=document.getElementById('name').value.trim();
-    const email=document.getElementById('email').value.trim();
-    const topic=document.getElementById('topic').value;
-    const message=document.getElementById('message').value.trim();
-    send.disabled=true;send.textContent='Submitting…';status.textContent='Saving your request securely…';
+    send.disabled=true;send.textContent='Sending…';status.textContent='Sending your message securely…';
     try{
-      await tables.createRow({
-        databaseId:'default',tableId:'bugReports',rowId:Appwrite.ID.unique(),
-        data:{uid:'00000000-0000-4000-8000-000000000000',displayName:name.slice(0,40),title:topic,description:'Reply email: '+email+'\n\nMessage:\n'+message,severity:'support',status:'open',createdAt:new Date().toISOString(),adminNote:''},
-        permissions:[]
-      });
-      form.reset();
-      status.textContent='Your support request has been submitted to the ChatByKarnav Admin Portal.';
+      const response=await fetch(form.action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
+      const result=await response.json().catch(()=>null);
+      if(!response.ok || !result || result.success===false || result.success==='false') {
+        throw new Error(result?.message || 'The support service did not accept the message. If this is the first submission, check the support inbox for a FormSubmit activation email and activate the form.');
+      }
+      if(result.success!==true && result.success!=='true') {
+        throw new Error(result.message || 'The support service returned an unclear response. Please do not assume your message was delivered.');
+      }
+      form.reset();status.textContent='Thanks! The support service accepted your submission. If this is the first use, complete the FormSubmit activation email to enable delivery.';
     }catch(error){
-      status.textContent='We could not save your request. Please try again later.';
+      status.textContent=error.message||'Unable to send right now. Please try again later.';
     }finally{send.disabled=false;send.textContent='Send message';}
   });
 </script>
