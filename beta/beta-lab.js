@@ -86,12 +86,12 @@ const css=[
 '@media(max-width:600px){#ck-beta-lab-launch{right:10px;bottom:10px;padding:10px 13px}#ck-beta-lab .lab-window{height:96vh;border-radius:16px}#ck-beta-lab .lab-tools{grid-template-columns:1fr 1fr;padding:10px;gap:7px}#ck-beta-lab .lab-tool{padding:10px}}'
 ].join('\n');
 const st=document.createElement('style');st.textContent=css;document.head.appendChild(st);
-const launch=document.createElement('button');launch.id='ck-beta-lab-launch';launch.type='button';launch.textContent='🧪 Beta Lab · 64 tools';launch.setAttribute('aria-label','Open Beta Lab with 50 local tools and 4 live Appwrite insights');
-const panel=document.createElement('div');panel.id='ck-beta-lab';panel.innerHTML='<div class="lab-window" role="dialog" aria-modal="true" aria-label="Beta Lab"><div class="lab-head"><div><h2>🧪 Beta Lab</h2><div class="lab-sub">60 local tools + 4 live Appwrite insights · beta only</div></div><button class="lab-close" type="button" aria-label="Close">✕</button></div><div class="lab-tabs" role="tablist"></div><div class="lab-tools"></div><div class="lab-report hidden"></div><div class="lab-foot">60 local tools + 4 live Appwrite insights. Notes and drafts stay on this device; insights read existing beta chat data.</div></div>';
+const launch=document.createElement('button');launch.id='ck-beta-lab-launch';launch.type='button';launch.textContent='🧪 Beta Lab · 64 tools';launch.setAttribute('aria-label','Open Beta Lab with 50 local tools and 4 live KNet Insights');
+const panel=document.createElement('div');panel.id='ck-beta-lab';panel.innerHTML='<div class="lab-window" role="dialog" aria-modal="true" aria-label="Beta Lab"><div class="lab-head"><div><h2>🧪 Beta Lab</h2><div class="lab-sub">60 local tools + 4 live KNet insights · beta only</div></div><button class="lab-close" type="button" aria-label="Close">✕</button></div><div class="lab-tabs" role="tablist"></div><div class="lab-tools"></div><div class="lab-report hidden"></div><div class="lab-foot">60 local tools + 4 live KNet insights. Notes and drafts stay on this device; insights read existing beta chat data.</div></div>';
 document.body.append(launch,panel);
-const tabs=panel.querySelector('.lab-tabs'),grid=panel.querySelector('.lab-tools'),report=panel.querySelector('.lab-report'),cats=['All','Messaging','Appearance','Productivity','Experiments','Live Insights'];let current='All';
+const tabs=panel.querySelector('.lab-tabs'),grid=panel.querySelector('.lab-tools'),report=panel.querySelector('.lab-report'),cats=['All','Messaging','Appearance','Productivity','Experiments','KNet Insights'];let current='All';
 const backendTools=[
-['Live Insights','📊','Conversation analytics','Analyse the latest 100 messages stored in Appwrite.','analytics'],
+['Live Insights','📊','Conversation analytics','Analyse the latest 100 messages stored in KNet.','analytics'],
 ['Live Insights','✓','Read receipt explorer','See which members received and read your sent messages.','receipts'],
 ['Live Insights','🟢','Member activity board','See live and last-seen activity for conversation members.','activity'],
 ['Live Insights','🗳️','Poll results dashboard','Review live poll totals and option percentages from chat data.','polls']
@@ -100,7 +100,7 @@ function reportNode(tag,cls,txt){const n=document.createElement(tag);if(cls)n.cl
 async function openBackendReport(key,title){
  grid.classList.add('hidden');tabs.classList.add('hidden');report.classList.remove('hidden');report.innerHTML='';
  const head=reportNode('div','lab-report-head');const back=reportNode('button','lab-report-back','← Back');back.type='button';back.onclick=()=>{report.classList.add('hidden');tabs.classList.remove('hidden');grid.classList.remove('hidden')};const h=reportNode('h3','',title);head.append(back,h);report.append(head);
- const note=reportNode('p','lab-report-note','Loading the latest data from Appwrite…');report.append(note);
+ const note=reportNode('p','lab-report-note','Loading the latest data from KNet…');report.append(note);
  const content=reportNode('div','');report.append(content);
  try{
   const api=window.CBKBetaBackend;if(!api||typeof api[key]!=='function')throw new Error('Live insights are not available. Reload the beta page and try again.');
