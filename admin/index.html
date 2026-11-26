@@ -76,7 +76,7 @@ async function loadSupport(){
    const tr=document.createElement('tr');
    const cell=value=>{const td=document.createElement('td');td.textContent=value;return td;};
    const sender=cell(request.displayName||'Guest');
-   const emailMatch=String(request.description||'').match(/^Reply email:\\s*(.+)$/m);
+   const emailMatch=String(request.description||'').match(/^Reply email:\s*(.+)$/m);
    sender.title=emailMatch?emailMatch[1]:'';
    tr.append(sender,cell(request.title||'Other question'),cell(request.createdAt?new Date(request.createdAt).toLocaleString():'—'));
    const statusCell=cell(''),select=document.createElement('select');
@@ -84,7 +84,7 @@ async function loadSupport(){
    select.value=request.status||'open';statusCell.append(select);tr.append(statusCell);
    const action=cell(''),wrap=document.createElement('div');wrap.className='actions';
    const view=document.createElement('button');view.className='btn';view.textContent='Read';
-   view.onclick=()=>{const w=window.open('','_blank','width=650,height=700');if(w){const pre=w.document.createElement('pre');pre.style.cssText='white-space:pre-wrap;font:14px system-ui;padding:20px';pre.textContent='From: '+(request.displayName||'Guest')+'\\n'+(emailMatch?'Reply email: '+emailMatch[1]+'\\n':'')+'Topic: '+(request.title||'')+'\\nReceived: '+(request.createdAt||'')+'\\nStatus: '+(request.status||'open')+'\\n\\n'+String(request.description||'').replace(/^Reply email:.*?\\n\\nMessage:\\n/s,'');w.document.body.append(pre);}};
+   view.onclick=()=>{const w=window.open('','_blank','width=650,height=700');if(w){const pre=w.document.createElement('pre');pre.style.cssText='white-space:pre-wrap;font:14px system-ui;padding:20px';pre.textContent='From: '+(request.displayName||'Guest')+'\n'+(emailMatch?'Reply email: '+emailMatch[1]+'\n':'')+'Topic: '+(request.title||'')+'\nReceived: '+(request.createdAt||'')+'\nStatus: '+(request.status||'open')+'\n\n'+String(request.description||'').replace(/^Reply email:.*?\n\nMessage:\n/s,'');w.document.body.append(pre);}};
    const save=document.createElement('button');save.className='btn primary';save.textContent='Save status';
    save.onclick=async()=>{save.disabled=true;try{await api('admin.bugs.update',{rowId:request.$id,status:select.value,adminNote:request.adminNote||''});say('support-msg','Support request updated.');await loadSupport();}catch(e){say('support-msg',e.message);}finally{save.disabled=false;}};
    wrap.append(view,save);action.append(wrap);tr.append(action);$('support-rows').append(tr);
