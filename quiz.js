@@ -1,4 +1,4 @@
-/* ChatByKarnav five-question subject quiz.
+/* ChatByKarnav five-question Class 12 quiz.
  * This is a learning/onboarding quiz only. It is NOT an age check,
  * identity check, parental-consent mechanism, or account eligibility gate.
  * The client-side skip code is public and must never be treated as a secret.
@@ -30,11 +30,11 @@
       {q:'The value of ∫₀¹ 2x dx is:',a:['1','2','1/2','0'],c:0},
       {q:'If two events A and B are independent, then P(A∩B) equals:',a:['P(A)P(B)','P(A)+P(B)','P(A)/P(B)','P(A∪B)'],c:0}
     ],
-    'General Knowledge': [
-      {q:'Which institution is responsible for monetary policy in India?',a:['Reserve Bank of India','NITI Aayog','SEBI','Finance Commission'],c:0},
-      {q:'The headquarters of the World Trade Organization is in:',a:['Geneva','New York','Paris','Vienna'],c:0},
-      {q:'Which part of the Indian Constitution deals with Fundamental Rights?',a:['Part III','Part I','Part IV','Part IVA'],c:0},
-      {q:'The chemical symbol W stands for:',a:['Tungsten','Tin','Tantalum','Titanium'],c:0}
+    'Computer Science': [
+      {q:'Which data structure follows the LIFO principle?',a:['Stack','Queue','Linked list','Binary tree'],c:0},
+      {q:'Which Python file mode opens an existing file for reading only?',a:['r','w','a','x'],c:0},
+      {q:'Which SQL function returns the number of rows in a result set?',a:['COUNT()','SUM()','AVG()','MAX()'],c:0},
+      {q:'Which Python method adds an item to the top of a stack implemented using a list?',a:['append()','pop()','insert()','remove()'],c:0}
     ]
   };
   const shuffle = list => {
@@ -67,17 +67,17 @@
   const host=document.querySelector('.main-actions')||document.querySelector('.side-actions');
   if(!host || document.getElementById('cbk-quiz-launch')) return;
   const launch=document.createElement('button');
-  launch.type='button';launch.id='cbk-quiz-launch';launch.textContent='🧠 Quick quiz';
-  launch.setAttribute('aria-label','Open five-question subject quiz');
+  launch.type='button';launch.id='cbk-quiz-launch';launch.textContent='🧠 Class 12 quiz';
+  launch.setAttribute('aria-label','Open five-question Class 12 quiz');
   host.appendChild(launch);
   const overlay=document.createElement('div');
   overlay.id='cbk-quiz-overlay';
   overlay.innerHTML=`<section id="cbk-quiz-card" role="dialog" aria-modal="true" aria-labelledby="cbk-quiz-title">
     <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
-      <h2 id="cbk-quiz-title">Five-question challenge</h2>
+      <h2 id="cbk-quiz-title">Class 12 challenge</h2>
       <button type="button" id="cbk-quiz-close" class="quiz-secondary" aria-label="Close quiz">✕</button>
     </div>
-    <p class="quiz-muted">One question from each subject: Biology, Physics, Chemistry, Mathematics and General Knowledge. Questions and answer choices are shuffled for each attempt.</p>
+    <p class="quiz-muted">Five Class 12 questions from Biology, Physics, Chemistry, Mathematics and Computer Science. One question is selected from each subject; questions and answer choices are shuffled for each attempt.</p>
     <div id="cbk-quiz-content"></div>
   </section>`;
   document.body.appendChild(overlay);
@@ -96,7 +96,7 @@
   const renderStart=message=>{
     content.innerHTML='';
     const p=document.createElement('p');p.className='quiz-muted';
-    p.textContent=message||'Each attempt contains exactly five questions.';
+    p.textContent=message||'Each attempt contains exactly five Class 12 questions.';
     const codeLabel=document.createElement('label');codeLabel.className='quiz-muted';codeLabel.textContent='Optional skip code';
     const code=document.createElement('input');code.id='cbk-quiz-code';code.type='password';code.inputMode='numeric';code.autocomplete='off';code.placeholder='Enter code to skip this quiz';
     const actions=document.createElement('div');actions.className='quiz-actions';
@@ -152,5 +152,5 @@
   overlay.addEventListener('click',e=>{if(e.target===overlay){discard('Attempt discarded because you left the quiz.');close();}});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)discard('Attempt discarded because you switched tabs or minimised the browser. Start again for five fresh questions.');});
   window.addEventListener('blur',()=>discard('Attempt discarded because you left the quiz window. Start again for five fresh questions.'));
-  window.ChatByKarnavQuiz={version:1,questionsPerAttempt:5,subjects:Object.keys(subjects)};
+  window.ChatByKarnavQuiz={version:2,level:'Class 12',questionsPerAttempt:5,subjects:Object.keys(subjects)};
 })();
