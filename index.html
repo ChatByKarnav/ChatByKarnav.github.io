@@ -523,6 +523,15 @@
       <button type="button" data-mode="signup">Create account</button>
     </div>
     <form id="auth-form" novalidate>
+      <label class="field hidden" id="account-kind-field">Account type
+        <select id="account-kind" style="width:100%;padding:12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);">
+          <option value="adult">Adult account</option>
+          <option value="child">Child account (invite question required)</option>
+        </select>
+      </label>
+      <label class="field hidden" id="child-invite-field">Invitation question: Which section is Karnav in?
+        <input id="child-invite-answer" type="text" maxlength="12" placeholder="Enter section" autocomplete="off" autocapitalize="characters">
+      </label>
       <label class="field">Email <input id="auth-email" type="email" maxlength="100" placeholder="you@example.com" autocomplete="email"></label>
       <label class="field">Password <input id="password" type="password" minlength="8" maxlength="100" placeholder="Min 8 characters" autocomplete="current-password"></label>
       <button type="button" id="forgot-password" class="forgot-link">Forgot password?</button>
@@ -1085,7 +1094,13 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       $('auth-submit').textContent = mode === 'signup' ? 'Create account' : 'Sign in';
       $('forgot-password').classList.toggle('hidden', mode === 'signup');
       $('email-updates-choice').classList.toggle('hidden', mode !== 'signup');
-      if (mode !== 'signup') $('email-updates-optin').checked = false;
+      $('account-kind-field').classList.toggle('hidden', mode !== 'signup');
+      if (mode !== 'signup') {
+        $('email-updates-optin').checked = false;
+        $('account-kind').value = 'adult';
+        $('child-invite-field').classList.add('hidden');
+        $('child-invite-answer').value = '';
+      }
       $('auth-email')?.focus();
     }
 
@@ -1746,6 +1761,15 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       const email = $('auth-email').value.trim();
       const password = $('password').value;
       const avatar = $('memoji-value').value || '🙂';
+      const isChildSignup = currentAuthMode === 'signup' && $('account-kind').value === 'child';
+      if (currentAuthMode === 'signup' && isChildSignup) {
+        const answer = $('child-invite-answer').value.trim().toUpperCase();
+        if (answer !== '4C') {
+          setStatus('auth-status', 'Child accounts are invite-only. Please answer the invitation question correctly.', true);
+          $('child-invite-answer').focus();
+          return;
+        }
+      }
 
       if (!email || !email.includes('@')) { setStatus('auth-status', 'Please enter a valid email address.', true); return; }
       if (password.length < 8) { setStatus('auth-status', 'Password must be at least 8 characters.', true); return; }
@@ -2203,6 +2227,11 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
       }
     });
     document.querySelectorAll('.auth-toggle button').forEach((b) => b.addEventListener('click', () => setAuthMode(b.dataset.mode)));
+    $('account-kind').addEventListener('change', () => {
+      const childMode = $('account-kind').value === 'child';
+      $('child-invite-field').classList.toggle('hidden', !childMode);
+      if (!childMode) $('child-invite-answer').value = '';
+    });
     $('auth-form').addEventListener('submit', handleAuthSubmit);
 
     $('forgot-password').addEventListener('click', async () => {
