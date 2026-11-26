@@ -2052,7 +2052,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
 
     $('welcome-continue').addEventListener('click', () => { $('welcome-screen').classList.add('hidden'); $('login').classList.remove('hidden'); $('auth-email')?.focus(); });
 
-    // Beta applications use the existing authenticated beta-api; Appwrite Auth remains unchanged.
+    // Beta applications use the existing authenticated beta-api; KNet identity service remains unchanged.
     const betaModal = document.createElement('div');
     betaModal.id = 'beta-application-modal';
     betaModal.className = 'modal-backdrop hidden';
