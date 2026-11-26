@@ -466,7 +466,7 @@
       border-radius: 12px;
       background: #181920;
     }
-  </style>
+   .knet-brand{display:inline-flex;align-items:center;padding:6px 10px;border:1px solid #6384ad66;border-radius:999px;background:linear-gradient(135deg,#142b48,#211e43);color:#b9d8ff;font-size:11px;font-weight:800;letter-spacing:.08em;white-space:nowrap}.knet-brand:before{content:'';width:6px;height:6px;border-radius:50%;background:#58d6a0;margin-right:7px;box-shadow:0 0 9px #58d6a0}@media(max-width:520px){.knet-brand{display:none}}\n</style>
 </head>
 <body>
   <div id="offline-banner" class="offline-banner hidden">You are offline. Reconnecting…</div>
@@ -562,7 +562,7 @@
             <div id="subtitle" class="subtitle">Everyone in the community</div>
           </div>
         </div>
-        <div class="main-actions">
+        <div class="main-actions"><span class="knet-brand" title="KNet Core · ChatByKarnav service platform">KNet Core</span>
           <button class="icon-btn hidden" id="disappear-toggle" title="24h Disappearing Messages">⏳</button>
           <button class="icon-btn hidden" id="archive-toggle" title="Archive chat">📥</button>
           <button class="icon-btn hidden" id="mute-toggle" title="Mute chat">🔔</button>
@@ -880,7 +880,7 @@
   <div id="toast" class="toast hidden"></div>
 
   <script>
-    // === 100% APPWRITE CLOUD BACKEND ===
+    // === KNet Core: ChatByKarnav's unified backend layer ===
     const IS_BETA_SITE = /^\/beta(?:\/|$)/.test(window.location.pathname);
     const { Client, Account, TablesDB, Storage, Functions, ID, Query, Permission, Role } = Appwrite;
 
@@ -888,10 +888,18 @@
       .setEndpoint('https://nyc.cloud.appwrite.io/v1')
       .setProject('6af69d7f00178e3e64c2');
 
-    const awAccount = new Account(awClient);
-    const awTables = new TablesDB(awClient);
-    const awStorage = new Storage(awClient);
-    const awFunctions = new Functions(awClient);
+    // KNet is the app's own service layer. It coordinates identity, data, files and server tasks.
+    // The infrastructure provider remains an implementation detail behind this interface.
+    const KNet = Object.freeze({
+      auth: new Account(awClient),
+      database: new TablesDB(awClient),
+      storage: new Storage(awClient),
+      functions: new Functions(awClient)
+    });
+    const awAccount = KNet.auth;
+    const awTables = KNet.database;
+    const awStorage = KNet.storage;
+    const awFunctions = KNet.functions;
 
     // TablesDB returns row columns inside `data`, while this app's existing
     // features expect document-style fields at the top level. Normalize every
@@ -1007,7 +1015,7 @@
       if (code === 404) return 'The requested item could not be found.';
       if (code === 409) return 'That item already exists. Check your details and try again.';
       if (code === 429) return 'Too many attempts. Please wait a little and try again.';
-      if (code >= 500) return 'The chat service is temporarily unavailable. Please try again soon.';
+      if (code >= 500) return 'KNet Core is temporarily unavailable. Please try again soon.';
       return fallback;
     }
 async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docId=d!==undefined?c:b; const data=d!==undefined?d:c; try { return await awDb.updateDocument(DB_ID,colId,docId,data); } catch(e) { if(e.code===404) return await awDb.createDocument(DB_ID,colId,docId,data,permissionsForTableRow(colId,data)); throw e; } }
@@ -1628,7 +1636,7 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         showToast('Sent!');
       } catch (err) {
         console.error('Upload error:', err);
-        showToast('Upload failed. Check Appwrite bucket permissions.', true);
+        showToast('KNet Storage couldn't upload that file. Check the file and try again.', true);
       }
     }
 
@@ -2125,10 +2133,10 @@ async function upsertDoc(a, b, c, d) { const colId=d!==undefined?b:a; const docI
         body: JSON.stringify({ body: JSON.stringify({ ...payload, userJwt: sessionJwt.jwt }), async: false, method: 'POST', path: '/', headers: { 'Content-Type': 'application/json' } })
       });
       const execution = await response.json();
-      if (!response.ok) throw new Error(execution.message || `Appwrite request failed (${response.status}).`);
+      if (!response.ok) throw new Error(execution.message || `KNet request failed (${response.status}).`);
       let result = {};
-      try { result = JSON.parse(execution.responseBody || '{}'); } catch (_) { throw new Error('The beta service returned an unreadable response.'); }
-      if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300 || !result.ok) throw new Error(result.error || result.message || 'The beta service request failed.');
+      try { result = JSON.parse(execution.responseBody || '{}'); } catch (_) { throw new Error('KNet returned an unreadable response.'); }
+      if (execution.responseStatusCode < 200 || execution.responseStatusCode >= 300 || !result.ok) throw new Error(result.error || result.message || 'KNet couldn't complete that request.');
       return result;
     }
 
