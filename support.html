@@ -61,9 +61,14 @@
     send.disabled=true;send.textContent='Sending…';status.textContent='Sending your message securely…';
     try{
       const response=await fetch(form.action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
-      const result=await response.json().catch(()=>({}));
-      if(!response.ok || result.success===false) throw new Error(result.message||'The message could not be sent. Please try again.');
-      form.reset();status.textContent='Thanks! Your message was submitted. The support team has been notified.';
+      const result=await response.json().catch(()=>null);
+      if(!response.ok || !result || result.success===false || result.success==='false') {
+        throw new Error(result?.message || 'The support service did not accept the message. If this is the first submission, check the support inbox for a FormSubmit activation email and activate the form.');
+      }
+      if(result.success!==true && result.success!=='true') {
+        throw new Error(result.message || 'The support service returned an unclear response. Please do not assume your message was delivered.');
+      }
+      form.reset();status.textContent='Thanks! The support service accepted your submission. If this is the first use, complete the FormSubmit activation email to enable delivery.';
     }catch(error){
       status.textContent=error.message||'Unable to send right now. Please try again later.';
     }finally{send.disabled=false;send.textContent='Send message';}
